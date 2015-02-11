@@ -1,0 +1,16 @@
+*.swp
+*.bak
+*.o
+*.a
+*.lo
+*.so
+*.orig
+*.rej
+.dirstamp
+/package/deps.mak
+/config.mak
+/src/include/anopa/config.h
+/doc/*.1
+/libanopa.a
+/aa-enable
+/aa-start

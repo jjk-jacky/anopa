@@ -1,0 +1,157 @@
+=head1 NAME
+
+aa-enable - Enable services, i.e. copy servicedirs to repodir
+
+=head1 SYNOPSIS
+
+B<aa-enable> [B<-D>] [B<-r> I<repodir>] [B<-S> I<sourcedir>]
+[B<-s> I<sourcedir>] [B<-l> I<listdir>] [B<-n>] [B<-w>] [I<service...>]
+
+=head1 OPTIONS
+
+=over
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
+
+=item B<-r, --repodir> I<dir>
+
+Use I<dir> as repository directory. This is where all servicedirs will be
+created/copied to.
+
+=item B<-S, --reset-source> I<dir>
+
+Reset the list of source directories to I<dir>. You can add more with
+B<--source>. This is useful to unset the defaults.
+
+=item B<-s, --source> I<dir>
+
+Add I<dir> as new source. Can be specified multiple times; Source directories
+will be processed in the order they were added.
+
+=item B<-l, --listdir> I<dir>
+
+Use I<dir> to list services to enable. Only one can be set, if specified more
+than once the last one will be used.
+
+=item B<-n, --no-needs>
+
+Don't auto-enable any services listed under directory I<needs> of a service
+being (auto-)enabled.
+
+=item B<-w, --no-wants>
+
+Don't auto-enable any services listed under directory I<wants> of a service
+being (auto-)enabled.
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+With B<anopa>, you usually create your service repository early on boot (during
+stage 1) into tmpfs (I</run/services>). This ensures that no previous
+state/files from an earlier boot will interfere with the current one, leaving
+your main filesystem untouched (it could even be read-only).
+
+By default the repository directory used is I</run/services> and source
+directories are, in order, I</etc/anopa/services> and I</usr/lib/services>
+
+Also note that by default B<aa-enable>(1) will auto-enable any service whose
+name was found in a directory I<need> or I<wants> of a created servicedir. This
+can be turned off via B<--no-needs> and/or B<--no-wants> if needed.
+
+=head2 Enabling a service / Creating a servicedir
+
+Instead of simply creating the repository ahead of time, and copying it all on
+boot, the copying process is done through B<aa-enable>(1) which works as such:
+
+- The given I<listdir> is read. It contains either empty regular files, or
+directories, whose name is the name of a service to enable.
+
+- Source directories are tried, in order, to find the corresponding servicedir,
+which is then copied over to the runtime repository (I<repodir>). During this
+copy, B<aa-enable>(1) notes whether or not a file I<run> exists, i.e. whether
+this is a long-run or one-shot service.
+
+- If the service name came from a directory in I<listdir>, its content is then
+merged/copied over into the servicedir. This allows to specify service-specific
+configuration, or could possibly be used to overwrite an actual script.
+
+- If the service is a long-run, an empty regular file I<down> is created (unless
+it already existed) to ensure the service won't be auto-started by B<s6-svscan>,
+and a symlink is added to the servicedir into the I<.scandir> sub-directory of
+I<repodir>.
+
+=head2 Special case: Instances
+
+Service names cannot start nor end with a @ character, but can contain one.
+servicedirs in source directories shall not contain a @ character, unless it is
+the last character in their name.
+
+The idea is to use the notion of "instances." Imagine a service that starts a
+getty on a tty. Instead of needing to write as many servicedirs as you want
+gettys on ttys, you simply write one, named I<getty@>
+
+Then, you can enable I<getty@tty1> and I<getty@tty2>. For the service name
+I<getty@tty1>, we say the service used in I<getty> for instance I<tty1>. The way
+it works in B<aa-enable>(1) is that it will look for a servicedir I<getty@> in
+source directories, but will copy it as I<getty@tty1> into the repository.
+
+Then, in your run/finish/start/stop script(s), you can e.g. use B<aa_service>(1)
+to get the service & instance and use them as needed.
+
+Additionally, whenever copying content of the directories I<needs>, I<wants>,
+I<after> and I<before>, B<aa-enable>(1) will automatically rename any file whose
+name ends with a @ to append the current instance name.
+
+Therefore, if servicedir I<getty@> contained a file named I<set-numlock@> into
+on of those, it would be copied as e.g. I<set-numock@tty1> into the repository.
+
+=head2 Special case: service logger
+
+Long-run services are likely to be logged, and to do so you need to provide a
+servicedir I<log> inside the servicedir of the service.
+
+To simplify things, if a regular file or directory I<log> is found in a
+servicedir, B<aa-enable>(1) will copy the servicedir I<log>, taken for source
+directories as usual, into the servicedir of the service. And in case of a
+directory, its content will then be merge/copied over.
+
+This allows you to use the service/servicedir I<log> as logger for a service by
+simply putting an empty regular file I<log> into the original servicedir (in a
+source directory); Or use a directory to simply specify/add configuration files.
+
+Note that you can also still provide files from the configuration directory in
+listdir, since it is copied last (and that this always includes providing a new
+I<run> file).
+
+=head1 BUGS
+
+They're probably crawling somewhere in there... if you happen to catch one,
+(or more) report it and I'll do my best to squash it.
+
+=head1 REPOSITORY
+
+You can find the latest source code of B<anopa> as well as report bugs and/or
+suggest features on its GitHub repository, available at
+L<https://github.com/jjk-jacky/anopa>
+
+=head1 AUTHORS
+
+=over
+
+=item Olivier Brunel <jjk@jjacky.com>
+
+=back

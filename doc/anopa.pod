@@ -1,0 +1,335 @@
+=head1 NAME
+
+anopa - init system/service manager build around s6 supervision suite
+
+=head1 DESCRIPTION
+
+anopa is an collection of tools and scripts aimed to provide an init system and
+service manager for Linux systems, based around the s6 supervision suite[B<1>].
+
+It provides some execline[B<2>] scripts that can be used as init for different
+stage of the boot process, leaving stage 2 to be handled by B<s6-svscan>, as
+well as tools that can be used to create a runtime repository of servicedirs,
+start/stop them and other related functions.
+
+=head1 WHAT DOES INIT (PID 1) DO ?
+
+Paraphrasing B<s6>'s author, Laurent Bercot, there are really three stages for
+the init process of a Unix system :
+
+=over
+
+=item Stage 1: Booting up phase
+
+=item Stage 2: Supervision phase
+
+=item Stage 3: Shutting down phase
+
+=back
+
+Stage 1 starts when the kernel launches the first userland process,
+traditionally called B<init>. The goal is to prepare the system: mounting
+filesystems, setting system clock, configuring the network, and other similar
+tasks are to be performed, to be ready to start long-running processes, that
+will be expected to stay running for as long as the system is up.
+
+Stage 2 starts with the launch of all long-running processes (getty-s, ssh
+server, etc) and continues - as you're using the system - with supervising said
+processes, making sure they stay up, and restarting them should they not. init's
+job here also includes reaping any orphaned zombies.
+
+Stage 3 starts when a shutdown (or reboot) is initiated. init then needs to
+"undo" what was done prior: stop all long-running processes, clean up, unmount
+filesystems, etc
+
+B<s6-svscan> is perfectly suited to be in charge of stage 2, supervising
+long-running processes. B<anopa> provides tools to take care of the other
+stages.
+
+Because the init process launched by the kernel, also known as PID 1, cannot die
+and has to be the one process to exist from start to finish, lots of init system
+include all functionnalities into a single binary. Instead, since PID 1 is
+allowed to execute I<into> another binary, this is what B<anopa> makes uses of.
+
+=head1 NOTION OF SERVICES
+
+B<s6> works with services, defined under what's called a service directory, or
+I<servicedir>. Since it is build around it, B<anopa> uses the same principle;
+However, a service from B<anopa>'s point-of-view can either be one-shot, i.e. a
+process to start on boot (during stage 1) and that's it (possibly with a
+counter-part one to be run on shutdown, during stage 3), or a long-run, i.e. a
+process to be started during phase 2, and to stay up until stage 3 is initiated.
+
+Therefore, you can have two kinds of services, and servicedir: one-shot, and
+long-run. A servicedir is simply a directory, in which the definition of the
+service is held.
+
+Long-run services requires a file I<run> to be present, which will be the
+long-running process launched & supervised (or, more likely, is a small script
+executing into said process). Therefore, the rule is that if a servicedir
+contains a file I<run> it is of a long-run service, else of a one-shot one.
+
+=head2 LONG-RUN SERVICES
+
+Long-run services will be launched & supervised by B<s6-svscan>, therefore you
+should refer to its official documentation[B<3>] when it comes to that, but such
+servicedirs contain:
+
+=over
+
+=item An executable file named I<run>
+
+It can be any executable file (binary or script), but usually will be a small
+script containing the command setting up the services, before executing into it.
+
+=item An optional executable file named I<finish>
+
+Like I<run>, it can be any executable file. If present, it is executed everytime
+the I<run> script dies. Generally, its main purpose is to clean up non-volatile
+data such as the filesystem after the supervised process has been killed.
+
+Note that it must do its work and exit in less than 5 seconds, else it'll be
+killed.
+
+=item An optional, empty, regular file named I<nosetsid>
+
+If such a file exists, B<s6-supervise> will not make the service a process group
+and session leader; the service will be run in the same process group as
+B<s6-supervise>. If no I<nosetsid> file exists, the service has its own process
+group and is started as a session leader.
+
+=item An optional service directory named I<log>
+
+If it exists then two services will be monitored: the actual service (I<./run>)
+as well as its logger (I<./log/run>).
+A pipe is open and maintained between the two, i.e. everything that I<./run>
+writes to its stdout will appear on I<./log/run>'s stdin. The service is said to
+be logged; the I<log> service is called the service's logger.
+
+=back
+
+For completeness, the following "internals" are also supported.
+
+=over
+
+=item A directory named I<supervise>
+
+It is automatically created by B<s6-supervise> if it does not exist. This is
+where B<s6-supervise> stores its information. The directory must be writable.
+
+=item A fifodir named I<event>
+
+It is automatically created by B<s6-supervise> if it does not exist. This is
+used to send notifications when the service goes up/down.
+
+=item An optional, empty, regular file named I<down>
+
+If such a file exists, the default state of the service is considered down, not
+up, and it isn't automatically started by B<s6-supervise>.
+
+=back
+
+=head2 ONE-SHOT SERVICES
+
+One-shot services are simply binaries that will be executed by B<aa-start>(1) or
+B<aa-stop>(1). Such servicedirs contain:
+
+=over
+
+=item An optional executable file named I<start>
+
+It can be any executable file (binary or script), that will be executed by
+B<aa-start> when starting the service. It if exits with 0 the service will be
+considered started, else failed.
+If no such file exists, the service will be considered started instantly.
+
+=item An optional executable file named I<stop>
+
+It can be any executable file (binary or script), that will be executed by
+B<aa-stop> when stopping the service. It if exits with 0 the service will be
+considered stopped, else stopped-failed.
+If no such file exists, the service will be considered stopped instantly.
+
+=item An optional, empty, regular file names I<essential>
+
+If present and the service fails to be started, when it exits B<aa-start> will
+return 1. It will only return 0 if no essential services failed to be started.
+This can be used by I<init>, e.g. to launch an emergency shell if B<aa-start>
+end succesfully (return non-zero).
+
+You would usually use such a file for the service mounting the root filesystem
+in initramfs, or launching getty.
+
+=back
+
+=head2 SERVICE DEPENDENCIES
+
+Common to long-run and one-shot services, therefore supported in both types of
+servicedirs, are the notion of dependencies and order supported by B<anopa>.
+
+The idea is that on boot, all long-run servicedirs will actually contain an
+empty file I<down> so that they aren't automatically started by B<s6-svscan>.
+Instead, B<aa-start>(1) will be used to start everything (during stage 2), both
+one-shot and long-run services; It will also be used by B<aa-stop>(1) to order
+stopping.
+
+Four additional directories can be found inside servicedirs, used by
+B<aa-start>(1) and B<aa-stop>(1) to determine when to start/stop what.
+
+=over
+
+=item An optional directory named I<needs>
+
+This directory can contain empty regular files, whose name is the name of a
+service to be marked as dependency of the current service. Such services will be
+auto-started by B<aa-start>(1) and the current service will automatically be
+marked to be started after it.
+
+Additionally, should the depedency service fail to start, the current service
+will not be started, but placed into a failed state (for dependency error).
+
+B<aa-stop>(1) will process those as if they were in directory I<after>.
+
+=item An optional directory named I<wants>
+
+This directory can contain empty regular files, whose name is the name of a
+service to be auto-started by B<aa-start>(1). This is not a dependency, and
+there's no ordering associated either.
+
+This is ignored by B<aa-stop>(1).
+
+=item An optional directory named I<after>
+
+This directory can contain empty regular files. The current service will only be
+started after those services have been started by B<aa-start>(1); And the other
+way around for B<aa-stop>(1), i.e. those services will be stopped after the
+current service has been.
+
+It is important to note that this is only an ordering directive, i.e. if the
+service isn't actually being started, then it is simply ignored. And if it is,
+but fails to do so, the current service will still be started regardless.
+
+=item An optional directory named I<before>
+
+This directory can contain empty regular files. If those services are being
+started, then they'll only be started after the current service by
+B<aa-start>(1); And the other way around for B<aa-stop>(1), i.e. the current
+service will be stopped after they have been.
+
+It is important to note that this is only an ordering directive, i.e. if the
+service isn't being started then it is simply ignored. And if it is, but the
+current service fails to start, it will still be started regardless.
+
+=back
+
+It should also be noted that a long-run service will be considered started once
+the event 'u' is received; Should the service actually fail right after will
+have no consequences on the rest of the B<aa-start>(1) process.
+
+=head1 SERVICE REPOSITORY (AND SCANDIR)
+
+B<s6-svscan> will supervise all services found in its scandir. Obviously,
+because it has no notion of one-shot services, only servicedir for long-run
+services should be found there.
+
+The way this works in B<anopa> is to use B<aa-enable>(1) to create the service
+repository, as well as the scandir. This is done by using source directories,
+and optionally merging in configuration directories.
+The idea is that you will not create your service repository manually, but
+instead using B<aa-enable>(1) from a pre-established definition.
+
+The service repository will contain all (enabled) servicedirs, both one-shots
+and long-runs. For long-run servicedirs, symlinks will be put into directory
+I<.scandir> which will be used by B<s6-svscan> as its scandir.
+
+A typical organization would work like the following :
+
+=over
+
+=item I</usr/lib/services>
+
+Source directory containing available servicedirs. This is where servicedirs
+from packages would be installed. Used by B<aa-enable>(1).
+
+=item I</etc/anopa/services>
+
+Source directory containing available servicedirs. This is where the
+administrator can define its own servicedirs, either because they're not
+provided by packages, or to be used instead. Used by B<aa-enable>(1).
+
+=item I</etc/anopa/enabled>
+
+List directory containing either empty regular files, whose name is the name of
+a service to enable on boot, or directories, whose name is the name of a service
+to enable on boot.
+
+In the later case, the content of the folder will also be merged/copied over
+into the servicedir.
+
+=item I</etc/anopa/start/default>
+
+List directory containing empty regular files, whose name is the name of a
+service to start on boot.
+
+=item I</run/services>
+
+Runtime repository, the service repository for the current system, containing a
+directory I<.scandir>, with symlinks for all long-run services, used by
+B<s6-svscan> as its scandir.
+
+=back
+
+On boot, B<aa-enable>(1) is used to create the runtime repository. To do so, it
+reads the content of the listdir, and for each service named there copies the
+corresponding servicedir from a source directory into the runtime repository. If
+listdir contained a directory, its content is then merged/copied over into the
+newlu created servicedir, allowing easy custom service-specific configuration.
+
+Source directories are looked up in order, thus allowing the administrator to
+provide not only its own servicedirs, but its own version of a given servicedir.
+
+Refer to B<aa-enable>(1) for more on how it works and how the copy operation
+takes place.
+
+
+
+
+
+
+=head1 LINKS
+
+=over
+
+=item [B<1>] s6 supervision suite
+
+L<http://skarnet.org/software/s6/>
+
+=item [B<2>] execline
+
+L<http://skarnet.org/software/execline/>
+
+=item [B<3>] s6 service directories
+
+L<http://skarnet.org/software/s6/servicedir.html>
+
+=back
+
+=head1 BUGS
+
+They're probably crawling somewhere in there... if you happen to catch one,
+(or more) report it and I'll do my best to squash it.
+
+=head1 REPOSITORY
+
+You can find the latest source code of B<anopa> as well as report bugs and/or
+suggest features on its GitHub repository, available at
+L<https://github.com/jjk-jacky/anopa>; or visit its official website at
+L<http://jjacky.com/anopa>
+
+=head1 AUTHORS
+
+=over
+
+=item Olivier Brunel <jjk@jjacky.com>
+
+=back

@@ -1,0 +1,4 @@
+util.o
+${LIBANOPA}
+-lskarnet
+${TAINNOW_LIB}
