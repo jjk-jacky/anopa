@@ -12,5 +12,6 @@
 /src/include/anopa/config.h
 /doc/*.1
 /libanopa.a
+/aa-echo
 /aa-enable
 /aa-start

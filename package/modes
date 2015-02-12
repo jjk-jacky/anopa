@@ -1,2 +1,3 @@
 aa-start                0755
 aa-enable               0755
+aa-echo                 0755

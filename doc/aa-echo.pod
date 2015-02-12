@@ -1,0 +1,107 @@
+=head1 NAME
+
+aa-echo - Shows a message
+
+=head1 SYNOPSIS
+
+B<aa-enable> [B<-D>] [B<-T> | B<-t> | B<-w> | B<-e>] I<MESSAGE...>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
+
+=item B<-e, --error>
+
+Show I<MESSAGE...> as an error message. A red prefix "==> ERROR: " will be
+printed before the message.
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-T, --title>
+
+Show I<MESSAGE...> as a main title. A green "==> " prefix will be printed before
+the message. This is the default, if no other option is used.
+
+=item B<-t, --title2>
+
+Show I<MESSAGE...> as a secondary title. A blue "  -> " prefix will be printed
+before the message.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=item B<-w, --warning>
+
+Show I<MESSAGE...> as a warning. A yellow "==> WARNING: " prefix will be printed
+before the message.
+
+=back
+
+=head1 DESCRIPTION
+
+This is a little helper to easily print messages using the same color code as
+other B<anopa> tools do. Note that all arguments making up I<MESSAGE> are
+printed one after the other, without adding a blank space; In other words,
+`aa-echo foo bar` will result in the string "==> foobar" being printed.
+
+This is due to the way B<aa-echo>(1) processes its arguments, to allow you to
+set the text color. Any argument making up I<MESSAGE> can indeed be one of:
+
+=over
+
+=item B<+g, +green>
+
+Set color to green.
+
+=item B<+b, +blue>
+
+Set color to blue.
+
+=item B<+y, +yellow>
+
+Set color to yellow.
+
+=item B<+r, +red>
+
+Set color to red.
+
+=item B<+n, +normal>
+
+Reset color to "normal" aka white.
+
+=item B<++TEXT>
+
+To print +TEXT
+
+=back
+
+For example: `aa-echo -w "The file " +r "/foo/bar" +n " doesn't exist"`
+
+=head1 BUGS
+
+They're probably crawling somewhere in there... if you happen to catch one,
+(or more) report it and I'll do my best to squash it.
+
+=head1 REPOSITORY
+
+You can find the latest source code of B<anopa> as well as report bugs and/or
+suggest features on its GitHub repository, available at
+L<https://github.com/jjk-jacky/anopa>
+
+=head1 AUTHOR
+
+=over
+
+=item Olivier Brunel <jjk@jjacky.com>
+
+=back
