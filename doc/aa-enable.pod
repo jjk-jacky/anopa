@@ -18,6 +18,24 @@ stderr for warnings and errors, everything is sent both to stdout and stderr.
 This is intended to redirect stderr to a log file, so full output can be both
 shown on console and logged.
 
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-l, --listdir> I<dir>
+
+Use I<dir> to list services to enable. Only one can be set, if specified more
+than once the last one will be used.
+
+The directory will be read, and names of files/directories within be used as
+service name to enable. For directories, their content will be merged/copied
+into the servicedir; See below for more.
+
+=item B<-n, --no-needs>
+
+Don't auto-enable any services listed under directory I<needs> of a service
+being (auto-)enabled.
+
 =item B<-r, --repodir> I<dir>
 
 Use I<dir> as repository directory. This is where all servicedirs will be
@@ -33,28 +51,14 @@ B<--source>. This is useful to unset the defaults.
 Add I<dir> as new source. Can be specified multiple times; Source directories
 will be processed in the order they were added.
 
-=item B<-l, --listdir> I<dir>
+=item B<-V, --version>
 
-Use I<dir> to list services to enable. Only one can be set, if specified more
-than once the last one will be used.
-
-=item B<-n, --no-needs>
-
-Don't auto-enable any services listed under directory I<needs> of a service
-being (auto-)enabled.
+Show version information and exit.
 
 =item B<-w, --no-wants>
 
 Don't auto-enable any services listed under directory I<wants> of a service
 being (auto-)enabled.
-
-=item B<-h, --help>
-
-Show help screen and exit.
-
-=item B<-V, --version>
-
-Show version information and exit.
 
 =back
 
@@ -148,7 +152,7 @@ You can find the latest source code of B<anopa> as well as report bugs and/or
 suggest features on its GitHub repository, available at
 L<https://github.com/jjk-jacky/anopa>
 
-=head1 AUTHORS
+=head1 AUTHOR
 
 =over
 
