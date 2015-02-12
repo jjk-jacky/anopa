@@ -1,6 +1,7 @@
 
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <skalibs/allreadwrite.h>
 #include <skalibs/djbunix.h>
@@ -91,6 +92,22 @@ _exec_oneshot (int si, aa_mode mode)
         fd_close (p_int[1]);
 
         goto err;
+    }
+    else
+    {
+        int flags = fcntl (p_in[0], F_GETFL, 0);
+        if (flags < 0 || fcntl (p_in[0], F_SETFL, flags & ~O_NONBLOCK) < 0)
+        {
+            _errno = errno;
+            _err = "set up pipes";
+
+            fd_close (p_int[0]);
+            fd_close (p_int[1]);
+            fd_close (p_in[0]);
+            fd_close (p_in[1]);
+
+            goto err;
+        }
     }
     if (pipenb (p_out) < 0)
     {
