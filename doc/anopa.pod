@@ -162,16 +162,29 @@ in initramfs, or launching getty.
 
 =back
 
+Note that a one-shot service can have only a I<start> script, only a I<stop>
+script, both, or none. In the later case, it can be used simply to order things.
+
+For example, you could use a service I<sysinit>, making sure all very early
+services (e.g. mounting file systems or setting up console) are started before
+it, and starting everything else after it.
+
+(Similarly, it would get everything stopped before those services are stopped,
+obviously.)
+
 =head2 SERVICE DEPENDENCIES
 
 Common to long-run and one-shot services, therefore supported in both types of
-servicedirs, are the notion of dependencies and order supported by B<anopa>.
+servicedirs, are the notion of dependencies and ordering introduced by B<anopa>.
 
 The idea is that on boot, all long-run servicedirs will actually contain an
 empty file I<down> so that they aren't automatically started by B<s6-svscan>.
 Instead, B<aa-start>(1) will be used to start everything (during stage 2), both
 one-shot and long-run services; It will also be used by B<aa-stop>(1) to order
 stopping.
+
+(If you create your runtime service repository using B<aa-enable>(1) this is
+done automatically.)
 
 Four additional directories can be found inside servicedirs, used by
 B<aa-start>(1) and B<aa-stop>(1) to determine when to start/stop what.
@@ -203,11 +216,12 @@ This is ignored by B<aa-stop>(1).
 This directory can contain empty regular files. The current service will only be
 started after those services have been started by B<aa-start>(1); And the other
 way around for B<aa-stop>(1), i.e. those services will be stopped after the
-current service has been.
+current service has been (or, the current service before them).
 
 It is important to note that this is only an ordering directive, i.e. if the
-service isn't actually being started, then it is simply ignored. And if it is,
-but fails to do so, the current service will still be started regardless.
+service isn't actually being started, then the directive is simply ignored. And
+if it is, but fails to start, the current service will still be started
+regardless.
 
 =item An optional directory named I<before>
 
@@ -236,7 +250,7 @@ The way this works in B<anopa> is to use B<aa-enable>(1) to create the service
 repository, as well as the scandir. This is done by using source directories,
 and optionally merging in configuration directories.
 The idea is that you will not create your service repository manually, but
-instead using B<aa-enable>(1) from a pre-established definition.
+instead using B<aa-enable>(1) from pre-established definitions.
 
 The service repository will contain all (enabled) servicedirs, both one-shots
 and long-runs. For long-run servicedirs, symlinks will be put into directory
@@ -266,16 +280,19 @@ to enable on boot.
 In the later case, the content of the folder will also be merged/copied over
 into the servicedir.
 
-=item I</etc/anopa/start/default>
+Used by B<aa-enable>(1).
+
+=item I</etc/anopa/onboot/default>
 
 List directory containing empty regular files, whose name is the name of a
-service to start on boot.
+service to start on boot. Used by B<aa-start>(1).
 
 =item I</run/services>
 
 Runtime repository, the service repository for the current system, containing a
 directory I<.scandir>, with symlinks for all long-run services, used by
-B<s6-svscan> as its scandir.
+B<s6-svscan> as its scandir. Used by B<aa-enable>(1), B<aa-start>(1) and
+B<aa-stop>(1).
 
 =back
 
@@ -291,6 +308,12 @@ provide not only its own servicedirs, but its own version of a given servicedir.
 Refer to B<aa-enable>(1) for more on how it works and how the copy operation
 takes place.
 
+Then, B<aa-start>(1) is used to start all services in order, getting the system
+up & ready. Refer to B<aa-start>(1) for more on how it works.
+
+Note that this is of course only a possible solution to set up your system, you
+are of couse free to organize things differently, only the the tool(s) you need
+fro B<anopa> however you want.
 
 
 
@@ -326,7 +349,7 @@ suggest features on its GitHub repository, available at
 L<https://github.com/jjk-jacky/anopa>; or visit its official website at
 L<http://jjacky.com/anopa>
 
-=head1 AUTHORS
+=head1 AUTHOR
 
 =over
 
