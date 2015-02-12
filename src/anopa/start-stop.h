@@ -28,16 +28,29 @@ extern genalloc ga_failed;
 extern int cols;
 extern int is_utf8;
 extern int ioloop;
+extern int si_password;
 
 enum
 {
     DRAW_CUR_WAITING    = (1 << 0),
     DRAW_CUR_PROGRESS   = (1 << 1),
-    DRAW_HAS_CUR        = (1 << 2) - 1,
+    DRAW_CUR_PASSWORD   = (1 << 2),
+    DRAW_HAS_CUR        = (1 << 3) - 1,
 
-    DRAW_NEED_WAITING   = (1 << 2),
-    DRAW_NEED_PROGRESS  = (1 << 3),
-    DRAW_HAS_NEED       = (1 << 4) - DRAW_HAS_CUR - 1
+    DRAW_NEED_WAITING   = (1 << 3),
+    DRAW_NEED_PROGRESS  = (1 << 4),
+    DRAW_NEED_PASSWORD  = (1 << 5),
+    DRAW_HAS_NEED       = (1 << 6) - DRAW_HAS_CUR - 1
+};
+
+enum
+{
+    DRAWN_NOT = 0,
+    DRAWN = 1,
+
+    DRAWN_PASSWORD_WAITMSG = -1,
+    DRAWN_PASSWORD_READY = -2,
+    DRAWN_PASSWORD_WRITING = -3
 };
 
 struct progress
@@ -58,6 +71,7 @@ void remove_fd_from_iop (int fd);
 void close_fd_for (int fd, int si);
 int handle_fd_out (int si);
 int handle_fd_progress (int si);
+int handle_fd_in (void);
 int handle_fd (int fd);
 int handle_longrun (aa_mode mode, uint16 id, char event);
 int is_locale_utf8 (void);

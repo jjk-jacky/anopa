@@ -34,6 +34,7 @@ genalloc ga_failed = GENALLOC_ZERO;
 int cols = 80;
 int is_utf8 = 0;
 int ioloop = 1;
+int si_password = -1;
 
 /* aa-start.c */
 void check_essential (int si);
@@ -47,6 +48,9 @@ free_progress (struct progress *pg)
 void
 clear_draw ()
 {
+    if (draw & DRAW_CUR_PASSWORD)
+        aa_is_flush (AA_OUT, ANSI_CLEAR_BEFORE ANSI_START_LINE);
+
     if (draw & DRAW_CUR_WAITING)
     {
         aa_is_flush (AA_OUT, ANSI_CLEAR_BEFORE ANSI_START_LINE);
@@ -61,7 +65,7 @@ clear_draw ()
         {
             struct progress *pg = &genalloc_s (struct progress, &ga_progress)[i];
 
-            if (pg->is_drawn)
+            if (pg->is_drawn > 0)
             {
                 aa_is_flush (AA_OUT, ANSI_PREV_LINE ANSI_CLEAR_AFTER);
                 pg->is_drawn = 0;
@@ -81,6 +85,23 @@ draw_progress_for (int si)
     aa_progress_draw (&pg->aa_pg, aa_service_name (aa_service (si)), cols, is_utf8);
     pg->is_drawn = 1;
     draw |= DRAW_CUR_PROGRESS;
+}
+
+void
+draw_password ()
+{
+    aa_service *s = aa_service (si_password);
+    struct progress *pg = &genalloc_s (struct progress, &ga_progress)[s->pi];
+
+    if (pg->is_drawn == DRAWN_PASSWORD_READY)
+        aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
+    aa_is_noflush (AA_OUT, aa_service_name (s));
+    if (pg->is_drawn == DRAWN_PASSWORD_READY)
+        aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
+    aa_is_noflush (AA_OUT, ": ");
+    aa_is_noflush (AA_OUT, pg->aa_pg.sa.s);
+    aa_is_flush (AA_OUT, " : ");
+    draw |= DRAW_CUR_PASSWORD;
 }
 
 void
@@ -109,17 +130,78 @@ draw_waiting (int already_drawn)
     draw |= DRAW_CUR_WAITING;
 }
 
+static int
+term_set_echo (int on)
+{
+    struct termios termios;
+    int r;
+
+    r = tcgetattr (0, &termios);
+    if (r < 0)
+        return r;
+
+    if (on)
+    {
+        if (termios.c_lflag & ECHO)
+            return 0;
+        termios.c_lflag |= ECHO;
+    }
+    else
+    {
+        if (!(termios.c_lflag & ECHO))
+            return 0;
+        termios.c_lflag &= ~ECHO;
+    }
+
+    return tcsetattr (0, TCSANOW, &termios);
+}
+
 void
 refresh_draw ()
 {
     unsigned int old_draw = draw;
 
     if ((!(draw & DRAW_NEED_WAITING) && (draw & DRAW_CUR_WAITING))
-            || (draw & DRAW_CUR_PROGRESS))
+            || (draw & (DRAW_CUR_PROGRESS | DRAW_CUR_PASSWORD)))
     {
         clear_draw ();
         if (old_draw & DRAW_NEED_WAITING)
             draw |= DRAW_NEED_WAITING;
+    }
+
+    if ((draw & DRAW_NEED_PASSWORD) && si_password < 0)
+    {
+        int i;
+
+        for (i = 0; i < genalloc_len (struct progress, &ga_progress); ++i)
+        {
+            struct progress *pg = &genalloc_s (struct progress, &ga_progress)[i];
+
+            if (pg->si >= 0 && pg->is_drawn == DRAWN_PASSWORD_READY)
+            {
+                iopause_fd iop;
+                int r;
+
+                r = term_set_echo (0);
+                if (r < 0)
+                {
+                    strerr_warnwu2sys ("set terminal attributes; "
+                            "can't ask for password for service ",
+                            aa_service_name (aa_service (pg->si)));
+                    break;
+                }
+
+                iop.fd = 0;
+                iop.events = IOPAUSE_READ;
+                genalloc_append (iopause_fd, &ga_iop, &iop);
+
+                si_password = pg->si;
+                break;
+            }
+        }
+
+        if (si_password < 0)
+            draw &= ~DRAW_NEED_PASSWORD;
     }
 
     if (draw & DRAW_NEED_PROGRESS)
@@ -130,12 +212,18 @@ refresh_draw ()
         {
             struct progress *pg = &genalloc_s (struct progress, &ga_progress)[i];
 
-            if (pg->si >= 0)
+            if (pg->si >= 0 && pg->is_drawn >= 0)
                 draw_progress_for (pg->si);
         }
 
         if (!(draw & DRAW_CUR_PROGRESS))
             draw &= ~DRAW_NEED_PROGRESS;
+    }
+
+    if (draw & DRAW_NEED_PASSWORD)
+    {
+        draw_password ();
+        draw &= ~DRAW_NEED_WAITING;
     }
 
     if (draw & DRAW_NEED_WAITING)
@@ -308,6 +396,46 @@ handle_fd_progress (int si)
         close_fd_for (s->fd_progress, si);
         return 0;
     }
+
+    /* PASSWORD */
+    if ((r > 3 && buf[1] == '<' && buf[2] == ' ') || pg->is_drawn == DRAWN_PASSWORD_WAITMSG)
+    {
+        int rr;
+
+        if (pg->is_drawn != DRAWN_PASSWORD_WAITMSG)
+        {
+            pg->aa_pg.sa.len = 0;
+            i = 3;
+        }
+        else
+            i = 1;
+
+        rr = byte_rchr (buf + i, r, '\n');
+        if (rr == r)
+        {
+            if (!stralloc_catb (&pg->aa_pg.sa, buf + i, rr))
+                return -1;
+            pg->is_drawn = DRAWN_PASSWORD_WAITMSG;
+            return 0;
+        }
+
+        buf[i + rr] = '\0';
+        if (!stralloc_catb (&pg->aa_pg.sa, buf + i, rr + 1))
+            return -1;
+
+        pg->is_drawn = DRAWN_PASSWORD_READY;
+        draw |= DRAW_NEED_PASSWORD;
+        /* clear in order to "reset" any WAITING */
+        clear_draw ();
+        return 0;
+    }
+    else if (pg->is_drawn < 0)
+        /* no progress during a password prompt */
+        return -1;
+
+
+    /* PROGRESS */
+
     /* if sa is empty (i.e. we just created pg) we need to keep it consistent
      * with our expectations: it starts with the msg before the
      * buffered/unprocessed data. So we'll add a NUL (i.e. no msg) */
@@ -332,10 +460,42 @@ handle_fd_progress (int si)
 }
 
 int
+handle_fd_in (void)
+{
+    aa_service *s = aa_service (si_password);
+    struct progress *pg = &genalloc_s (struct progress, &ga_progress)[s->pi];
+    char buf[256];
+    iopause_fd iop;
+    int r;
+
+    r = fd_read (0, buf, 256);
+    if (r < 0)
+        return r;
+    else if (r == 0)
+        goto done;
+
+    if (!stralloc_catb (&pg->aa_pg.sa, buf, r))
+        return -1;
+
+    iop.fd = s->fd_in;
+    iop.events = IOPAUSE_WRITE;
+    genalloc_append (iopause_fd, &ga_iop, &iop);
+    pg->is_drawn = DRAWN_PASSWORD_WRITING;
+    r = 0;
+
+done:
+    remove_fd_from_iop (0);
+    return r;
+}
+
+int
 handle_fd (int fd)
 {
     int si;
     int i;
+
+    if (fd == 0 && si_password >= 0)
+        return handle_fd_in ();
 
     for (i = 0; i < genalloc_len (int, &aa_tmp_list); ++i)
     {
@@ -348,6 +508,62 @@ handle_fd (int fd)
 
     errno = ENOENT;
     return -1;
+}
+
+int
+handle_fdw (int fd)
+{
+    aa_service *s;
+    struct progress *pg;
+    int offset;
+    int len;
+    int r;
+
+    if (si_password < 0 || aa_service (si_password)->fd_in != fd)
+        return (errno = ENOENT, -1);
+
+    s = aa_service (si_password);
+    pg = &genalloc_s (struct progress, &ga_progress)[s->pi];
+
+    offset = byte_chr (pg->aa_pg.sa.s, pg->aa_pg.sa.len, '\0') + 1;
+    len = pg->aa_pg.sa.len - offset;
+
+    r = fd_write (fd, pg->aa_pg.sa.s + offset, len);
+    if (r < 0)
+    {
+        strerr_warnwu2sys ("write to fd_in of service ", aa_service_name (s));
+        return r;
+    }
+    else if (r < len)
+    {
+        memmove (pg->aa_pg.sa.s + offset, pg->aa_pg.sa.s + offset + r, len - r);
+        pg->aa_pg.sa.len -= r;
+    }
+    else
+    {
+        clear_draw ();
+        /* we put the message into the service output */
+        aa_bs_noflush (AA_OUT, aa_service_name (s));
+        aa_bs_noflush (AA_OUT, ": ");
+        aa_bs_noflush (AA_OUT, pg->aa_pg.sa.s);
+        aa_bs_flush (AA_OUT, "\n");
+
+        remove_fd_from_iop (fd);
+        pg->si = -1;
+        pg->is_drawn = 0;
+        pg->aa_pg.sa.len = 0;
+        s->pi = -1;
+        si_password = -1;
+
+        r = term_set_echo (1);
+        if (r < 0)
+            strerr_warnwu1sys ("reset terminal attributes");
+
+        /* to get to the next one, if any */
+        draw |= DRAW_NEED_PASSWORD;
+    }
+
+    return 0;
 }
 
 static int
@@ -702,6 +918,12 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
                     r = handle_fd (iofd->fd);
                     if (r < 0)
                         strerr_warnwu1sys ("handle fd");
+                }
+                else if (iofd->revents & IOPAUSE_WRITE)
+                {
+                    r = handle_fdw (iofd->fd);
+                    if (r < 0)
+                        strerr_warnwu1sys ("handle fdw");
                 }
                 else if (iofd->revents & IOPAUSE_EXCEPT)
                     close_fd_for (iofd->fd, -1);
