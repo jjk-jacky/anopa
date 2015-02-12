@@ -66,8 +66,11 @@ aa_put_err (const char *name, const char *msg, int end)
     aa_bs_noflush (AA_ERR, "==> ERROR: ");
     aa_is_noflush (AA_ERR, ANSI_HIGHLIGHT_ON);
     aa_bs_noflush (AA_ERR, name);
-    aa_bs_noflush (AA_ERR, ": ");
-    aa_bs_noflush (AA_ERR, msg);
+    if (msg)
+    {
+        aa_bs_noflush (AA_ERR, ": ");
+        aa_bs_noflush (AA_ERR, msg);
+    }
     if (end)
         aa_end_err ();
 }
@@ -79,8 +82,11 @@ aa_put_warn (const char *name, const char *msg, int end)
     aa_bs_noflush (AA_ERR, "==> WARNING: ");
     aa_is_noflush (AA_ERR, ANSI_HIGHLIGHT_ON);
     aa_bs_noflush (AA_ERR, name);
-    aa_bs_noflush (AA_ERR, ": ");
-    aa_bs_noflush (AA_ERR, msg);
+    if (msg)
+    {
+        aa_bs_noflush (AA_ERR, ": ");
+        aa_bs_noflush (AA_ERR, msg);
+    }
     if (end)
         aa_end_warn ();
 }
@@ -92,8 +98,11 @@ aa_put_title (int main, const char *name, const char *title, int end)
     aa_bs_noflush (AA_OUT, (main) ? "==> " : "  -> ");
     aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
     aa_bs_noflush (AA_OUT, name);
-    aa_bs_noflush (AA_OUT, ": ");
-    aa_bs_noflush (AA_OUT, title);
+    if (title)
+    {
+        aa_bs_noflush (AA_OUT, ": ");
+        aa_bs_noflush (AA_OUT, title);
+    }
     if (end)
         aa_end_title ();
 }
