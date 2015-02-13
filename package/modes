@@ -1,3 +1,4 @@
 aa-start                0755
+aa-stop                 0755
 aa-enable               0755
 aa-echo                 0755

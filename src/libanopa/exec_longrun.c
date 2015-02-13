@@ -84,6 +84,18 @@ _exec_longrun (int si, aa_mode mode)
         return -1;
     }
 
+    if (mode == AA_MODE_STOP_ALL)
+    {
+        char dir[l_sn + 5 + sizeof (S6_SUPERVISE_CTLDIR) + 8];
+
+        byte_copy (dir, l_sn, aa_service_name (s));
+        byte_copy (dir + l_sn, 13 + sizeof (S6_SUPERVISE_CTLDIR), "/log/" S6_SUPERVISE_CTLDIR "/control");
+
+        /* ignore any error, starting with the fact that there might not be a
+         * logger for this service */
+        s6_svc_write (dir, "x", 1);
+    }
+
     {
         char dir[l_sn + 1 + sizeof (S6_SUPERVISE_CTLDIR) + 8];
         int r;
@@ -91,7 +103,8 @@ _exec_longrun (int si, aa_mode mode)
         byte_copy (dir, l_sn, aa_service_name (s));
         byte_copy (dir + l_sn, 9 + sizeof (S6_SUPERVISE_CTLDIR), "/" S6_SUPERVISE_CTLDIR "/control");
 
-        r = s6_svc_write (dir, event, 1);
+        r = s6_svc_write (dir, (mode == AA_MODE_STOP_ALL) ? "dx" : event,
+                (mode == AA_MODE_STOP_ALL) ? 2 : 1);
         if (r <= 0)
         {
             tain_addsec_g (&deadline, 1);

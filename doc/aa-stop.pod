@@ -1,0 +1,103 @@
+=head1 NAME
+
+aa-stop - Stop services
+
+=head1 SYNOPSIS
+
+B<aa-stop> [B<-D>] [B<-r> I<repodir>] [B<-a>] [B<-k> I<service>]
+[I<service...>]
+
+=head1 OPTIONS
+
+=over
+
+=item B<-a, --all>
+
+Stops all running/started services. This option is intended to be used during
+stage 3; When used, you shouldn't specify any service on the command line.
+See below for its implications.
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-k, --skip> I<service>
+
+If I<service> was asked to be stopped, silently ignore it. This is intended for
+use alongside B<--all> to keep the catch-all logger service running as long as
+possible (It will be stopped when sending SIGTERM to all running processes.).
+
+=item B<-r, --repodir> I<dir>
+
+Use I<dir> as repository directory. This is where servicedirs will be looked
+for.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-stop>(1) allows to stop one or more services. Unlike B<aa-start>(1) it
+doesn't take into account any dependency relation, and the only services that
+will be stopped are those asked to be stopped.
+
+It does however accounts for I<after> and I<before> to stop services in reverse
+order they were started in, treating I<needs> exactly as it does I<after>.
+
+Refer to B<anopa>(1) for descriptions of servicedirs and service dependencies.
+
+B<aa-stop>(1) works in a very similar manner as B<aa-start>(1), with the
+following differences :
+
+=head1 STOPPING A LONG-RUN SERVICE
+
+B<aa-stop>(1) will check if the service is running, and if not simply announce
+it as not up.
+
+When B<--all> is used, if the service has a logger then command 'x' will be sent
+to said logger's B<s6-supervise> first, so that when the logger exits it isn't
+restarted and B<s6-supervise> exits as well instead.
+
+Similarly, instead of 'd' the commands 'dx' are sent to the service's
+B<s6-supervise>, so that after bringing the service down it exits as well. This
+is obviously all intended to bring the supervised tree all down, as is expected
+when using B<--all> (usually from stage 3).
+
+Note that if a service was not running, no 'x' command is sent so the
+B<s6-supervise> process of the service - and of its logger, if any - are kept
+running. This isn't a problem, since they'll simply exit when sending SIGTERM to
+all process further down in stage 3.
+
+=head1 STOPPING A ONE-SHOT SERVICE
+
+Obviously, the script used is I<stop> and not I<start>. Other than that, the
+process is much the same, so you can refer to B<aa-start>(1) for more.
+
+=head1 BUGS
+
+They're probably crawling somewhere in there... if you happen to catch one,
+(or more) report it and I'll do my best to squash it.
+
+=head1 REPOSITORY
+
+You can find the latest source code of B<anopa> as well as report bugs and/or
+suggest features on its GitHub repository, available at
+L<https://github.com/jjk-jacky/anopa>
+
+=head1 AUTHOR
+
+=over
+
+=item Olivier Brunel <jjk@jjacky.com>
+
+=back

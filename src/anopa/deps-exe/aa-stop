@@ -1,0 +1,6 @@
+util.o
+start-stop.o
+${LIBANOPA}
+-ls6
+-lskarnet
+${TAINNOW_LIB}

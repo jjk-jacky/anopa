@@ -30,7 +30,8 @@ typedef enum
 typedef enum
 {
     AA_MODE_START = 0,
-    AA_MODE_STOP
+    AA_MODE_STOP,
+    AA_MODE_STOP_ALL
 } aa_mode;
 
 typedef enum

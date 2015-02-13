@@ -191,7 +191,7 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
             svst->code = ERR_ALREADY_UP;
             return -ERR_ALREADY_UP;
         }
-        else if (mode == AA_MODE_STOP && !is_up)
+        else if ((mode == AA_MODE_STOP || mode == AA_MODE_STOP_ALL) && !is_up)
         {
             /* if not up, we "fail" because we can't stop it */
             aa_service (si)->ls = AA_LOAD_FAIL;
@@ -485,7 +485,8 @@ aa_scan_mainlist (aa_scan_cb scan_cb, aa_mode mode)
 
         if (genalloc_len (int, &s->after) == 0
                 && ((mode == AA_MODE_START && s->st.event != AA_EVT_STARTING)
-                    || (mode == AA_MODE_STOP && s->st.event != AA_EVT_STOPPING))
+                    || ((mode == AA_MODE_STOP || mode == AA_MODE_STOP_ALL)
+                        && s->st.event != AA_EVT_STOPPING))
                 && aa_exec_service (si, mode) < 0)
             /* failed to exec service, was removed from main_list, so we need to
              * rescan from top */
