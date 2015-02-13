@@ -136,6 +136,12 @@ copy_dir (const char        *src,
     dir = opendir (src);
     if (!dir)
         return -ERR_IO;
+
+    if (depth == 0 && (flags & (_AA_FLAG_IS_SERVICEDIR | AA_FLAG_SKIP_DOWN))
+            == (_AA_FLAG_IS_SERVICEDIR | AA_FLAG_SKIP_DOWN))
+        /* treat as if there'e one, so don't create it */
+        has.down = 1;
+
     errno = 0;
     for (;;)
     {

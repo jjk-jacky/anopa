@@ -4,7 +4,7 @@ aa-enable - Enable services, i.e. copy servicedirs to repodir
 
 =head1 SYNOPSIS
 
-B<aa-enable> [B<-D>] [B<-r> I<repodir>] [B<-S> I<sourcedir>]
+B<aa-enable> [B<-D>] [B<-r> I<repodir>] [B<-k> I<service>] [B<-S> I<sourcedir>]
 [B<-s> I<sourcedir>] [B<-l> I<listdir>] [B<-n>] [B<-w>] [I<service...>]
 
 =head1 OPTIONS
@@ -21,6 +21,13 @@ shown on console and logged.
 =item B<-h, --help>
 
 Show help screen and exit.
+
+=item B<-k, --skip-down> I<service>
+
+When (if) enabling I<service> do not create a file I<down> even it there's none
+and it is a longrun service. This is intended to be used during stage 1, for
+the catch-all logger service, which needs to be started automatically by
+B<s6-svscan> (to unblock & trigger stage 2).
 
 =item B<-l, --listdir> I<dir>
 
@@ -94,9 +101,10 @@ merged/copied over into the servicedir. This allows to specify service-specific
 configuration, or could possibly be used to overwrite an actual script.
 
 - If the service is a long-run, an empty regular file I<down> is created (unless
-it already existed) to ensure the service won't be auto-started by B<s6-svscan>,
-and a symlink is added to the servicedir into the I<.scandir> sub-directory of
-I<repodir>.
+it already existed, or the service was specified to B<--skip-down>) to ensure
+the service won't be auto-started by B<s6-svscan>, and a symlink is added to the
+servicedir into the I<.scandir> sub-directory of I<repodir> (even if the service
+was specified to B<--skip-down>).
 
 =head2 Special case: Instances
 

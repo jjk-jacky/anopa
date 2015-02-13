@@ -38,6 +38,7 @@ static stralloc names = STRALLOC_ZERO;
 static int nb_enabled = 0;
 static genalloc ga_failed = GENALLOC_ZERO;
 static genalloc ga_next = GENALLOC_ZERO;
+static const char *skip = NULL;
 
 static void
 warn_cb (const char *name, int err)
@@ -86,7 +87,10 @@ enable_service (const char *name, int from_next)
     else
         offset = from_next - 1;
 
+    if (skip && str_equal (cur_name, skip))
+        flags |= AA_FLAG_SKIP_DOWN;
     r = aa_enable_service (name, warn_cb, flags, ae_cb);
+    flags &= ~AA_FLAG_SKIP_DOWN;
     if (r < 0)
     {
         int e = errno;
@@ -136,6 +140,7 @@ dieusage (void)
             " -r, --repodir DIR             Use DIR as repository directory\n"
             " -S, --reset-source DIR        Reset list of source directories to DIR\n"
             " -s, --source DIR              Add DIR as source directories\n"
+            " -k, --skip-down SERVICE       Don't create file 'down' for SERVICE\n"
             " -l, --listdir DIR             Use DIR to list services to enable\n"
             " -n, --no-needs                Don't auto-enable services from 'needs'\n"
             " -w, --no-wants                Don't auto-enable services from 'wants'\n"
@@ -162,20 +167,21 @@ main (int argc, char * const argv[])
     for (;;)
     {
         struct option longopts[] = {
-            { "help",               no_argument,        NULL,   'h' },
-            { "version",            no_argument,        NULL,   'V' },
             { "double-output",      no_argument,        NULL,   'D' },
-            { "repodir",            required_argument,  NULL,   'r' },
+            { "help",               no_argument,        NULL,   'h' },
+            { "skip-down",          required_argument,  NULL,   'k' },
             { "listdir",            required_argument,  NULL,   'l' },
-            { "source",             required_argument,  NULL,   's' },
-            { "reset-source",       required_argument,  NULL,   'S' },
             { "no-needs",           no_argument,        NULL,   'n' },
+            { "repodir",            required_argument,  NULL,   'r' },
+            { "reset-source",       required_argument,  NULL,   'S' },
+            { "source",             required_argument,  NULL,   's' },
+            { "version",            no_argument,        NULL,   'V' },
             { "no-wants",           no_argument,        NULL,   'w' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "hVDr:l:s:S:nw", longopts, NULL);
+        c = getopt_long (argc, argv, "Dhk:l:nr:S:s:vw", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -184,14 +190,22 @@ main (int argc, char * const argv[])
                 mode_both = 1;
                 break;
 
-            case 'r':
-                unslash (optarg);
-                path_repo = optarg;
+            case 'k':
+                skip = optarg;
                 break;
 
             case 'l':
                 unslash (optarg);
                 path_list = optarg;
+                break;
+
+            case 'n':
+                flags &= ~AA_FLAG_AUTO_ENABLE_NEEDS;
+                break;
+
+            case 'r':
+                unslash (optarg);
+                path_repo = optarg;
                 break;
 
             case 'S':
@@ -204,10 +218,6 @@ main (int argc, char * const argv[])
                     strerr_diefu1sys (1, "stralloc_catb");
                 break;
 
-            case 'n':
-                flags &= ~AA_FLAG_AUTO_ENABLE_NEEDS;
-                break;
-
             case 'w':
                 flags &= ~AA_FLAG_AUTO_ENABLE_WANTS;
                 break;
@@ -215,6 +225,7 @@ main (int argc, char * const argv[])
             case 'V':
                 aa_die_version ();
 
+            case 'h':
             default:
                 dieusage ();
         }
