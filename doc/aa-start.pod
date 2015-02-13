@@ -1,0 +1,155 @@
+=head1 NAME
+
+aa-start - Start services
+
+=head1 SYNOPSIS
+
+B<aa-start> [B<-D>] [B<-r> I<repodir>] [B<-l> I<listdir>] [B<-w>]
+[I<service...>]
+
+=head1 OPTIONS
+
+=over
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-l, --listdir> I<dir>
+
+Use I<dir> to list services to start. Only one can be set, if specified more
+than once the last one will be used.
+
+=item B<-r, --repodir> I<dir>
+
+Use I<dir> as repository directory. This is where servicedirs will be looked
+for.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=item B<-w, --no-wants>
+
+Don't auto-start any services listed under directory I<wants> of a service
+being (auto-)started.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-start>(1) allows to start one or more services. By default, any services
+found in directories I<needs> or I<wants> are also auto-started, though it is
+possible not to auto-start the ones from I<wants> via B<--no-wants>.
+
+Refer to B<anopa>(1) for descriptions of servicedirs and service dependencies.
+
+=head1 STARTING A LONG-RUN SERVICE
+
+When starting a long-run service, B<aa-start>(1) first connects to the I<event>
+fifodir of the service, then checks (with B<s6>) if the service is already up or
+not. If so, it disconnects and the service is announced as already up and
+process continues as expected.
+
+If not, B<aa-start>(1) sends the command to bring it up and removes the I<down>
+file (if present). It then waits for event 'u' to be triggered, to (disconnect
+and) announce the service as started.
+
+=head1 STARTING A ONE-SHOT SERVICE
+
+When starting a one-shot service, if no file I<start> exists the service is
+simply announced as started right away. Else, B<aa-start>(1) forks and the child
+goes into the servicedir (making it its current working directory) then executes
+into I<start>.
+
+Pipes are set up, so the script's stdin (fd 0) is a pipe connected to
+B<aa-start>(1), as are its stdout & stderr (fd 1 & 2), and lastly another pipe
+is set up on file descriptor 3.
+
+Any and all lines written on fd 1 and 2 will be printed on console by
+B<aa-start>(1), prefixed with the service name.
+
+This last fd can be used by the service for special cases.
+
+=head2 Showing progress bars
+
+A service might want to show the user a progress bar as they perform long
+operations. This can be done simply by writing LF-terminated lines to fd 3
+made of the following space-separated fields :
+
+=over
+
+=item 1. Step number
+
+In case more than one steps will be performed, each having its own progress bar.
+If only one progress bar will be used, use 0.
+
+=item 2. Current value
+
+The current value. This is an integer representing the current value of the
+operation, from 0 to the maximum value (next field).
+
+=item 3. Maximum value
+
+The maximum value. Note that when the current value and the maximum value are
+the same, a progress bar filled to 100% will be shown; It is only removed from
+the screen once the process execution is over (or when the fd is closed).
+
+=item 4. Description
+
+This last field can include spaces, as it goes until the LF. It is an optional
+(small) description to be added alongside the progress bar, e.g. to indicate
+what is being performed.
+
+=back
+
+The knowledgeable reader will have noticed that this format correspond to that
+used by B<fsck>(8) and its B<-C> option; This is no coincidence. To have
+progress bars shown for a service performing an fsck, simply run it with `-C3`
+as option.
+
+=head2 Asking user for a password
+
+A service might need to ask the user to input a password, e.g. to open an
+encrypted device. This can also be done with a little help from our friend, in
+file descriptor 3.
+
+First, the service needs to write an LF-terminated line to its fd 3, the message
+asking the user, prefixed with "< " (less than sign and a space). For example,
+write "< Please enter passphrase to open /dev/sda2" (ending with a LF).
+
+Then, simply read on stdin (fd 0) what the user inputed. B<aa-start>(1) takes
+care of showing the message to the user (prefixed with the service name) and
+disabling echoing input on the terminal.
+
+It is possible to ask again for another input (e.g. if password failed) by
+simply doing the same again.
+
+Note that it is not possible to show a progress bar while asking for user input,
+not that there should be a need for it anyways.
+
+=head1 BUGS
+
+They're probably crawling somewhere in there... if you happen to catch one,
+(or more) report it and I'll do my best to squash it.
+
+=head1 REPOSITORY
+
+You can find the latest source code of B<anopa> as well as report bugs and/or
+suggest features on its GitHub repository, available at
+L<https://github.com/jjk-jacky/anopa>
+
+=head1 AUTHOR
+
+=over
+
+=item Olivier Brunel <jjk@jjacky.com>
+
+=back

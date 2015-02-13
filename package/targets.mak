@@ -5,6 +5,7 @@ aa-echo
 
 DOC_TARGETS := \
 doc/anopa.1 \
+doc/aa-start.1 \
 doc/aa-enable.1 \
 doc/aa-echo.1
 
