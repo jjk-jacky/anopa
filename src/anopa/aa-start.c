@@ -214,17 +214,17 @@ main (int argc, char * const argv[])
     for (;;)
     {
         struct option longopts[] = {
-            { "help",               no_argument,        NULL,   'h' },
-            { "version",            no_argument,        NULL,   'V' },
             { "double-output",      no_argument,        NULL,   'D' },
-            { "repodir",            required_argument,  NULL,   'r' },
+            { "help",               no_argument,        NULL,   'h' },
             { "listdir",            required_argument,  NULL,   'l' },
+            { "repodir",            required_argument,  NULL,   'r' },
+            { "version",            no_argument,        NULL,   'V' },
             { "no-wants",           no_argument,        NULL,   'w' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "hVDr:l:w", longopts, NULL);
+        c = getopt_long (argc, argv, "Dhl:r:Vw", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -233,14 +233,14 @@ main (int argc, char * const argv[])
                 mode_both = 1;
                 break;
 
-            case 'r':
-                unslash (optarg);
-                path_repo = optarg;
-                break;
-
             case 'l':
                 unslash (optarg);
                 path_list = optarg;
+                break;
+
+            case 'r':
+                unslash (optarg);
+                path_repo = optarg;
                 break;
 
             case 'w':
@@ -250,6 +250,7 @@ main (int argc, char * const argv[])
             case 'V':
                 aa_die_version ();
 
+            case 'h':
             default:
                 dieusage ();
         }
