@@ -197,12 +197,12 @@ main (int argc, char * const argv[])
             break;
         switch (c)
         {
-            case 'D':
-                mode_both = 1;
-                break;
-
             case 'a':
                 all = 1;
+                break;
+
+            case 'D':
+                mode_both = 1;
                 break;
 
             case 'h':

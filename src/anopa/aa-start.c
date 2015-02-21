@@ -246,12 +246,12 @@ main (int argc, char * const argv[])
                 path_repo = optarg;
                 break;
 
+            case 'V':
+                aa_die_version ();
+
             case 'w':
                 no_wants = 1;
                 break;
-
-            case 'V':
-                aa_die_version ();
 
             default:
                 dieusage (1);

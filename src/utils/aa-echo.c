@@ -54,24 +54,29 @@ main (int argc, char * const argv[])
     for (;;)
     {
         struct option longopts[] = {
-            { "help",               no_argument,        NULL,   'h' },
-            { "version",            no_argument,        NULL,   'V' },
             { "double-output",      no_argument,        NULL,   'D' },
+            { "error",              no_argument,        NULL,   'e' },
+            { "help",               no_argument,        NULL,   'h' },
             { "title",              no_argument,        NULL,   'T' },
             { "title2",             no_argument,        NULL,   't' },
+            { "version",            no_argument,        NULL,   'V' },
             { "warning",            no_argument,        NULL,   'w' },
-            { "error",              no_argument,        NULL,   'e' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "hVDTtwe", longopts, NULL);
+        c = getopt_long (argc, argv, "DehTtVw", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
         {
             case 'D':
                 mode_both = 1;
+                break;
+
+            case 'e':
+                put = aa_put_err;
+                where = AA_ERR;
                 break;
 
             case 'h':
@@ -87,18 +92,13 @@ main (int argc, char * const argv[])
                 where = AA_OUT;
                 break;
 
+            case 'V':
+                aa_die_version ();
+
             case 'w':
                 put = aa_put_warn;
                 where = AA_ERR;
                 break;
-
-            case 'e':
-                put = aa_put_err;
-                where = AA_ERR;
-                break;
-
-            case 'V':
-                aa_die_version ();
 
             default:
                 dieusage (1);

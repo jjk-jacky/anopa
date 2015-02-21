@@ -181,7 +181,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "Dhk:l:nr:S:s:vw", longopts, NULL);
+        c = getopt_long (argc, argv, "Dhk:l:nr:S:s:Vw", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -221,12 +221,12 @@ main (int argc, char * const argv[])
                     strerr_diefu1sys (1, "stralloc_catb");
                 break;
 
+            case 'V':
+                aa_die_version ();
+
             case 'w':
                 flags &= ~AA_FLAG_AUTO_ENABLE_WANTS;
                 break;
-
-            case 'V':
-                aa_die_version ();
 
             default:
                 dieusage (1);
