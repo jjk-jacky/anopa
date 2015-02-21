@@ -9,6 +9,7 @@ aa-echo \
 aa-kill \
 aa-mount \
 aa-pivot \
+aa-reboot \
 aa-sync \
 aa-terminate \
 aa-test \
@@ -22,6 +23,7 @@ aa-enable.1 \
 aa-kill.1 \
 aa-mount.1 \
 aa-pivot.1 \
+aa-reboot.1 \
 aa-start.1 \
 aa-stop.1 \
 aa-sync.1 \

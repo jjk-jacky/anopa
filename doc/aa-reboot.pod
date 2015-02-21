@@ -1,0 +1,42 @@
+=head1 NAME
+
+aa-reboot - Reboots, powers off or halts the machine
+
+=head1 SYNOPSIS
+
+B<aa-reboot> [B<-r> | B<-p> | B<-H>]
+
+=head1 OPTIONS
+
+=over
+
+=item B<-H, --halt>
+
+Halts the machine.
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-p, --poweroff>
+
+Powers off the machine.
+
+=item B<-r, --reboot>
+
+Reboots the machine. This is the default if no other option is specified.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-reboot>(1) is a simple wrapper around a B<reboot>(2) call.
+
+You should never trigger it manually/directly. Instead, use B<aa-shutdown>(1),
+that will send the appropriate commands to B<s6-svscan> (PID 1) in order to
+properly shut down the system, before (probably) ending with a call to
+B<aa-reboot>(1) at the end of stage 4.

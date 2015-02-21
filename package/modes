@@ -4,6 +4,7 @@ aa-enable               0755
 aa-kill                 0755
 aa-mount                0755
 aa-pivot                0755
+aa-reboot               0755
 aa-start                0755
 aa-stop                 0755
 aa-sync                 0755
