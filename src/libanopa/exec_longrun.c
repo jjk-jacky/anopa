@@ -21,6 +21,7 @@ _exec_longrun (int si, aa_mode mode)
     tain_t deadline;
     int is_start = (mode == AA_MODE_START) ? 1 : 0;
     char *event = (is_start) ? "u" : "d";
+    int already = 0;
 
     byte_copy (fifodir, l_sn, aa_service_name (s));
     fifodir[l_sn] = '/';
@@ -51,6 +52,7 @@ _exec_longrun (int si, aa_mode mode)
     {
         tain_now_g ();
 
+        already = 1;
         /* already there; unsubcribe */
         ftrigr_unsubscribe_g (&_aa_ft, s->ft_id, &deadline);
         s->ft_id = 0;
@@ -62,27 +64,33 @@ _exec_longrun (int si, aa_mode mode)
         if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
             strerr_warnwu2sys ("write service status file for ", aa_service_name (s));
 
-        if (_exec_cb)
-            _exec_cb (si, (is_start) ? -ERR_ALREADY_UP: -ERR_NOT_UP, 0);
-
-        /* this was not a failure, but we return -1 to trigger a
-         * aa_scan_mainlist() anyways, since the service changed state */
-        return -1;
+        /* we still process it. Because we checked the service state (from s6)
+         * before adding it to the "treansaction" (i.e. in
+         * aa_ensure_service_loaded()) and it wasn't there already.
+         * IOW this is likely e.g. that it crashed since then, but it isn't
+         * really down, or something. So make sure we do send the request to
+         * s6-supervise, so it isn't restarted, or indeed brought down if it's
+         * happening right now. Also in STOP_ALL this sends the 'x' event to
+         * both supervise (logger & service) as needed as well.
+         */
     }
-    tain_now_g ();
-
-    s->st.event = (is_start) ? AA_EVT_STARTING : AA_EVT_STOPPING;
-    tain_copynow (&s->st.stamp);
-    aa_service_status_set_msg (&s->st, "");
-    if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
+    else
     {
-        s->st.event = (is_start) ? AA_EVT_STARTING_FAILED : AA_EVT_STOPPING_FAILED;
-        s->st.code = ERR_WRITE_STATUS;
-        aa_service_status_set_msg (&s->st, error_str (errno));
+        tain_now_g ();
 
-        if (_exec_cb)
-            _exec_cb (si, s->st.event, 0);
-        return -1;
+        s->st.event = (is_start) ? AA_EVT_STARTING : AA_EVT_STOPPING;
+        tain_copynow (&s->st.stamp);
+        aa_service_status_set_msg (&s->st, "");
+        if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
+        {
+            s->st.event = (is_start) ? AA_EVT_STARTING_FAILED : AA_EVT_STOPPING_FAILED;
+            s->st.code = ERR_WRITE_STATUS;
+            aa_service_status_set_msg (&s->st, error_str (errno));
+
+            if (_exec_cb)
+                _exec_cb (si, s->st.event, 0);
+            return -1;
+        }
     }
 
     if (mode == AA_MODE_STOP_ALL)
@@ -106,7 +114,7 @@ _exec_longrun (int si, aa_mode mode)
 
         r = s6_svc_write (dir, (mode == AA_MODE_STOP_ALL) ? "dx" : event,
                 (mode == AA_MODE_STOP_ALL) ? 2 : 1);
-        if (r <= 0)
+        if (r <= 0 && !already)
         {
             tain_addsec_g (&deadline, 1);
             ftrigr_unsubscribe_g (&_aa_ft, s->ft_id, &deadline);
@@ -135,6 +143,16 @@ _exec_longrun (int si, aa_mode mode)
         byte_copy (buf + l_sn, 6, "/down");
 
         unlink (buf);
+    }
+
+    if (already)
+    {
+        if (_exec_cb)
+            _exec_cb (si, (is_start) ? -ERR_ALREADY_UP: -ERR_NOT_UP, 0);
+
+        /* this was not a failure, but we return -1 to trigger a
+         * aa_scan_mainlist() anyways, since the service changed state */
+        return -1;
     }
 
     if (_exec_cb)
