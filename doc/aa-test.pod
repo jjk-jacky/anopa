@@ -1,0 +1,67 @@
+=head1 NAME
+
+aa-test - Test file types
+
+=head1 SYNOPSIS
+
+B<aa-test> [B<-b> | B<-d> | B<-e> | B<-f> | B<-L> | B<-p> | B<-S> | B<-r> |
+B<-w> | B<-x>] I<FILE>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-b, --block>
+
+Test whether I<FILE> exists and is a block special
+
+=item B<-d, --directory>
+
+Test whether I<FILE> exists and is a directory
+
+=item B<-e, --exists>
+
+Test whether I<FILE> exists
+
+=item B<-f, --file>
+
+Test whether I<FILE> exists and is a regular file
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-L, --symlink>
+
+Test whether I<FILE> exists and is a symlink
+
+=item B<-p, --pipe>
+
+Test whether I<FILE> exists and is a named pipe (FIFO)
+
+=item B<-r, --read>
+
+Test whether I<FILE> exists and read permission is granted
+
+=item B<-S, --socket>
+
+Test whether I<FILE> exists and is a socket
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=item B<-w, --write>
+
+Test whether I<FILE> exists and write permission is granted
+
+=item B<-x, --execute>
+
+Test whether I<FILE> exists and execute (search) permission is granted
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-test>(1) is a simple tool to check file types/permissions as specified, and
+return 0 when true, else 1.
