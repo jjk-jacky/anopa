@@ -1,0 +1,59 @@
+=head1 NAME
+
+aa-kill - Send signals to (almost) all processes
+
+=head1 SYNOPSIS
+
+B<aa-kill> [B<-u>] [B<-t>] [B<-k>] [B<-s>]
+
+=head1 OPTIONS
+
+=over
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-k, --kill>
+
+Send SIGKILL
+
+=item B<-s, --skip>
+
+Skip processes whose argv[0][0] is '@' This can be useful to ignore some
+long-running processes that needs to be dealt with e.g. back in the initramfs,
+only after umounting the root filesystem.
+
+=item B<-t, --term>
+
+Send SIGTERM then SIGCONT
+
+=item B<-u, --hup>
+
+Send SIGHUP
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-kill>(1) can be used to send signals to (almost) all running processes. It
+is for example used during stage 3, after B<aa-stop>(1) and before
+B<aa-pivot>(1) to kill any & all procesess that may have not been stopped
+otherwise.
+
+By default it sends nothing, so at least one of B<--hup>, B<--term> or B<--kill>
+must be specified. You can combine them to send all specified signals. They will
+always be sent in that order (SIGHUP, SIGTERM/SIGCONT, SIGKILL).
+
+If B<--skip> was not used, signals are sent using B<kill>(3) with a pid of -1.
+If B<--skip> was used, B<aa-kill>(1) will then scan through I</proc> to list all
+running processes, and check their argv[0][0] (i.e. I</proc/PID/cmdline>) to
+skip any that starts with an '@' Also skipped will be process without cmdline
+(i.e. kernel threads), PID 1, and B<aa-kill>(1) itself.
+
+Note that B<aa-kill>(1) will ignore the signals it sends when B<--skip> isn't
+used, though that won't do much against SIGKILL.
