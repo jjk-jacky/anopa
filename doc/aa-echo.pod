@@ -4,7 +4,7 @@ aa-echo - Shows a message
 
 =head1 SYNOPSIS
 
-B<aa-echo> [B<-D>] [B<-T> | B<-t> | B<-w> | B<-e>] I<MESSAGE...>
+B<aa-echo> [B<-D>] [B<-T> | B<-t> | B<-w> | B<-e> | B<-n>] I<MESSAGE...>
 
 =head1 OPTIONS
 
@@ -25,6 +25,12 @@ printed before the message.
 =item B<-h, --help>
 
 Show help screen and exit.
+
+=item B<-n, --normal>
+
+Show I<MESSAGE...> as reglar text, i.e. without any prefix or color. This can be
+used for simple echo, but make sure to see how arguments making up I<MESSAGE...>
+are processed.
 
 =item B<-T, --title>
 
@@ -75,9 +81,13 @@ Set color to yellow.
 
 Set color to red.
 
+=item B<+w, +white>
+
+Set color to white.
+
 =item B<+n, +normal>
 
-Reset color to "normal" aka white.
+Reset color to normal.
 
 =item B<++TEXT>
 

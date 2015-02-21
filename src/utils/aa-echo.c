@@ -28,6 +28,7 @@ dieusage (int rc)
             " -t, --title2                  Show a secondary title\n"
             " -w, --warning                 Show a warning\n"
             " -e, --error                   Show an error\n"
+            " -n, --normal                  Show \"normal\" text\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             "\n"
@@ -37,7 +38,8 @@ dieusage (int rc)
             " +b, +blue                     Set color to blue\n"
             " +y, +yellow                   Set color to yellow\n"
             " +r, +red                      Set color to red\n"
-            " +n, +normal                   Set color to normal (white)\n"
+            " +w, +white                    Set color to white\n"
+            " +n, +normal                   Set color to normal\n"
             " ++TEXT                        To just print +TEXT\n"
             );
 }
@@ -57,6 +59,7 @@ main (int argc, char * const argv[])
             { "double-output",      no_argument,        NULL,   'D' },
             { "error",              no_argument,        NULL,   'e' },
             { "help",               no_argument,        NULL,   'h' },
+            { "normal",             no_argument,        NULL,   'n' },
             { "title",              no_argument,        NULL,   'T' },
             { "title2",             no_argument,        NULL,   't' },
             { "version",            no_argument,        NULL,   'V' },
@@ -65,7 +68,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "DehTtVw", longopts, NULL);
+        c = getopt_long (argc, argv, "DehnTtVw", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -81,6 +84,11 @@ main (int argc, char * const argv[])
 
             case 'h':
                 dieusage (0);
+
+            case 'n':
+                put = NULL;
+                where = AA_OUT;
+                break;
 
             case 'T':
                 put = put_title;
@@ -111,7 +119,8 @@ main (int argc, char * const argv[])
         dieusage (1);
 
     aa_init_output (mode_both);
-    put ("", NULL, 0);
+    if (put)
+        put ("", NULL, 0);
     for (i = 0; i < argc; ++i)
     {
         if (*argv[i] == '+')
@@ -124,8 +133,10 @@ main (int argc, char * const argv[])
                 aa_is_noflush (where, ANSI_HIGHLIGHT_YELLOW_ON);
             else if (str_equal (argv[i], "+r") || str_equal (argv[i], "+red"))
                 aa_is_noflush (where, ANSI_HIGHLIGHT_RED_ON);
-            else if (str_equal (argv[i], "+n") || str_equal (argv[i], "+normal"))
+            else if (str_equal (argv[i], "+w") || str_equal (argv[i], "+white"))
                 aa_is_noflush (where, ANSI_HIGHLIGHT_ON);
+            else if (str_equal (argv[i], "+n") || str_equal (argv[i], "+normal"))
+                aa_is_noflush (where, ANSI_HIGHLIGHT_OFF);
             else
                 aa_bs_noflush (where, argv[i] + 1);
         }
