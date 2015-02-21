@@ -1,0 +1,37 @@
+=head1 NAME
+
+aa-umount - Unmount a filesystem
+
+=head1 SYNOPSIS
+
+B<aa-umount> [B<-f> | B<-l>] I<MOUNTPOINT>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-f, --force>
+
+Force unmount even if busy (only for NFS moutns). This can cause data loss.
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-l, --lazy>
+
+Perform a lazy unmount: make the mount point unavailable for new accesses, and
+actually perform the unmount when the mount point ceases to be busy.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-umount>(1) unmounts the specified mount point. It isn't possible to unmount
+a filesystem if it is busy, e.g. there are still open files. This could even be
+caused by B<aa-umount>(1) itself; It is possible to avoid this using the
+B<--lazy> option.

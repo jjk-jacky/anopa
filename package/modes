@@ -6,3 +6,4 @@ aa-mount                0755
 aa-pivot                0755
 aa-start                0755
 aa-stop                 0755
+aa-umount               0755
