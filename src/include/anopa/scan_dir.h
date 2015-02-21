@@ -3,6 +3,7 @@
 #define AA_SCAN_DIR_H
 
 #include <skalibs/direntry.h>
+#include <skalibs/stralloc.h>
 
 typedef int (*aa_sd_it_fn) (direntry *d, void *data);
 
