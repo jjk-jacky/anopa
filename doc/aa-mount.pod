@@ -1,0 +1,71 @@
+=head1 NAME
+
+aa-mount - Mount a filesystem
+
+=head1 SYNOPSIS
+
+B<aa-mount> [B<-B> | B<-M>] [B<-r> | B<-w>] [B<-t> I<FSTYPE>] [B<-o> I<OPTIONS>]
+I<DEVICE> I<MOUNTPOINT>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-B, --bind>
+
+Remount subtree specified as I<DEVICE> onto I<MOUNTPOINT>, making it available
+in the two places. Note that the filesystem moun options remain the same and
+cannot be changed via B<--options>, you need a second call to change options,
+e.g:
+    aa-mount -B olddir newdir
+    aa-mount -o remount,ro,bind olddir newdir
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-M, --move>
+
+Move subtree specified as I<DEVICE> to I<MOUNTPOINT> So the content will be
+atomically moved from its old location (I<DEVICE>) into the new one
+(I<MOUNTPOINT>).
+
+=item B<-o, --options> I<OPTIONS>
+
+Set I<OPTIONS> as mount options to be used. They will be combined with any other
+options specified.
+
+=item B<-r, --read-only>
+
+Mount filesystem read-only
+
+=item B<-t, --fstype> I<FSTYPE>
+
+Use I<FSTYPE> as type of filesystem. Note that "auto" isn't supported.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=item B<-w, --read-write>
+
+Mount filesystem read-write.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-mount>(1) mounts the specified filesystem using to the given options. It
+does not read I</etc/fstab> (or any other file), and therefore always requires
+both I<DEVICE> and I<MOUNTPOINT> to be specified; It also doesn't support an
+option to mount all filesystems from anywhere.
+
+This also means that when using option remount you need to specify all the
+options to be set, since B<aa-mount>(1) will not read I</etc/fstab> to combine
+options from there with those on the command line, as B<mount>(8) does.
+
+Supported options are: defaults, ro, rw, bind, move, async, atime, noatime, dev,
+nodev, diratime, nodiratime, dirsync, exec, noexec, mand, nomand, relatime,
+norelatime, strictatime, nostrictatime, suid, nosuid, remount, sync.
+
+Any other options will be given to the kernel as-is.

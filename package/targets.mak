@@ -7,6 +7,7 @@ LIBEXEC_TARGETS := \
 aa-chroot \
 aa-echo \
 aa-kill \
+aa-mount \
 aa-pivot
 
 DOC_TARGETS := \
@@ -18,6 +19,7 @@ aa-pivot.1 \
 aa-start.1 \
 aa-stop.1 \
 aa-kill.1 \
+aa-mount.1
 
 ifdef DO_ALLSTATIC
 LIBANOPA := libanopa.a
