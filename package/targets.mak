@@ -4,12 +4,14 @@ aa-start \
 aa-stop
 
 LIBEXEC_TARGETS := \
+aa-chroot \
 aa-echo \
 aa-kill \
 aa-pivot
 
 DOC_TARGETS := \
 anopa.1 \
+aa-chroot.1 \
 aa-echo.1 \
 aa-enable.1 \
 aa-pivot.1 \

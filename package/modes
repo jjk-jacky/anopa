@@ -1,3 +1,4 @@
+aa-chroot               0755
 aa-echo                 0755
 aa-enable               0755
 aa-kill                 0755

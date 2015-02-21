@@ -1,0 +1,30 @@
+=head1 NAME
+
+aa-chroot - Execute command within given chroot jail
+
+=head1 SYNOPSIS
+
+B<aa-chroot> I<NEWROOT> I<COMMAND> [I<ARG...>]
+
+=head1 OPTIONS
+
+=over
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-chroot>(1) sets the root filesytem for the current process to I<NEWROOT>,
+which must exists, goes into this directory, chroots into it and chdir into the
+(new) root ("/"). It then executes into I<COMMAND> (searched under the new root)
+with the given I<ARG> (if any).
+
+Note that B<aa-chroot>(1)'s parent process if unaffected by the change.
