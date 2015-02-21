@@ -132,7 +132,7 @@ main (int argc, char * const argv[])
         else
             aa_bs_noflush (where, argv[i]);
     }
-    aa_bs_flush (where, "\n");
+    aa_bs_end (where);
 
     return 0;
 }
