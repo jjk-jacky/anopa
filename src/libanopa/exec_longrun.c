@@ -46,7 +46,8 @@ _exec_longrun (int si, aa_mode mode)
     }
 
     if (s6_svstatus_read (aa_service_name (s), &st6)
-            && ((is_start && !!st6.pid) || (!is_start && !st6.pid)))
+            && ((is_start && (st6.pid && !st6.flagfinishing))
+                || (!is_start && !(st6.pid && !st6.flagfinishing))))
     {
         tain_now_g ();
 

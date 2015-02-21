@@ -171,7 +171,7 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
             if (s6_svstatus_read (aa_service_name (aa_service (si)), &st6))
             {
                 chk_st = 0;
-                is_up = !!st6.pid;
+                is_up = st6.pid && !st6.flagfinishing;
             }
             tain_now_g ();
         }
