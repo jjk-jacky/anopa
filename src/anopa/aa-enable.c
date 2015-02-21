@@ -116,7 +116,7 @@ enable_service (const char *name, int from_next)
 static int
 it_list (direntry *d, void *data)
 {
-    if (d->d_type != DT_DIR && d->d_type != DT_UNKNOWN)
+    if (d->d_type != DT_DIR)
         enable_service (d->d_name, 0);
     else
     {

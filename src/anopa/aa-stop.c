@@ -134,17 +134,8 @@ add_service (const char *name)
 static int
 it_stop (direntry *d, void *data)
 {
-    if (*d->d_name == '.' || (d->d_type != DT_DIR && d->d_type != DT_UNKNOWN))
+    if (*d->d_name == '.' || d->d_type != DT_DIR)
         return 0;
-    else if (d->d_type == DT_UNKNOWN)
-    {
-        struct stat st;
-
-        if (stat (d->d_name, &st) < 0)
-            return 0;
-        if (!S_ISDIR (st.st_mode))
-            return 0;
-    }
 
     tain_now_g ();
     add_service (d->d_name);

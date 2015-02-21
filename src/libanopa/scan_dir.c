@@ -48,10 +48,14 @@ aa_scan_dir (stralloc *sa, int files_only, aa_sd_it_fn iterator, void *data)
             rr = stat (sa->s, &st);
             sa->len = l;
             sa->s[l - 1] = '\0';
-            if (rr != 0 || (!S_ISREG (st.st_mode) && (files_only || !S_ISDIR (st.st_mode))))
+            if (rr != 0)
                 continue;
+            if (S_ISREG (st.st_mode))
+                d->d_type = DT_REG;
+            else if (S_ISDIR (st.st_mode))
+                d->d_type = DT_DIR;
         }
-        else if (d->d_type != DT_REG && (files_only || d->d_type != DT_DIR))
+        if (d->d_type != DT_REG && (files_only || d->d_type != DT_DIR))
             continue;
 
         r = iterator (d, data);
