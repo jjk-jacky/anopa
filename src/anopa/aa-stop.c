@@ -153,9 +153,9 @@ it_stop (direntry *d, void *data)
 }
 
 static void
-dieusage (void)
+dieusage (int rc)
 {
-    aa_die_usage ("[OPTION...] [service...]",
+    aa_die_usage (rc, "[OPTION...] [service...]",
             " -D, --double-output           Enable double-output mode\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
             " -k, --skip SERVICE            Skip (do not stop) SERVICE\n"
@@ -205,6 +205,9 @@ main (int argc, char * const argv[])
                 all = 1;
                 break;
 
+            case 'h':
+                dieusage (0);
+
             case 'k':
                 skip = optarg;
                 break;
@@ -217,9 +220,8 @@ main (int argc, char * const argv[])
             case 'V':
                 aa_die_version ();
 
-            case 'h':
             default:
-                dieusage ();
+                dieusage (1);
         }
     }
     argc -= optind;
@@ -230,7 +232,7 @@ main (int argc, char * const argv[])
     is_utf8 = is_locale_utf8 ();
 
     if ((all && argc > 0) || (!all && argc < 1))
-        dieusage ();
+        dieusage (1);
 
     if (aa_init_repo (path_repo, AA_REPO_WRITE) < 0)
         strerr_diefu2sys (ERR_IO, "init repository ", path_repo);

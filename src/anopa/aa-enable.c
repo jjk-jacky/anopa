@@ -133,9 +133,9 @@ it_list (direntry *d, void *data)
 }
 
 static void
-dieusage (void)
+dieusage (int rc)
 {
-    aa_die_usage ("[OPTION...] [service...]",
+    aa_die_usage (rc, "[OPTION...] [service...]",
             " -D, --double-output           Enable double-output mode\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
             " -S, --reset-source DIR        Reset list of source directories to DIR\n"
@@ -190,6 +190,9 @@ main (int argc, char * const argv[])
                 mode_both = 1;
                 break;
 
+            case 'h':
+                dieusage (0);
+
             case 'k':
                 skip = optarg;
                 break;
@@ -225,9 +228,8 @@ main (int argc, char * const argv[])
             case 'V':
                 aa_die_version ();
 
-            case 'h':
             default:
-                dieusage ();
+                dieusage (1);
         }
     }
     argc -= optind;
@@ -236,7 +238,7 @@ main (int argc, char * const argv[])
     aa_init_output (mode_both);
 
     if (!path_list && argc < 1)
-        dieusage ();
+        dieusage (1);
 
     r = aa_init_repo (path_repo, AA_REPO_CREATE);
     if (r < 0)

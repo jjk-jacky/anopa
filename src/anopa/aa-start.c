@@ -184,9 +184,9 @@ scan_cb (int si, int sni)
 }
 
 static void
-dieusage (void)
+dieusage (int rc)
 {
-    aa_die_usage ("[OPTION...] [service...]",
+    aa_die_usage (rc, "[OPTION...] [service...]",
             " -D, --double-output           Enable double-output mode\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
             " -l, --listdir DIR             Use DIR to list services to start\n"
@@ -233,6 +233,9 @@ main (int argc, char * const argv[])
                 mode_both = 1;
                 break;
 
+            case 'h':
+                dieusage (0);
+
             case 'l':
                 unslash (optarg);
                 path_list = optarg;
@@ -250,9 +253,8 @@ main (int argc, char * const argv[])
             case 'V':
                 aa_die_version ();
 
-            case 'h':
             default:
-                dieusage ();
+                dieusage (1);
         }
     }
     argc -= optind;
@@ -263,7 +265,7 @@ main (int argc, char * const argv[])
     is_utf8 = is_locale_utf8 ();
 
     if (!path_list && argc < 1)
-        dieusage ();
+        dieusage (1);
 
     if (aa_init_repo (path_repo, AA_REPO_WRITE) < 0)
         strerr_diefu2sys (ERR_IO, "init repository ", path_repo);

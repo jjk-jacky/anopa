@@ -20,9 +20,9 @@ put_title2 (const char *name, const char *msg, int end)
 }
 
 static void
-dieusage (void)
+dieusage (int rc)
 {
-    aa_die_usage ("[OPTION...] MESSAGE...",
+    aa_die_usage (rc, "[OPTION...] MESSAGE...",
             " -D, --double-output           Enable double-output mode\n"
             " -T, --title                   Show a main title (default)\n"
             " -t, --title2                  Show a secondary title\n"
@@ -74,6 +74,9 @@ main (int argc, char * const argv[])
                 mode_both = 1;
                 break;
 
+            case 'h':
+                dieusage (0);
+
             case 'T':
                 put = put_title;
                 where = AA_OUT;
@@ -98,14 +101,14 @@ main (int argc, char * const argv[])
                 aa_die_version ();
 
             default:
-                dieusage ();
+                dieusage (1);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc < 1)
-        dieusage ();
+        dieusage (1);
 
     aa_init_output (mode_both);
     put ("", NULL, 0);
