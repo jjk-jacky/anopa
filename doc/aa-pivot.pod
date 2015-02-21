@@ -1,0 +1,35 @@
+=head1 NAME
+
+aa-pivot - Pivot root directory
+
+=head1 SYNOPSIS
+
+B<aa-pivot> I<NEWROOT> I<OLDROOT>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-pivot>(1) moves the root filesystem of the current process to I<OLDROOT>
+and makes I<NEWROOT> the new root filesystem. Since it simply calls
+B<pivot_root>(2), refer to that man page for further details.
+
+Note that B<aa-pivot>(1) doesn't change directory nor chroots, so for proper
+use, you should first chdir into I<NEWROOT>, call B<aa-pivot>(1) and then chroot
+into the current directory, e.g. using B<aa-chroot>(1). For example:
+
+    cd NEWROOT
+    aa-pivot . OLDROOT
+    aa-chroot . COMMAND
