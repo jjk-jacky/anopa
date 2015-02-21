@@ -167,6 +167,8 @@ add_service (const char *name)
 static int
 it_start (direntry *d, void *data)
 {
+    if (*d->d_name == '.')
+        return 0;
     tain_now_g ();
     add_service (d->d_name);
     return 0;
