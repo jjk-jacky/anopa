@@ -1,0 +1,110 @@
+=head1 NAME
+
+aa-teminate - Tries to close/unmount everything it can
+
+=head1 SYNOPSIS
+
+B<aa-terminate> [B<-D>] [B<-l>] [B<-a>] [B<-q> | B<-v>]
+
+=head1 OPTIONS
+
+=over
+
+=item B<-a, --apis>
+
+When done, unmount API file systems: I</run>, I</sys>, I</proc> and I</dev> If a
+regular umount call fails, a lazy umount will be performed.
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-l, --lazy-umounts>
+
+When nothing can be done anymore (see L<B<DESCRIPTION>|/DESCRIPTION> below) and
+there are still active mount points, run the loop again performing lazy
+unmounts: making the mount point unavailable for new accesses, and actually
+performing the unmount when the mount point ceases to be busy.
+
+=item B<-q, --quiet>
+
+Do not output anything (not even warnings of "left overs" when done; See
+B<--verbose> for more).
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=item B<-v, --verbose>
+
+Out information about everything that is tried. By default it only outputs when
+something succeeds (and warnings of "left-overs" when done, listing anything
+that couldn't be closed/removed/unmounted).
+With this option, B<aa-terminate>(1) will output about any operation it
+attempts, as well as an error message on failure. This is usually not important
+information and mostly useful for testing/debugging purposes.
+
+=back
+
+=head1 DESCRIPTION
+
+Ideally, when shutting down/rebooting the system, anything that was
+opened/mounted on boot (i.e. via B<aa-start>(1) during stage 0/1) should be
+closed/unmounted automatically (i.e. via B<aa-stop>(1) during stage 3/4), as
+defined on the relevant services.
+
+However, things might not go as planned, for one reason or another (starting
+with, things might have been opened/mounted outside of any services).
+
+B<aa-terminate>(1) is aimed at closing/unmounting all that can be done at the
+end of e.g. stage 3/4, right before powering off/rebooting.
+
+To do so, it will try to:
+
+=over
+
+=item 1. Turn all swaps off
+
+=item 2. Unmount everything but I</>, I</dev>, I</proc>, I</sys> and I</run>
+
+=item 3. Close all loop devices (I</dev/loop*>)
+
+=item 4. Remove all DM block devices (I</dev/dm-*>)
+
+=back
+
+When done, if there are still things to do (i.e. certain operations failed) and
+at least one attempt was successful, it will try it all again, until either
+there's nothing left to do, or it can't do anything else.
+
+If option B<--lazy-umounts> was specified and there are still active mount
+points, it will try all over again, performing lazy umounts.
+
+Then, if option B<--apis> was specified it will umount API file systems:
+I</run>, I</sys>, I</proc> and I</dev> If a regular umount call fails, a lazy
+umount will be performed (regardless of whether option B<--lazy-umounts> was
+used or not).
+
+Finally, unless option B<--quiet> was specified, warnings will be emitted for
+everything left (swaps, mount points, loop/block devices that couldn't be
+closed/unmounted/removed), if there is any.
+
+=head1 NOTE
+
+B<aa-terminate>(1) requires I</dev> and I</proc> to be mounted. Specifically, it
+reads I</proc/swaps> to list active swaps and I</proc/mounts> for mount points;
+It also reads I</dev> for loop/block devices, and uses I</dev/mapper/control> to
+remove block devices.
+
+=head1 RETURN VALUES
+
+B<aa-terminate>(1) returns 0 on success (no "left-overs"), 1 on syntax error
+(e.g. invalid option) and 2 if there is at least one left-over (excluding API
+file systems).

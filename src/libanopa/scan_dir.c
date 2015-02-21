@@ -54,8 +54,14 @@ aa_scan_dir (stralloc *sa, int files_only, aa_sd_it_fn iterator, void *data)
                 d->d_type = DT_REG;
             else if (S_ISDIR (st.st_mode))
                 d->d_type = DT_DIR;
+            else if (S_ISBLK (st.st_mode))
+                d->d_type = DT_BLK;
         }
-        if (d->d_type != DT_REG && (files_only || d->d_type != DT_DIR))
+        if (d->d_type != DT_REG && (
+                    files_only == 1
+                    || (files_only == 0 && d->d_type != DT_DIR)
+                    || (files_only == 2 && d->d_type != DT_BLK)
+                    ))
             continue;
 
         r = iterator (d, data);
