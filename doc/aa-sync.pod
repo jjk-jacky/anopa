@@ -1,0 +1,28 @@
+=head1 NAME
+
+aa-sync - Flush filesystems buffers
+
+=head1 SYNOPSIS
+
+B<aa-sync>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-sync>(1) causes all buffered modifications to file metadata and data to be
+written to the underlying filesystems.
+
+This is just a wrapper for B<sync>(2)

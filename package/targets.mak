@@ -9,6 +9,7 @@ aa-echo \
 aa-kill \
 aa-mount \
 aa-pivot \
+aa-sync \
 aa-test \
 aa-umount
 
@@ -22,6 +23,7 @@ aa-mount.1 \
 aa-pivot.1 \
 aa-start.1 \
 aa-stop.1 \
+aa-sync.1 \
 aa-test.1 \
 aa-umount.1
 
