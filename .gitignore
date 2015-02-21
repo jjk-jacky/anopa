@@ -10,9 +10,6 @@
 /package/deps.mak
 /config.mak
 /src/include/anopa/config.h
-/doc/*.1
+/anopa.1
+/aa-*
 /libanopa.a
-/aa-echo
-/aa-enable
-/aa-start
-/aa-stop

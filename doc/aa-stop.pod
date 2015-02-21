@@ -82,22 +82,3 @@ all process further down in stage 3.
 
 Obviously, the script used is I<stop> and not I<start>. Other than that, the
 process is much the same, so you can refer to B<aa-start>(1) for more.
-
-=head1 BUGS
-
-They're probably crawling somewhere in there... if you happen to catch one,
-(or more) report it and I'll do my best to squash it.
-
-=head1 REPOSITORY
-
-You can find the latest source code of B<anopa> as well as report bugs and/or
-suggest features on its GitHub repository, available at
-L<https://github.com/jjk-jacky/anopa>
-
-=head1 AUTHOR
-
-=over
-
-=item Olivier Brunel <jjk@jjacky.com>
-
-=back

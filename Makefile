@@ -123,8 +123,10 @@ lib%.a:
 lib%.so:
 	exec $(REALCC) -o $@ $(CFLAGS_ALL) $(CFLAGS_SHARED) $(LDFLAGS_ALL) $(LDFLAGS_SHARED) -Wl,-soname,$@.$(version_l) $^
 
-%.1: %.pod
-	exec $(POD2MAN) --center="anopa" --section=1 --release=$(version) $< > $@
+%.1: doc/%.pod doc/footer.pod
+	@exec cat $< doc/footer.pod > $(basename $@).pod
+	exec $(POD2MAN) --center="anopa" --section=1 --release=$(version) $(basename $@).pod > $@
+	@exec rm $(basename $@).pod
 
 .PHONY: it all clean distclean tgz strip install install-dynlib install-bin install-sbin install-lib install-include
 

@@ -148,22 +148,3 @@ source directory); Or use a directory to simply specify/add configuration files.
 Note that you can also still provide files from the configuration directory in
 listdir, since it is copied last (and that this always includes providing a new
 I<run> file).
-
-=head1 BUGS
-
-They're probably crawling somewhere in there... if you happen to catch one,
-(or more) report it and I'll do my best to squash it.
-
-=head1 REPOSITORY
-
-You can find the latest source code of B<anopa> as well as report bugs and/or
-suggest features on its GitHub repository, available at
-L<https://github.com/jjk-jacky/anopa>
-
-=head1 AUTHOR
-
-=over
-
-=item Olivier Brunel <jjk@jjacky.com>
-
-=back

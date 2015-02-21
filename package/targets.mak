@@ -5,11 +5,11 @@ aa-enable \
 aa-echo
 
 DOC_TARGETS := \
-doc/anopa.1 \
-doc/aa-start.1 \
-doc/aa-stop.1 \
-doc/aa-enable.1 \
-doc/aa-echo.1
+anopa.1 \
+aa-start.1 \
+aa-stop.1 \
+aa-enable.1 \
+aa-echo.1
 
 ifdef DO_ALLSTATIC
 LIBANOPA := libanopa.a
