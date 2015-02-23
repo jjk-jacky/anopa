@@ -462,8 +462,8 @@ handle_fd_progress (int si)
 int
 handle_fd_in (void)
 {
-    aa_service *s = aa_service (si_password);
-    struct progress *pg = &genalloc_s (struct progress, &ga_progress)[s->pi];
+    aa_service *s;
+    struct progress *pg;
     char buf[256];
     iopause_fd iop;
     int r;
@@ -471,8 +471,16 @@ handle_fd_in (void)
     r = fd_read (0, buf, 256);
     if (r < 0)
         return r;
-    else if (r == 0)
+    else if (r == 0 || si_password < 0)
         goto done;
+
+    s = aa_service (si_password);
+    pg = &genalloc_s (struct progress, &ga_progress)[s->pi];
+    if (pg->si != si_password)
+    {
+        r = -1;
+        goto done;
+    }
 
     if (!stralloc_catb (&pg->aa_pg.sa, buf, r))
         return -1;
@@ -510,6 +518,35 @@ handle_fd (int fd)
     return -1;
 }
 
+static void
+end_si_password (void)
+{
+    aa_service *s = aa_service (si_password);
+    struct progress *pg = &genalloc_s (struct progress, &ga_progress)[s->pi];
+    int r;
+
+    clear_draw ();
+    /* we put the message into the service output */
+    aa_bs_noflush (AA_OUT, aa_service_name (s));
+    aa_bs_noflush (AA_OUT, ": ");
+    aa_bs_noflush (AA_OUT, pg->aa_pg.sa.s);
+    aa_bs_flush (AA_OUT, "\n");
+
+    remove_fd_from_iop (s->fd_in);
+    pg->si = -1;
+    pg->is_drawn = 0;
+    pg->aa_pg.sa.len = 0;
+    s->pi = -1;
+    si_password = -1;
+
+    r = term_set_echo (1);
+    if (r < 0)
+        strerr_warnwu1sys ("reset terminal attributes");
+
+    /* to get to the next one, if any */
+    draw |= DRAW_NEED_PASSWORD;
+}
+
 int
 handle_fdw (int fd)
 {
@@ -540,28 +577,7 @@ handle_fdw (int fd)
         pg->aa_pg.sa.len -= r;
     }
     else
-    {
-        clear_draw ();
-        /* we put the message into the service output */
-        aa_bs_noflush (AA_OUT, aa_service_name (s));
-        aa_bs_noflush (AA_OUT, ": ");
-        aa_bs_noflush (AA_OUT, pg->aa_pg.sa.s);
-        aa_bs_flush (AA_OUT, "\n");
-
-        remove_fd_from_iop (fd);
-        pg->si = -1;
-        pg->is_drawn = 0;
-        pg->aa_pg.sa.len = 0;
-        s->pi = -1;
-        si_password = -1;
-
-        r = term_set_echo (1);
-        if (r < 0)
-            strerr_warnwu1sys ("reset terminal attributes");
-
-        /* to get to the next one, if any */
-        draw |= DRAW_NEED_PASSWORD;
-    }
+        end_si_password ();
 
     return 0;
 }
@@ -587,6 +603,8 @@ handle_oneshot (int is_start)
 
     remove_from_list (&aa_tmp_list, si);
     ga_remove (pid_t, &ga_pid, r - 1);
+    if (si == si_password)
+        end_si_password ();
     if (aa_service (si)->fd_in > 0)
         close_fd_for (aa_service (si)->fd_in, si);
     if (aa_service (si)->fd_out > 0)
