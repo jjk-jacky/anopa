@@ -4,8 +4,8 @@ aa-mount - Mount a filesystem
 
 =head1 SYNOPSIS
 
-B<aa-mount> [B<-B> | B<-M>] [B<-r> | B<-w>] [B<-t> I<FSTYPE>] [B<-o> I<OPTIONS>]
-I<DEVICE> I<MOUNTPOINT>
+B<aa-mount> [B<-B> | B<-M>] [B<-r> | B<-w>] [B<-d>] [B<-t> I<FSTYPE>]
+[B<-o> I<OPTIONS>] I<DEVICE> I<MOUNTPOINT>
 
 =head1 OPTIONS
 
@@ -19,6 +19,11 @@ cannot be changed via B<--options>, you need a second call to change options,
 e.g:
     aa-mount -B olddir newdir
     aa-mount -o remount,ro,bind olddir newdir
+
+=item B<-d, --mkdir>
+
+Create directory I<MOUNTPOINT> before doing the mount. Note that this only tries
+to create the last element of the path, so all parents must already exists.
 
 =item B<-h, --help>
 

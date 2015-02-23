@@ -1,5 +1,8 @@
 
 #include <getopt.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/mount.h>
 #include <skalibs/strerr2.h>
 #include <skalibs/stralloc.h>
@@ -106,6 +109,7 @@ dieusage (int rc)
             " -o, --options OPTIONS         Use OPTIONS as mount options\n"
             " -r, --read-only               Mount read-only\n"
             " -w, --read-write              Mount read-write\n"
+            " -d, --mkdir                   Create MOUNTPOINT before mounting\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -118,11 +122,13 @@ main (int argc, char * const argv[])
     stralloc sa = STRALLOC_ZERO;
     unsigned long flags = MS_MGC_VAL;
     const char *fstype = NULL;
+    int mk = 0;
 
     for (;;)
     {
         struct option longopts[] = {
             { "bind",               no_argument,        NULL,   'B' },
+            { "mkdir",              no_argument,        NULL,   'd' },
             { "help",               no_argument,        NULL,   'h' },
             { "move",               no_argument,        NULL,   'M' },
             { "options",            required_argument,  NULL,   'o' },
@@ -134,7 +140,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "BhMo:rt:Vw", longopts, NULL);
+        c = getopt_long (argc, argv, "BdhMo:rt:Vw", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -142,6 +148,10 @@ main (int argc, char * const argv[])
             case 'B':
                 if (!add_option (&sa, &flags, "bind"))
                     strerr_diefu1sys (2, "build user options");
+                break;
+
+            case 'd':
+                mk = 1;
                 break;
 
             case 'h':
@@ -186,6 +196,8 @@ main (int argc, char * const argv[])
 
     if (!stralloc_0 (&sa))
         strerr_diefu1sys (2, "build user options");
+    if (mk && mkdir (argv[1], 0755) < 0 && errno != EEXIST)
+        strerr_diefu4sys (2, "mkdir ", argv[1], " to mount ", argv[0]);
     if (mount (argv[0], argv[1], fstype, flags, sa.s) < 0)
         strerr_diefu4sys (3, "mount ", argv[0], " on ", argv[1]);
 
