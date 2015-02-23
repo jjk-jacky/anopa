@@ -300,7 +300,7 @@ check_afters (int si, int *sli, int *has_longrun)
 int
 aa_prepare_mainlist (aa_prepare_cb prepare_cb, aa_exec_cb exec_cb)
 {
-    int has_longrun;
+    int has_longrun = 0;
     int i;
 
     _exec_cb = exec_cb;
