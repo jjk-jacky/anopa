@@ -1,0 +1,41 @@
+=head1 NAME
+
+aa-shutdown - Helper to trigger a reboot/power off/halt of the machine
+
+=head1 SYNOPSIS
+
+B<aa-shutdown> [B<-r> | B<-p> | B<-H>]
+
+=head1 OPTIONS
+
+=over
+
+=item B<-H, --halt>
+
+Halts the machine.
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-p, --poweroff>
+
+Powers off the machine.
+
+=item B<-r, --reboot>
+
+Reboots the machine.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-shutdown>(1) is a simple helper that will send the appropriate commands to
+B<s6-svscan> (using B<s6-svscanctl>).
+
+It obviously expects it to be running (as PID 1) using I</run/services/.scandir>
+as its scandir.

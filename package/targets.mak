@@ -15,6 +15,9 @@ aa-terminate \
 aa-test \
 aa-umount
 
+BIN_SCRIPTS_TARGET := \
+aa-shutdown
+
 DOC_TARGETS := \
 anopa.1 \
 aa-chroot.1 \
@@ -26,6 +29,7 @@ aa-mount.1 \
 aa-mvlog.1 \
 aa-pivot.1 \
 aa-reboot.1 \
+aa-shutdown.1 \
 aa-start.1 \
 aa-stop.1 \
 aa-sync.1 \

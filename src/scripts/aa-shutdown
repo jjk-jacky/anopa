@@ -1,0 +1,50 @@
+#!/bin/sh
+
+dieusage() {
+    cat << EOF
+Usage: aa-shutdown [OPTION]
+ -r, --reboot                  Reboot the machine
+ -H, --halt                    Halt the machine
+ -p, --poweroff                Power off the machine
+ -h, --help                    Show this help screen and exit
+ -V, --version                 Show version information and exit
+EOF
+    exit $1
+}
+
+dieversion() {
+    cat << EOF
+aa-shutdown v@VERSION@
+Copyright (C) 2015 Olivier Brunel - http://jjacky.com/anopa
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+EOF
+    exit 0
+}
+
+if [ $# -ne 1 ]; then
+    dieusage 1
+fi
+
+case $1 in
+    -H|--halt)
+        cmd=s
+        ;;
+    -h|--help)
+        dieusage 0
+        ;;
+    -p|--poweroff)
+        cmd=p
+        ;;
+    -r|--reboot)
+        cmd=r
+        ;;
+    -V|--version)
+        dieversion
+        ;;
+    *)
+        dieusage 1
+esac
+
+exec s6-svscanctl -${cmd}b /run/services/.scandir
