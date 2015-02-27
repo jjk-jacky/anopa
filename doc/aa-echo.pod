@@ -4,11 +4,15 @@ aa-echo - Shows a message
 
 =head1 SYNOPSIS
 
-B<aa-echo> [B<-D>] [B<-T> | B<-t> | B<-w> | B<-e> | B<-n>] I<MESSAGE...>
+B<aa-echo> [B<-D>] [B<-B>] [B<-T> | B<-t> | B<-w> | B<-e> | B<-n>] I<MESSAGE...>
 
 =head1 OPTIONS
 
 =over
+
+=item B<-B, --blank-first>
+
+Prints a blank line (LF) first.
 
 =item B<-D, --double-output>
 

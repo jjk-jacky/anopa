@@ -24,6 +24,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...] MESSAGE...",
             " -D, --double-output           Enable double-output mode\n"
+            " -B, --blank-first             Print a blank line (LF) first\n"
             " -T, --title                   Show a main title (default)\n"
             " -t, --title2                  Show a secondary title\n"
             " -w, --warning                 Show a warning\n"
@@ -49,6 +50,7 @@ main (int argc, char * const argv[])
 {
     PROG = "aa-echo";
     int mode_both = 0;
+    int blank = 0;
     put_fn put = put_title;
     int where = AA_OUT;
     int i;
@@ -56,6 +58,7 @@ main (int argc, char * const argv[])
     for (;;)
     {
         struct option longopts[] = {
+            { "blank-first",        no_argument,        NULL,   'B' },
             { "double-output",      no_argument,        NULL,   'D' },
             { "error",              no_argument,        NULL,   'e' },
             { "help",               no_argument,        NULL,   'h' },
@@ -68,11 +71,15 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "DehnTtVw", longopts, NULL);
+        c = getopt_long (argc, argv, "BDehnTtVw", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
         {
+            case 'B':
+                blank = 1;
+                break;
+
             case 'D':
                 mode_both = 1;
                 break;
@@ -119,6 +126,8 @@ main (int argc, char * const argv[])
         dieusage (1);
 
     aa_init_output (mode_both);
+    if (blank)
+        aa_bs_noflush (where, "\n");
     if (put)
         put ("", NULL, 0);
     for (i = 0; i < argc; ++i)
