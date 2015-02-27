@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <skalibs/bytestr.h>
 #include <skalibs/stralloc.h>
 #include <skalibs/genalloc.h>
@@ -27,6 +28,10 @@
 #include <anopa/err.h>
 #include "util.h"
 
+
+#define SVSCANDIR       ".scandir/.s6-svscan"
+#define SCANDIR_CRASH   SVSCANDIR "/crash"
+#define SCANDIR_FINISH  SVSCANDIR "/finish"
 
 #define SOURCE_ETC      "/etc/anopa/services"
 #define SOURCE_USR      "/usr/lib/services"
@@ -144,6 +149,8 @@ dieusage (int rc)
             " -s, --source DIR              Add DIR as source directories\n"
             " -k, --skip-down SERVICE       Don't create file 'down' for SERVICE\n"
             " -l, --listdir DIR             Use DIR to list services to enable\n"
+            " -f, --set-finish TARGET       Create s6-svscan symlink finish to TARGET\n"
+            " -c, --set-crash TARGET        Create s6-svscan symlink crash to TARGET\n"
             " -n, --no-needs                Don't auto-enable services from 'needs'\n"
             " -w, --no-wants                Don't auto-enable services from 'wants'\n"
             " -h, --help                    Show this help screen and exit\n"
@@ -157,6 +164,8 @@ main (int argc, char * const argv[])
     PROG = "aa-enable";
     const char *path_repo = "/run/services";
     const char *path_list = NULL;
+    const char *set_crash = NULL;
+    const char *set_finish = NULL;
     int mode_both = 0;
     int i;
     int r;
@@ -169,7 +178,9 @@ main (int argc, char * const argv[])
     for (;;)
     {
         struct option longopts[] = {
+            { "set-crash",          required_argument,  NULL,   'c' },
             { "double-output",      no_argument,        NULL,   'D' },
+            { "set-finish",         required_argument,  NULL,   'f' },
             { "help",               no_argument,        NULL,   'h' },
             { "skip-down",          required_argument,  NULL,   'k' },
             { "listdir",            required_argument,  NULL,   'l' },
@@ -183,13 +194,21 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "Dhk:l:nr:S:s:Vw", longopts, NULL);
+        c = getopt_long (argc, argv, "c:Df:hk:l:nr:S:s:Vw", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
         {
+            case 'c':
+                set_crash = optarg;
+                break;
+
             case 'D':
                 mode_both = 1;
+                break;
+
+            case 'f':
+                set_finish = optarg;
                 break;
 
             case 'h':
@@ -274,9 +293,17 @@ main (int argc, char * const argv[])
         enable_service (names.s + offset, 1 + offset);
     }
 
+    aa_bs_noflush (AA_OUT, "\n");
     aa_put_title (1, PROG, "Completed", 1);
     aa_show_stat_nb (nb_enabled, "Enabled", ANSI_HIGHLIGHT_GREEN_ON);
     aa_show_stat_names (names.s, &ga_failed, "Failed", ANSI_HIGHLIGHT_RED_ON);
+
+    if ((set_crash || set_finish) && mkdir (SVSCANDIR, S_IRWXU) < 0)
+        aa_put_err ("Failed to create " SVSCANDIR, error_str (errno), 1);
+    if (set_crash && symlink (set_crash, SCANDIR_CRASH) < 0)
+        aa_put_err ("Failed to create symlink " SCANDIR_CRASH, error_str (errno), 1);
+    if (set_finish && symlink (set_finish, SCANDIR_FINISH) < 0)
+        aa_put_err ("Failed to create symlink " SCANDIR_FINISH, error_str (errno), 1);
 
     genalloc_free (int, &ga_failed);
     genalloc_free (int, &ga_next);
