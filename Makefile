@@ -63,13 +63,14 @@ ifneq ($(strip $(ALL_BINS)),)
 	exec ${STRIP} -R .note -R .comment -R .note.GNU-stack $(ALL_BINS)
 endif
 
-install: install-dynlib install-libexec install-bin install-sbin install-lib install-include
+install: install-dynlib install-libexec install-bin install-sbin install-lib install-include install-doc
 install-dynlib: $(SHARED_LIBS:lib%.so=$(DESTDIR)$(dynlibdir)/lib%.so)
 install-libexec: $(LIBEXEC_TARGETS:%=$(DESTDIR)$(libexecdir)/%)
 install-bin: $(BIN_TARGETS:%=$(DESTDIR)$(bindir)/%)
 install-sbin: $(SBIN_TARGETS:%=$(DESTDIR)$(sbindir)/%)
 install-lib: $(STATIC_LIBS:lib%.a=$(DESTDIR)$(libdir)/lib%.a)
 install-include: $(ALL_INCLUDES:src/include/$(package)/%.h=$(DESTDIR)$(includedir)/$(package)/%.h)
+install-doc: $(DOC_TARGETS:%=$(DESTDIR)/usr/share/man/man1/%)
 
 ifneq ($(exthome),)
 
@@ -107,6 +108,9 @@ $(DESTDIR)$(libdir)/lib%.a: lib%.a
 $(DESTDIR)$(includedir)/$(package)/%.h: src/include/$(package)/%.h
 	exec $(INSTALL) -D -m 644 $< $@
 
+$(DESTDIR)/usr/share/man/man1/%: %
+	exec $(INSTALL) -D -m 644 $< $@
+
 %.o: %.c
 	exec $(REALCC) $(CPPFLAGS_ALL) $(CFLAGS_ALL) -c -o $@ $<
 
@@ -125,9 +129,9 @@ lib%.so:
 
 %.1: doc/%.pod doc/footer.pod
 	@exec cat $< doc/footer.pod > $(basename $@).pod
-	exec $(POD2MAN) --center="anopa" --section=1 --release=$(version) $(basename $@).pod > $@
+	exec $(POD2MAN) --center="$(package)" --section=1 --release="$(version)" $(basename $@).pod > $@
 	@exec rm $(basename $@).pod
 
-.PHONY: it all clean distclean tgz strip install install-dynlib install-bin install-sbin install-lib install-include
+.PHONY: it all clean distclean tgz strip install install-dynlib install-bin install-sbin install-lib install-include install-doc
 
 .DELETE_ON_ERROR:
