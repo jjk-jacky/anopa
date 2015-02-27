@@ -1,0 +1,30 @@
+=head1 NAME
+
+aa-stage3 - Stage 3: Preparing reboot/poweroff/halt
+
+=head1 SYNOPSIS
+
+B<aa-stage3>
+
+=head1 DESCRIPTION
+
+B<aa-stage3>(1) is an B<execline> script B<s6-svscan> will exec into when told,
+e.g. via B<aa-shutdown>(1).
+
+It will log messages into file I</var/log/boot/current>, prefixing them with a
+TAI timestamp via B<s6-tai64n>, also sending them to I</dev/console>.
+
+It stops all services via B<aa-stop>(1) using option B<--all>, and skipping
+service I<uncaught-logs> to catch all possible logs as long as possible. The
+B<s6-supervise> process of that service will be sent command 'x' so it simply
+exits when the supervised process will.
+
+Signal SIGTERM is then sent to (almost) all processes, using B<aa-kill>(1) with
+option B<--skip>; Then SIGKILL is sent similarly.
+
+It will then pivot root (back) into I</run/initramfs> via B<aa-pivot>(1) and
+exec into I</shutdown> will the same argument it received from B<s6-svscan>, so
+either "halt", "reboot" or "poweroff".
+
+If B<aa-pivot>(1) fails, it will try to open a shell (I<sh -i>) to let you deal
+with things manually.

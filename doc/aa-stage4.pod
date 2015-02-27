@@ -1,0 +1,26 @@
+=head1 NAME
+
+aa-stage4 - Stage 4: Unmounting root file system
+
+=head1 SYNOPSIS
+
+B<aa-stage4>
+
+=head1 DESCRIPTION
+
+B<aa-stage4>(1) is an B<execline> script meant to be used as I<shutdown> inside
+an initramfs.
+
+It loads the environment from I</etc/anopa/env> (via B<s6-envdir>).
+
+It doesn't do much in itself, the bulk of the work being done via services, much
+like during system shutdown (stage 3). It will simply call B<aa-stop>(1) using
+I</servives> as repodir, with option B<--all>.
+
+Services are meant to unmount the root file system from I</root-fs> as well as
+all API file systems in there: I</root-fs/dev>, I</root-fs/proc>,
+I</root-fs/sys> and I</root-fs/run>
+
+Then it will mount I</dev> and I</proc> in order to run B<aa-terminate>(1) to
+make sure everything is closed/unmounted. It then performs the requested action
+(on stage 3) via B<aa-reboot>(1).

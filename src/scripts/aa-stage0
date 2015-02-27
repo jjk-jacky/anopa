@@ -1,0 +1,53 @@
+#!/bin/execlineb -P
+/bin/emptyenv /bin/s6-envdir /etc/anopa/env /bin/exec
+
+# Set up a pipe to log messages
+piperw 3 4
+background
+{
+    fdclose 4 fdmove 0 3
+    redirfd -a 1 /boot.log
+    fdmove -c 2 1
+    s6-tai64n
+}
+
+# aa-* tools will send output to both 1 & 2 via -D
+fdclose 3
+fdmove 2 4
+foreground { aa-echo -D "Stage 0: Mounting root file system..." }
+
+# Safety
+cd /
+umask 022
+
+# Start services
+foreground { if -n
+{
+  if { emptyenv -c aa-start -D -r /services -l /etc/anopa/onboot }
+  foreground {
+    # if "break" was specified on kernel cmdline, let's open a shell
+    if -t { aa-incmdline -qf /root-fs/proc/cmdline break }
+    foreground { aa-echo -DB "Break requested" }
+    foreground { aa-echo -Dt "Trying to open a shell; " +g exit +w " to continue" }
+    emptyenv -c sh -i
+  }
+}
+
+# aa-start failed (i.e. an essential service failed to be started), so we assume
+# the root fs wasn't mounted: try a shell so user has a chance to fix things
+foreground { aa-echo -DBe "Mouting root file system failed" }
+foreground { aa-echo -Dt "Trying to open a shell; " +g exit +w " to continue" }
+fdmove -c 2 1
+emptyenv -c sh -i
+}
+
+if { aa-echo -DB "Moving /root-fs to /..." }
+# First we mount bind the rootfs (initramfs) onto /run/initramfs so we can come
+# back to it for stage 4
+if { aa-mount -Bd / /root-fs/run/initramfs }
+fdmove -c 2 1
+backtick -n -D /sbin/init INIT { aa-incmdline -rf /root-fs/proc/cmdline init }
+import -u INIT
+cd /root-fs
+if { aa-mount -M . / }
+./run/initramfs/bin/emptyenv -c ./run/initramfs/bin/aa-chroot . ${INIT}

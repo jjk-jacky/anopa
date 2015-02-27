@@ -1,0 +1,17 @@
+#!/bin/execlineb -S0
+/bin/emptyenv /bin/s6-envdir /etc/anopa/env /bin/exec
+
+foreground { aa-echo -B "Stage 4: Unmounting root file system..." }
+foreground { emptyenv -c aa-stop -r /services -a }
+
+# At this point everything should be unmounted, so we need to remount what's
+# needed for aa-terminate to work. We can't not umount /proc & /dev in aa-stop
+# above and then assume they're here, since e.g. moving them back (from root-fs)
+# might have failed. (And trying to mount /dev on top of it won't prevent
+# aa-terminate from doing its thing properly.)
+foreground { aa-echo -B "Mounting /dev & /proc and terminating..." }
+foreground { aa-mount -t devtmpfs dev /dev }
+foreground { aa-mount -t proc proc /proc }
+foreground { aa-terminate -la }
+	foreground { sh -i }
+aa-reboot --${1}

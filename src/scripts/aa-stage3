@@ -1,0 +1,68 @@
+#!@BINDIR@/execlineb -S0
+
+# Set up a pipe to log messages
+piperw 3 4
+background
+{
+    fdclose 4 fdmove 0 3
+    redirfd -a 1 /var/log/boot/current
+    fdmove -c 2 1
+    s6-tai64n
+}
+fdclose 3
+fdmove 2 4
+
+# Make sure we're sane
+cd /
+redirfd -r 0 /dev/console
+redirfd -w 1 /dev/console
+
+foreground { aa-echo -DB "Stage 3: Preparing ${1}..." }
+# Stop all running services -- s6-svscan did only exec into us, leaving the
+# whole supervised tree intact. Here we stop everything (longrun & oneshot) in
+# order.
+foreground { emptyenv -c aa-stop -D -ak uncaught-logs }
+# We left the catch-all running (in case), make sure everything will exit
+# properly when we send TERM
+foreground { s6-svc -x /run/services/uncaught-logs }
+
+# Kill everything left
+foreground { aa-echo -DB "Killing remaining processes..." }
+foreground { aa-echo -Dt "Sending SIGTERM to all processes..." }
+foreground { aa-kill -st }
+wait -r { } # Reap zombies
+# logger was killed, and we won't open it back
+fdmove -c 2 1
+foreground { pipeline { aa-echo -Dt "Sending SIGKILL to all processes..." }
+    redirfd -a 1 /var/log/boot/current
+    s6-tai64n
+}
+foreground { aa-kill -sk }
+wait { } # Wait for all children
+
+foreground { aa-sync }
+foreground { pipeline { aa-echo -DB "Pivoting root..." }
+    redirfd -a 1 /var/log/boot/current
+    s6-tai64n
+}
+
+cd /run/initramfs
+foreground {
+    if -n
+    {
+        # grab the chroot binary for after the pivot
+        if { cp /bin/aa-chroot . }
+        # PIVOT!
+        if { aa-pivot . root-fs }
+    }
+
+    # Something went wrong
+    foreground { pipeline { aa-echo -DBe "Unable to ${1}: Failed to pivot root" }
+        redirfd -a 1 /var/log/boot/current
+        s6-tai64n
+    }
+    foreground { aa-echo -t "Trying to open a shell..." }
+    emptyenv -c sh -i
+}
+# And let initramfs end things ($1 is halt/reboot/poweroff)
+./aa-chroot . /shutdown ${1}

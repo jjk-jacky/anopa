@@ -1,0 +1,51 @@
+#!@BINDIR@/execlineb -P
+@BINDIR@/emptyenv @BINDIR@/s6-envdir /etc/anopa/env @BINDIR@/exec
+
+# Set up a pipe to log messages
+piperw 3 4
+background
+{
+    fdclose 4 fdmove 0 3
+    redirfd -a 1 /run/initramfs/boot.log
+    fdmove -c 2 1
+    s6-tai64n
+}
+
+# aa-* tools will send output to both 1 & 2 via -D
+fdclose 3
+fdmove 2 4
+foreground { aa-echo -DB "Stage 1: Preparing system..." }
+
+# Safety
+cd /
+umask 022
+
+# Create the repository
+foreground { emptyenv -c
+aa-enable -Dl /etc/anopa/enabled -k uncaught-logs -f @LIBEXECDIR@/aa-stage3 }
+
+# Make sure the FIFO needed for the switch to stage 2 is there
+ifelse -X -n { aa-test -p /run/services/.scandir/uncaught-logs/fifo }
+{
+    foreground { aa-echo -DBe "Cannot start s6-svscan: No uncaught-logs fifo found" }
+    fdmove -c 2 1
+    foreground { aa-echo -t "Trying to open a shell..." }
+    emptyenv -c sh -i
+}
+
+# Reopen stdin/stdout/stderr to make them point to the right places
+redirfd -r 0 /dev/null
+redirfd -wnb 1 /run/services/uncaught-logs/fifo # (black magic: doesn't block)
+fdmove -c 2 1
+
+# Fork the stage2 script and have it ready to start as soon as the catch-all
+# logger is in place
+background
+{
+    s6-setsid
+    redirfd -w 1 /run/services/uncaught-logs/fifo # (blocks until the logger reads)
+    @LIBEXECDIR@/aa-stage2
+}
+
+# Start the "real" stage 2 (as far as PID 1 goes)
+emptyenv -c s6-svscan -t0 /run/services/.scandir

@@ -1,0 +1,27 @@
+=head1 NAME
+
+aa-stage1 - Stage 1: Preparing system
+
+=head1 SYNOPSIS
+
+B<aa-stage1>
+
+=head1 DESCRIPTION
+
+B<aa-stage1>(1) is an B<execline> script meant to be used as I<init> for the
+system.
+
+It loads the environment from I</etc/anopa/env> (via B<s6-envdir>), and will log
+messages into file I</run/initramfs/boot.log>, prefixing them with a TAI
+timestamp via B<s6-tai64n>.
+
+It doesn't do much in itself, the bulk of the work being done via services. It
+will create the runtime repository I</run/services> using B<aa-enable>(1) and
+I</etc/anopa/enabled> as listdir.
+
+A service I<uncaught-logs> must exist and be a logger that will be used to catch
+all "uncaught logs" (i.e. anything not redirected to a service logger). A FIFO
+must be created as I</run/services/.scandir/uncaught-logs/fifo> and will be
+automatically started by B<s6-svscan>; It will also be used as trigger for
+B<aa-stage2>(1).
+

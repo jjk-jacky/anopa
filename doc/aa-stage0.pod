@@ -1,0 +1,42 @@
+=head1 NAME
+
+aa-stage0 - Stage 0: Mounting root file system
+
+=head1 SYNOPSIS
+
+B<aa-stage0>
+
+=head1 DESCRIPTION
+
+B<aa-stage0>(1) is an B<execline> script meant to be used as I<init> inside an
+initramfs.
+
+It loads the environment from I</etc/anopa/env> (via B<s6-envdir>), and will log
+messages into file I</boot.log>, prefixing them with a TAI timestamp via
+B<s6-tai64n>.
+
+It doesn't do much in itself, the bulk of the work being done via services, much
+like during system init (stage 1/2). It will simply call B<aa-start>(1) using
+I</servives> as repodir, and I</etc/anopa/onboot> as listdir for services to
+start.
+
+Services are meant to mount the root file system on to I</root-fs> and mount all
+API file systems in there as well: I</root-fs/dev>, I</root-fs/proc>,
+I</root-fs/sys> and I</root-fs/run>
+
+It is also up to them to load required kernel modules in order to do so.
+
+Once B<aa-start>(1) is done, B<aa-stage0>(1) will mount bind the rootfs (of the
+initramfs) onto I</root-fs/run/initramfs> (so it's possible to pivot back into
+it at the end of stage 3) before doing a mount move of I</root-fs> onto I</> and
+executing (via B<aa-chroot>(1)) into I</sbin/init>, or whatever was specified
+via I<init> on the kernel command line.
+
+If B<aa-start>(1) exits non-zero, e.g. if an essential service failed to be
+started, B<aa-stage0>(1) assumes the root file system couldn't be mounted, and
+tries to open a shell (I<sh -i>) to give you a possibility to fix things.
+Exiting the shell will resume the process.
+
+You can also specify I<break> on the kernel command line to open a shell after
+B<aa-start>(1) succesfully completed, before moving I</root-fs> to I</> (also
+before mount binding the rootfs).

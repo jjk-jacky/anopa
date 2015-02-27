@@ -1,0 +1,46 @@
+#!@BINDIR@/execlineb -P
+
+# Set up a pipe to log messages
+piperw 3 4
+background
+{
+  fdclose 4 fdmove 0 3
+  redirfd -a 1 /run/initramfs/boot.log
+  fdmove -c 2 1
+  s6-tai64n
+}
+fdclose 3
+fdmove 2 4
+
+if -n -t
+{
+  # Reopen the console for stdin/stdout
+  redirfd -r 0 /dev/console
+  redirfd -w 1 /dev/console
+  # And start everything
+  foreground { aa-echo -DB "Stage 2: Initializing system..." }
+  backtick -n -D default LISTDIR { aa-incmdline -rs aa }
+  import -u LISTDIR
+  if { emptyenv -c aa-start -D -l /etc/anopa/onboot/${LISTDIR} }
+  foreground { aa-echo -DB "System ready." }
+  # close logger
+  fdmove -c 2 1
+  # no more input
+  redirfd -r 0 /dev/null
+  # move log to file system
+  if -n -t { aa-mvlog /run/initramfs/boot.log /var/log/boot }
+  # show (& log) a warning
+  pipeline { aa-echo -DBw "Failed to save /run/initramfs/boot.log to /var/log/boot" }
+  redirfd -a 1 /run/initramfs/boot.log
+  s6-tai64n
+}
+
+# Something went wrong, likely aa-start failed (i.e. an essential service failed
+# to be started), so we assume there's not event a getty: try a shell so user
+# has a chance to fix things
+redirfd -r 0 /dev/console
+redirfd -w 1 /dev/console
+foreground { aa-echo -DBe "System initialization failed" }
+fdmove -c 2 1
+foreground { aa-echo -t "Trying to open a shell..." }
+emptyenv -c sh -i

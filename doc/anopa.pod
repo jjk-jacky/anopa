@@ -281,12 +281,12 @@ to enable on boot.
 In the later case, the content of the folder will also be merged/copied over
 into the servicedir.
 
-Used by B<aa-enable>(1).
+Used by B<aa-enable>(1) from B<aa-stage1>(1).
 
 =item I</etc/anopa/onboot/default>
 
 List directory containing empty regular files, whose name is the name of a
-service to start on boot. Used by B<aa-start>(1).
+service to start on boot. Used by B<aa-start>(1) from B<aa-stage2>(1).
 
 =item I</run/services>
 
@@ -310,7 +310,11 @@ Refer to B<aa-enable>(1) for more on how it works and how the copy operation
 takes place.
 
 Then, B<aa-start>(1) is used to start all services in order, getting the system
-up & ready. Refer to B<aa-start>(1) for more on how it works.
+up & ready. Refer to B<aa-start>(1) for more on how it works; Refer to
+B<aa-stage1>(1) and B<aa-stage2>(1) for more on this init process on boot works.
+
+You can also see B<aa-stage0>(1) and B<aa-stage4>(1) for how to use B<anopa> in
+your initramfs.
 
 Note that this is of course only a possible solution to set up your system, you
 are of course free to organize things differently, only the tool(s) you need
