@@ -78,6 +78,24 @@ B<s6-supervise> process of the service - and of its logger, if any - are kept
 running. This isn't a problem, since they'll simply exit when sending SIGTERM to
 all process further down in stage 3.
 
+=head2 Service not up
+
+When you call B<aa-stop>(1) it will first create a list of all services to be
+stopped. Any service specified that isn't up will simply be ignored with a "Not
+up" message shown.
+
+It should be noted that, for long-run services, it is possible that a service
+was up then, but will be down by the time B<aa-stop>(1) wants to stop it. E.g.
+because other services stopped first caused it to stop/crash.
+
+In such a case, the message "Stopping service..." will be shown, and
+B<aa-stop>(1) will send the command(s) as usual; But it won't check for errors
+(nor wait for the 'd' event) and simply report the service as "Not up" instead.
+
+This should ensure that e.g. s6 doesn't restart the service, or stops it if that
+was already (being) done, and in case B<--all> was used that the B<s6-supervise>
+process(es) will exit as expected.
+
 =head1 STOPPING A ONE-SHOT SERVICE
 
 Obviously, the script used is I<stop> and not I<start>. Other than that, the
