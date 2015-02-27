@@ -1,0 +1,31 @@
+=head1 NAME
+
+aa-mvlog - Helper to move & rename log file
+
+=head1 SYNOPSIS
+
+B<aa-mvlog> I<LOGFILE> I<DESTDIR>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-mvlog>(1) is a small helper to move I<LOGFILE> into I<DESTDIR>, renaming it
+to the TAI timestamp read from its first line (i.e. the first 25 bytes of
+I<LOGFILE>), and creating in I<DESTDIR> a symlink named I<current> pointing to
+it.
+
+This is mostly aimed to be used at the end of stage 2, to move logs of the boot
+process (in I</run/initramfs/boot.log>) into persistent storage.

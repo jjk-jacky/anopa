@@ -11,6 +11,7 @@
 #include <skalibs/direntry.h>
 #include <skalibs/skamisc.h>
 #include <anopa/enable_service.h>
+#include <anopa/copy_file.h>
 #include <anopa/err.h>
 
 static int
@@ -40,39 +41,6 @@ is_valid_service_name (const char *name, int len)
     if (byte_chr (name, len, '/') < len)
         return 0;
     return 1;
-}
-
-static int
-copy_file (const char *src, const char *dst, mode_t mode)
-{
-    int fd_src;
-    int fd_dst;
-
-    fd_src = open_readb (src);
-    if (fd_src < 0)
-        return -1;
-
-    fd_dst = open3 (dst, O_WRONLY | O_CREAT | O_TRUNC, mode);
-    if (fd_dst < 0)
-    {
-        int e = errno;
-        fd_close (fd_src);
-        errno = e;
-        return -1;
-    }
-
-    if (fd_cat (fd_src, fd_dst) < 0)
-    {
-        int e = errno;
-        fd_close (fd_src);
-        fd_close (fd_dst);
-        errno = e;
-        return -1;
-    }
-
-    fd_close (fd_src);
-    fd_close (fd_dst);
-    return 0;
 }
 
 static int
@@ -240,7 +208,7 @@ copy_dir (const char        *src,
                     if (depth == 1 && instance && (flags & _AA_FLAG_IS_1OF4)
                             && satmp.s[i + len - 1] == '@')
                         byte_copy (buf_dst + l_dst + 1 + len, l_inst + 1, instance);
-                    r = copy_file (buf_src, buf_dst, st.st_mode);
+                    r = aa_copy_file (buf_src, buf_dst, st.st_mode, 1);
                     if (depth == 1 && r == 0 && ae_cb)
                     {
                         if ((flags & (AA_FLAG_AUTO_ENABLE_NEEDS | _AA_FLAG_IS_NEEDS))

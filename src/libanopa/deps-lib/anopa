@@ -1,3 +1,4 @@
+copy_file.o
 die_usage.o
 die_version.o
 enable_service.o

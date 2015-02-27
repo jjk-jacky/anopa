@@ -9,6 +9,7 @@ aa-echo \
 aa-incmdline \
 aa-kill \
 aa-mount \
+aa-mvlog \
 aa-pivot \
 aa-reboot \
 aa-sync \
@@ -24,6 +25,7 @@ aa-enable.1 \
 aa-incmdline.1 \
 aa-kill.1 \
 aa-mount.1 \
+aa-mvlog.1 \
 aa-pivot.1 \
 aa-reboot.1 \
 aa-start.1 \
