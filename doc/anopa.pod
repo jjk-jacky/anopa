@@ -29,7 +29,7 @@ the init process of a Unix system :
 
 Stage 1 starts when the kernel launches the first userland process,
 traditionally called B<init>. The goal is to prepare the system: mounting
-filesystems, setting system clock, configuring the network, and other similar
+file systems, setting system clock, configuring the network, and other similar
 tasks are to be performed, to be ready to start long-running processes, that
 will be expected to stay running for as long as the system is up.
 
@@ -40,7 +40,7 @@ job here also includes reaping any orphaned zombies.
 
 Stage 3 starts when a shutdown (or reboot) is initiated. init then needs to
 "undo" what was done prior: stop all long-running processes, clean up, unmount
-filesystems, etc
+file systems, etc
 
 B<s6-svscan> is perfectly suited to be in charge of stage 2, supervising
 long-running processes. B<anopa> provides tools to take care of the other
@@ -48,7 +48,7 @@ stages.
 
 Because the init process launched by the kernel, also known as PID 1, cannot die
 and has to be the one process to exist from start to finish, lots of init system
-include all functionnalities into a single binary. Instead, since PID 1 is
+include all functionalities into a single binary. Instead, since PID 1 is
 allowed to execute I<into> another binary, this is what B<anopa> makes uses of.
 
 =head1 NOTION OF SERVICES
@@ -84,9 +84,10 @@ script containing the command setting up the services, before executing into it.
 
 =item An optional executable file named I<finish>
 
-Like I<run>, it can be any executable file. If present, it is executed everytime
-the I<run> script dies. Generally, its main purpose is to clean up non-volatile
-data such as the filesystem after the supervised process has been killed.
+Like I<run>, it can be any executable file. If present, it is executed every
+time the I<run> script dies. Generally, its main purpose is to clean up
+non-volatile data such as the file system after the supervised process has been
+killed.
 
 Note that it must do its work and exit in less than 5 seconds, else it'll be
 killed.
@@ -155,7 +156,7 @@ If no such file exists, the service will be considered stopped instantly.
 If present and the service fails to be started, when it exits B<aa-start> will
 return 1. It will only return 0 if no essential services failed to be started.
 This can be used by I<init>, e.g. to launch an emergency shell if B<aa-start>
-end succesfully (return non-zero).
+end successfully (return non-zero).
 
 You would usually use such a file for the service mounting the root filesystem
 in initramfs, or launching getty.
@@ -198,7 +199,7 @@ service to be marked as dependency of the current service. Such services will be
 auto-started by B<aa-start>(1) and the current service will automatically be
 marked to be started after it.
 
-Additionally, should the depedency service fail to start, the current service
+Additionally, should the dependency service fail to start, the current service
 will not be started, but placed into a failed state (for dependency error).
 
 B<aa-stop>(1) will process those as if they were in directory I<after>.
@@ -312,9 +313,8 @@ Then, B<aa-start>(1) is used to start all services in order, getting the system
 up & ready. Refer to B<aa-start>(1) for more on how it works.
 
 Note that this is of course only a possible solution to set up your system, you
-are of couse free to organize things differently, only the the tool(s) you need
-fro B<anopa> however you want.
-
+are of course free to organize things differently, only the tool(s) you need
+from B<anopa> however you want.
 
 
 

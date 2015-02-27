@@ -32,9 +32,9 @@ Show help screen and exit.
 
 =item B<-n, --normal>
 
-Show I<MESSAGE...> as reglar text, i.e. without any prefix or color. This can be
-used for simple echo, but make sure to see how arguments making up I<MESSAGE...>
-are processed.
+Show I<MESSAGE...> as regular text, i.e. without any prefix or color. This can
+be used for simple echo, but make sure to see how arguments making up
+I<MESSAGE...> are processed.
 
 =item B<-T, --title>
 
