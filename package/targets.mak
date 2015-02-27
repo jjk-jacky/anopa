@@ -1,17 +1,15 @@
-SBIN_TARGETS := \
-aa-enable \
-aa-start \
-aa-stop
-
-LIBEXEC_TARGETS := \
+BIN_TARGETS := \
 aa-chroot \
 aa-echo \
+aa-enable \
 aa-incmdline \
 aa-kill \
 aa-mount \
 aa-mvlog \
 aa-pivot \
 aa-reboot \
+aa-start \
+aa-stop \
 aa-sync \
 aa-terminate \
 aa-test \
