@@ -1,0 +1,51 @@
+=head1 NAME
+
+aa-incmdline - Helper to parse kernel command line
+
+=head1 SYNOPSIS
+
+B<aa-incmdline> [B<-q>] [B<-f> I<FILE>] [B<-r>] [B<-s>] I<NAME>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-f, --file> I<FILE>
+
+Read command line from I<FILE> instead of I</proc/cmdline>
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-q, --quiet>
+
+Do not print value (if any) on stdout
+
+=item B<-r, --required>
+
+Ignore argument (i.e. exit 3) if no value was specified.
+
+=item B<-s, --safe>[=I<C>]
+
+Ignore argument (i.e. exit 3) if it contains I<C> (defaults to I</>).
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-incmdline>(1) is a small helper to parse arguments from the kernel command
+line. It will read I</proc/cmdline> (or I<FILE> specified with B<--file>) and
+look for an argument I<NAME>. If reading the file fails, it exits 2. If no
+I<NAME> was specified, it exits 1.
+
+If there's no such argument on the command line, or B<--safe> was used and the
+argument's value contains I<C>, or there's no value and B<--required> was used,
+it exits 3; Else it exits 0.
+
+If the argument had a value specified it will be printed on stdout unless
+B<--quiet> was used.

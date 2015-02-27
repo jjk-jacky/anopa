@@ -6,6 +6,7 @@ aa-stop
 LIBEXEC_TARGETS := \
 aa-chroot \
 aa-echo \
+aa-incmdline \
 aa-kill \
 aa-mount \
 aa-pivot \
@@ -20,6 +21,7 @@ anopa.1 \
 aa-chroot.1 \
 aa-echo.1 \
 aa-enable.1 \
+aa-incmdline.1 \
 aa-kill.1 \
 aa-mount.1 \
 aa-pivot.1 \
