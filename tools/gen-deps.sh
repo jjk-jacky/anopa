@@ -81,3 +81,7 @@ for dir in $(ls -1 src | grep -v ^include) ; do
     echo "$file: src/$dir/$file.o$deps"
   done
 done
+
+for file in $(ls -1 src/scripts) ; do
+    echo "$file: src/scripts/$file"
+done

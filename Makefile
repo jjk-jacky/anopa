@@ -38,11 +38,12 @@ POD2MAN := pod2man
 ALL_BINS := $(LIBEXEC_TARGETS) $(BIN_TARGETS) $(SBIN_TARGETS)
 ALL_LIBS := $(SHARED_LIBS) $(STATIC_LIBS) $(INTERNAL_LIBS)
 ALL_INCLUDES := $(wildcard src/include/$(package)/*.h)
+ALL_SCRIPTS := $(LIBEXEC_SCRIPTS_TARGET) $(BIN_SCRIPTS_TARGET)
 
-all: $(ALL_LIBS) $(ALL_BINS) $(ALL_INCLUDES) $(DOC_TARGETS)
+all: $(ALL_LIBS) $(ALL_BINS) $(ALL_SCRIPTS) $(ALL_INCLUDES) $(DOC_TARGETS)
 
 clean:
-	@exec rm -f $(ALL_LIBS) $(ALL_BINS) $(wildcard src/*/*.o src/*/*.lo) $(EXTRA_TARGETS)
+	@exec rm -f $(ALL_LIBS) $(ALL_BINS) $(BIN_SCRIPTS_TARGET) $(wildcard src/*/*.o src/*/*.lo) $(EXTRA_TARGETS)
 
 distclean: clean
 	@exec rm -f config.mak src/include/${package}/config.h $(DOC_TARGETS)
@@ -65,8 +66,8 @@ endif
 
 install: install-dynlib install-libexec install-bin install-sbin install-lib install-include install-doc
 install-dynlib: $(SHARED_LIBS:lib%.so=$(DESTDIR)$(dynlibdir)/lib%.so)
-install-libexec: $(LIBEXEC_TARGETS:%=$(DESTDIR)$(libexecdir)/%)
-install-bin: $(BIN_TARGETS:%=$(DESTDIR)$(bindir)/%)
+install-libexec: $(LIBEXEC_TARGETS:%=$(DESTDIR)$(libexecdir)/%) $(LIBEXEC_SCRIPTS_TARGET:%=$(DESTDIR)$(libexecdir)/%)
+install-bin: $(BIN_TARGETS:%=$(DESTDIR)$(bindir)/%) $(BIN_SCRIPTS_TARGET:%=$(DESTDIR)$(bindir)/%)
 install-sbin: $(SBIN_TARGETS:%=$(DESTDIR)$(sbindir)/%)
 install-lib: $(STATIC_LIBS:lib%.a=$(DESTDIR)$(libdir)/lib%.a)
 install-include: $(ALL_INCLUDES:src/include/$(package)/%.h=$(DESTDIR)$(includedir)/$(package)/%.h)
@@ -126,6 +127,10 @@ lib%.a:
 
 lib%.so:
 	exec $(REALCC) -o $@ $(CFLAGS_ALL) $(CFLAGS_SHARED) $(LDFLAGS_ALL) $(LDFLAGS_SHARED) -Wl,-soname,$@.$(version_l) $^
+
+$(ALL_SCRIPTS):
+	exec sed -e "s/@VERSION@/$(version)/g" -e "s/@BINDIR@/$(subst /,\/,$(bindir))/g" \
+		-e "s/@LIBEXECDIR@/$(subst /,\/,$(libexecdir))/g" $< > $@
 
 %.1: doc/%.pod doc/footer.pod
 	@exec cat $< doc/footer.pod > $(basename $@).pod
