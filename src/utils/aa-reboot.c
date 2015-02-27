@@ -10,10 +10,10 @@ const char *PROG;
 static void
 dieusage (int rc)
 {
-    aa_die_usage (rc, "[OPTION]",
-            " -r, --reboot                  Reboot the machine; This is the default\n"
-            " -H, --halt                    Halt the machine\n"
-            " -p, --poweroff                Power off the machine\n"
+    aa_die_usage (rc, "OPTION",
+            " -r, --reboot                  Reboot the machine NOW\n"
+            " -H, --halt                    Halt the machine NOW\n"
+            " -p, --poweroff                Power off the machine NOW\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -32,7 +32,7 @@ main (int argc, char * const argv[])
         { .cmd = RB_POWER_OFF,   .desc = "power off" },
         { .cmd = RB_AUTOBOOT,    .desc = "reboot" }
     };
-    int i = 2;
+    int i = -1;
 
     for (;;)
     {
@@ -76,7 +76,7 @@ main (int argc, char * const argv[])
     argc -= optind;
     argv += optind;
 
-    if (argc != 0)
+    if (argc != 0 || i < 0)
         dieusage (1);
 
     if (reboot (cmd[i].cmd) < 0)
