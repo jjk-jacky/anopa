@@ -592,7 +592,8 @@ handle_oneshot (int is_start)
     r = wait_pids_nohang ((pid_t const *) ga_pid.s, genalloc_len (pid_t, &ga_pid), &wstat);
     if (r < 0)
     {
-        strerr_warnwu1sys ("wait_pids_nohang");
+        if (errno != ECHILD)
+            strerr_warnwu1sys ("wait_pids_nohang");
         return r;
     }
     else if (r == 0)
@@ -739,9 +740,14 @@ handle_signals (aa_mode mode)
 
             case SIGCHLD:
                 {
-                    int rr = handle_oneshot (mode == AA_MODE_START);
-                    if (rr > 0)
-                        r += rr;
+                    for (;;)
+                    {
+                        int rr = handle_oneshot (mode == AA_MODE_START);
+                        if (rr > 0)
+                            r += rr;
+                        else
+                            break;
+                    }
                     break;
                 }
 
