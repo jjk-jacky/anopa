@@ -11,6 +11,7 @@
 
 #define AA_START_FILENAME           "start"
 #define AA_STOP_FILENAME            "stop"
+#define AA_GETS_READY_FILENAME      "gets-ready"
 
 extern genalloc aa_services;
 extern stralloc aa_names;
@@ -60,6 +61,7 @@ typedef struct
     aa_service_status st;
     /* longrun */
     uint16 ft_id;
+    int gets_ready;
     /* oneshot */
     int fd_in;
     int fd_out;
@@ -84,5 +86,6 @@ extern int  aa_prepare_mainlist (aa_prepare_cb prepare_cb, aa_exec_cb exec_cb);
 extern void aa_scan_mainlist (aa_scan_cb scan_cb, aa_mode mode);
 extern int  aa_exec_service (int si, aa_mode mode);
 extern int  aa_get_longrun_info (uint16 *id, char *event);
+extern int  aa_unsubscribe_for (uint16 id);
 
 #endif /* AA_SERVICE_H */

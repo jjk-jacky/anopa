@@ -138,14 +138,13 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
 
     {
         aa_service_status *svst = &aa_service (si)->st;
-        struct stat st;
         int l_sn = strlen (aa_service_name (aa_service (si)));
-        char buf[l_sn + 5];
+        char buf[l_sn + 1 + sizeof (AA_GETS_READY_FILENAME)];
 
         byte_copy (buf, l_sn, aa_service_name (aa_service (si)));
         byte_copy (buf + l_sn, 5, "/run");
 
-        if (stat (buf, &st) < 0)
+        if (access (buf, F_OK) < 0)
         {
             if (errno != ENOENT)
                 return -ERR_IO;
@@ -153,7 +152,12 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
                 svst->type = AA_TYPE_ONESHOT;
         }
         else
+        {
             svst->type = AA_TYPE_LONGRUN;
+
+            byte_copy (buf + l_sn, 1 + sizeof (AA_GETS_READY_FILENAME), "/" AA_GETS_READY_FILENAME);
+            aa_service (si)->gets_ready = (access (buf, F_OK) == 0) ? 1 : 0;
+        }
     }
 
     {

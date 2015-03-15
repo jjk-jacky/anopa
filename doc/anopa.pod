@@ -128,6 +128,12 @@ used to send notifications when the service goes up/down.
 If such a file exists, the default state of the service is considered down, not
 up, and it isn't automatically started by B<s6-supervise>.
 
+=item An optional, empty, regular file named I<gets-ready>
+
+This is B<anopa>-specific, and if present indicates to B<aa-start>(1) that the
+service supports readiness, so it will wait for event 'U' (instead of 'u') when
+starting it.
+
 =back
 
 =head2 ONE-SHOT SERVICES

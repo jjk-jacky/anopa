@@ -28,7 +28,10 @@ _exec_longrun (int si, aa_mode mode)
     byte_copy (fifodir + l_sn + 1, sizeof (S6_SUPERVISE_EVENTDIR), S6_SUPERVISE_EVENTDIR);
 
     tain_addsec_g (&deadline, 1);
-    s->ft_id = ftrigr_subscribe_g (&_aa_ft, fifodir, event, 0, &deadline);
+    s->ft_id = ftrigr_subscribe_g (&_aa_ft, fifodir,
+            (is_start && s->gets_ready) ? "[udU]" : event,
+            (is_start && s->gets_ready) ? FTRIGR_REPEAT : 0,
+            &deadline);
     if (s->ft_id == 0)
     {
         /* this could happen e.g. if the servicedir isn't in scandir, if
@@ -185,4 +188,13 @@ aa_get_longrun_info (uint16 *id, char *event)
 
     i = -1;
     return 0;
+}
+
+int
+aa_unsubscribe_for (uint16 id)
+{
+    tain_t deadline;
+
+    tain_addsec_g (&deadline, 1);
+    return ftrigr_unsubscribe_g (&_aa_ft, id, &deadline);
 }

@@ -685,10 +685,27 @@ handle_longrun (aa_mode mode, uint16 id, char event)
     }
 
     si = list_get (&aa_main_list, i);
-    aa_service (si)->ft_id = 0;
+    if (mode == AA_MODE_START && aa_service (si)->gets_ready)
+    {
+        if (event == 'u' || event == 'd')
+        {
+            clear_draw ();
+            aa_bs_noflush (AA_OUT, aa_service_name (aa_service (si)));
+            aa_bs_noflush (AA_OUT, ": ");
+            aa_bs_flush (AA_OUT, (event == 'u')
+                    ? "Started; Getting ready...\n"
+                    : "Down; Will restart...\n");
+            return 0;
+        }
+        /* event == 'U' */
+        aa_unsubscribe_for (id);
+    }
 
+    aa_service (si)->ft_id = 0;
     put_title (1, aa_service_name (aa_service (si)),
-            (mode == AA_MODE_START) ? "Started" : "Stopped", 1);
+            (mode == AA_MODE_START) ?
+            ((aa_service (si)->gets_ready) ? "Ready" : "Started")
+            : "Stopped", 1);
     ++nb_done;
     --nb_wait_longrun;
 
