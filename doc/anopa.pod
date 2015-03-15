@@ -107,6 +107,9 @@ A pipe is open and maintained between the two, i.e. everything that I<./run>
 writes to its stdout will appear on I<./log/run>'s stdin. The service is said to
 be logged; the I<log> service is called the service's logger.
 
+See B<aa-enable>(1) for how you can use a file instead, to automatically use the
+same logger for all services.
+
 =back
 
 For completeness, the following "internals" are also supported.
@@ -157,7 +160,7 @@ B<aa-stop> when stopping the service. It if exits with 0 the service will be
 considered stopped, else stopped-failed.
 If no such file exists, the service will be considered stopped instantly.
 
-=item An optional, empty, regular file names I<essential>
+=item An optional, empty, regular file named I<essential>
 
 If present and the service fails to be started, when it exits B<aa-start> will
 return 1. It will only return 0 if no essential services failed to be started.
