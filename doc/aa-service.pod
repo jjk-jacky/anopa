@@ -1,0 +1,54 @@
+=head1 NAME
+
+aa-service - Helper for execline script to get service name/instance
+
+=head1 SYNOPSIS
+
+B<aa-service> [B<-l>] I<PROG...>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-l, --log>
+
+To use for a service logger run script, i.e. when current folder will be
+subfolder I<log> of the servicedir.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+This is a little helper for execline scripts (e.g. a service's I<run> script)
+that will perform variable substitution on I<PROG...> for:
+
+=over
+
+=item B<SERVICE_NAME>
+
+Will be the name of the current folder, i.e. full service name (e.g. I<foobar>
+or I<bar@foo>)
+
+=item B<SERVICE>
+
+Will be the name of the service, without the instance name if any (e.g.
+I<foobar> or I<bar>)
+
+=item B<INSTANCE>
+
+Will be the instance name of the service if any, else empty string (e.g. empty
+string or I<foo>)
+
+=back
+
+This can be useful to get the service/instance name dynamicly; e.g. a service
+could use I<${INSTANCE}> as argument, and a generic logger could then use
+I</var/log/${SERVICE_NAME}> as logdir.
