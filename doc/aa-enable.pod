@@ -138,15 +138,16 @@ I<getty@tty1>, we say the service used in I<getty> for instance I<tty1>. The way
 it works in B<aa-enable>(1) is that it will look for a servicedir I<getty@> in
 source directories, but will copy it as I<getty@tty1> into the repository.
 
-Then, in your run/finish/start/stop script(s), you can e.g. use B<aa_service>(1)
-to get the service & instance and use them as needed.
+Then, in your run/finish/start/stop script(s), you can e.g. use B<aa-service>(1)
+to get the service & instance names and use them as needed.
 
 Additionally, whenever copying content of the directories I<needs>, I<wants>,
 I<after> and I<before>, B<aa-enable>(1) will automatically rename any file whose
 name ends with a @ to append the current instance name.
 
 Therefore, if servicedir I<getty@> contained a file named I<set-numlock@> into
-on of those, it would be copied as e.g. I<set-numock@tty1> into the repository.
+one of those, it would be copied as e.g. I<set-numock@tty1> into the created
+servicedir I<getty@tty1>.
 
 =head2 Special case: service logger
 
@@ -154,9 +155,10 @@ Long-run services are likely to be logged, and to do so you need to provide a
 servicedir I<log> inside the servicedir of the service.
 
 To simplify things, if a regular file or directory I<log> is found in a
-servicedir, B<aa-enable>(1) will copy the servicedir I<log>, taken for source
-directories as usual, into the servicedir of the service. And in case of a
-directory, its content will then be merge/copied over.
+servicedir (in a source directory), B<aa-enable>(1) will copy the servicedir
+I<log>, taken from source directories as usual, into the servicedir of the
+service. And in case of a directory, its content will then be merged/copied
+over.
 
 This allows you to use the service/servicedir I<log> as logger for a service by
 simply putting an empty regular file I<log> into the original servicedir (in a
