@@ -475,7 +475,35 @@ aa_enable_service (const char       *_name,
         return r;
 
     if (name != _name)
+    {
         r = copy_dir (_name, name, _mode, 0, warn_fn, flags | _AA_FLAG_IS_CONFIGDIR, ae_cb, instance);
+        if (r < 0)
+            return r;
+    }
+
+    {
+        int l = sizeof ("/log/run-args");
+        char buf[l_name + l];
+        struct stat st;
+
+        byte_copy (buf, l_name, name);
+        byte_copy (buf + l_name, l, "/log/run-args");
+
+        r = stat (buf, &st);
+        if (r == 0 && S_ISREG (st.st_mode))
+        {
+            char dst[l_name + l - 5];
+
+            byte_copy (dst, l_name, name);
+            byte_copy (dst + l_name, l - 5, "/log/run");
+
+            r = aa_copy_file (buf, dst, st.st_mode, AA_CP_APPEND);
+            if (r == 0)
+                unlink (buf);
+        }
+        else if (r < 0 && errno == ENOENT)
+            r = 0;
+    }
 
     return r;
 }

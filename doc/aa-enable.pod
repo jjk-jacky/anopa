@@ -119,6 +119,10 @@ the service won't be auto-started by B<s6-svscan>, and a symlink is added to the
 servicedir into the I<.scandir> sub-directory of I<REPODIR> (even if the service
 was specified to B<--skip-down>).
 
+- As last step, B<aa-enable>(1) will check if a regular file I<log/run-args>
+exists in the newly created servicedir, and if so its content will be appended
+to I<log/run>
+
 =head2 Special case: Instances
 
 Service names cannot start nor end with a @ character, but can contain one.
@@ -161,6 +165,19 @@ source directory); Or use a directory to simply specify/add configuration files.
 Note that you can also still provide files from the configuration directory in
 listdir, since it is copied last (and that this always includes providing a new
 I<run> file).
+
+Lastly, B<aa-enable>(1)'s last step when creating a servicedir is to check for a
+regular file I<log/run-args> in the newly created servicedir, and if found to
+append its content to I<log/run>
+
+The idea is to allow to easily use the default logger, and yet be able to add
+e.g. directives to B<s6-log>'s loggin script. This could be particularly useful
+e.g. if the default logger does connect its stdout to a fifo, allowing you to
+select lines to write there (or to the logger's stderr).
+
+Note that since you can remove or append to files from configuration (directory
+in I<LISTDIR>; See below), you can either remove, rewrite or append to
+I<log/run-args> as needed before it is processed.
 
 =head2 Removing/appending to files
 
