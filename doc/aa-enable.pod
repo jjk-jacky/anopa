@@ -110,7 +110,8 @@ this is a long-run or one-shot service.
 
 - If the service name came from a directory in I<LISTDIR>, its content is then
 merged/copied over into the servicedir. This allows to specify service-specific
-configuration, or could possibly be used to overwrite an actual script.
+configuration, or could possibly be used to overwrite an actual script. See
+below for how to remove/append to files.
 
 - If the service is a long-run, an empty regular file I<down> is created (unless
 it already existed, or the service was specified to B<--skip-down>) to ensure
@@ -160,3 +161,15 @@ source directory); Or use a directory to simply specify/add configuration files.
 Note that you can also still provide files from the configuration directory in
 listdir, since it is copied last (and that this always includes providing a new
 I<run> file).
+
+=head2 Removing/appending to files
+
+When copying files from the "configuration directory" (directory in I<LISTDIR>)
+regular files starting with either a dash ( - ) or plus sign ( + ) are processed
+in a special manner:
+
+- A file I<-foobar> will have B<aa-enable>(1) remove file I<foobar> from the
+destination servicedir, if it exists.
+
+- A file I<+foobar> will have its content be appended to I<foobar> in the
+destination servicedir.

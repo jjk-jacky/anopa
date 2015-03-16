@@ -12,9 +12,10 @@ typedef enum
     AA_FLAG_SKIP_DOWN           = (1 << 2),
     /* private */
     _AA_FLAG_IS_SERVICEDIR      = (1 << 3),
-    _AA_FLAG_IS_NEEDS           = (1 << 4),
-    _AA_FLAG_IS_WANTS           = (1 << 5),
-    _AA_FLAG_IS_BEF_AFT         = (1 << 6),
+    _AA_FLAG_IS_CONFIGDIR       = (1 << 4),
+    _AA_FLAG_IS_NEEDS           = (1 << 5),
+    _AA_FLAG_IS_WANTS           = (1 << 6),
+    _AA_FLAG_IS_BEF_AFT         = (1 << 7),
     _AA_FLAG_IS_1OF4            = _AA_FLAG_IS_NEEDS | _AA_FLAG_IS_WANTS | _AA_FLAG_IS_BEF_AFT
 } aa_enable_flags;
 

@@ -54,7 +54,7 @@ main (int argc, char * const argv[])
             strerr_dief2x (2, "invalid new name read from ", argv[1]);
         newname[l + 26] = '\0';
 
-        if (aa_copy_file (argv[1], newname, st.st_mode, 0) < 0)
+        if (aa_copy_file (argv[1], newname, st.st_mode, AA_CP_CREATE) < 0)
             strerr_diefu4sys (2, "copy ", argv[1], " as ", newname);
 
         byte_copy (target, 26, newname + l + 1);

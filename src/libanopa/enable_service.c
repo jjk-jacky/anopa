@@ -201,6 +201,23 @@ copy_dir (const char        *src,
                     r = copy_log (dst, NULL, 0, warn_fn);
                     st.st_mode = 0755;
                 }
+                else if ((flags & _AA_FLAG_IS_CONFIGDIR) && len > 1
+                        && (satmp.s[i] == '-' || satmp.s[i] == '+'))
+                {
+                    byte_copy (buf_dst + l_dst + 1, len, satmp.s + i + 1);
+
+                    if (satmp.s[i] == '-')
+                    {
+                        r = unlink (buf_dst);
+                        if (r < 0 && errno == ENOENT)
+                            /* not an error */
+                            r = 0;
+                        /* skip lchown/chmod calls */
+                        goto next;
+                    }
+                    else /* '+' */
+                        r = aa_copy_file (buf_src, buf_dst, st.st_mode, AA_CP_APPEND);
+                }
                 else
                 {
                     /* for any file in one of the 4 special places that ends
@@ -208,7 +225,7 @@ copy_dir (const char        *src,
                     if (depth == 1 && instance && (flags & _AA_FLAG_IS_1OF4)
                             && satmp.s[i + len - 1] == '@')
                         byte_copy (buf_dst + l_dst + 1 + len, l_inst + 1, instance);
-                    r = aa_copy_file (buf_src, buf_dst, st.st_mode, 1);
+                    r = aa_copy_file (buf_src, buf_dst, st.st_mode, AA_CP_OVERWRITE);
                     if (depth == 1 && r == 0 && ae_cb)
                     {
                         if ((flags & (AA_FLAG_AUTO_ENABLE_NEEDS | _AA_FLAG_IS_NEEDS))
@@ -270,6 +287,7 @@ copy_dir (const char        *src,
             if (r >= 0 && !S_ISLNK (st.st_mode) && !S_ISDIR (st.st_mode))
                 r = chmod (buf_dst, st.st_mode);
 
+next:
             if (r < 0)
             {
                 warn_fn (buf_src, errno);
@@ -457,7 +475,7 @@ aa_enable_service (const char       *_name,
         return r;
 
     if (name != _name)
-        return copy_dir (_name, name, _mode, 0, warn_fn, flags, ae_cb, instance);
-    else
-        return 0;
+        r = copy_dir (_name, name, _mode, 0, warn_fn, flags | _AA_FLAG_IS_CONFIGDIR, ae_cb, instance);
+
+    return r;
 }
