@@ -8,6 +8,7 @@ aa-mvlog                0755
 aa-pivot                0755
 aa-reboot               0755
 aa-service              0755
+aa-setready             0755
 aa-shutdown             0755
 aa-stage0               0755
 aa-stage1               0755

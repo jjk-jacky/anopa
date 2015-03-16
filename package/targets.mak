@@ -9,6 +9,7 @@ aa-mvlog \
 aa-pivot \
 aa-reboot \
 aa-service \
+aa-setready \
 aa-start \
 aa-stop \
 aa-sync \
@@ -38,6 +39,7 @@ aa-mvlog.1 \
 aa-pivot.1 \
 aa-reboot.1 \
 aa-service.1 \
+aa-setready.1 \
 aa-shutdown.1 \
 aa-stage0.1 \
 aa-stage1.1 \
