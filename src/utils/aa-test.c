@@ -53,7 +53,7 @@ main (int argc, char * const argv[])
     struct stat st;
     uid_t euid;
     int mode;
-    char test;
+    char test = 0;
 
     for (;;)
     {
@@ -105,7 +105,7 @@ main (int argc, char * const argv[])
     argc -= optind;
     argv += optind;
 
-    if (argc != 1)
+    if (argc != 1 || test == 0)
         dieusage (1);
 
     if (lstat (argv[0], &st) < 0)
