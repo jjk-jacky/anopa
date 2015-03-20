@@ -10,8 +10,10 @@
 #include <skalibs/djbunix.h>
 #include <skalibs/direntry.h>
 #include <skalibs/skamisc.h>
+#include <skalibs/stralloc.h>
 #include <anopa/enable_service.h>
 #include <anopa/copy_file.h>
+#include <anopa/scan_dir.h>
 #include <anopa/err.h>
 
 static int
@@ -233,15 +235,6 @@ copy_dir (const char        *src,
                             && satmp.s[i + len - 1] == '@')
                         byte_copy (buf_dst + l_dst + 1 + len, l_inst + 1, instance);
                     r = aa_copy_file (buf_src, buf_dst, st.st_mode, AA_CP_OVERWRITE);
-                    if (depth == 1 && r == 0 && ae_cb)
-                    {
-                        if ((flags & (AA_FLAG_AUTO_ENABLE_NEEDS | _AA_FLAG_IS_NEEDS))
-                                == (AA_FLAG_AUTO_ENABLE_NEEDS | _AA_FLAG_IS_NEEDS))
-                            ae_cb (buf_dst + l_dst + 1, AA_FLAG_AUTO_ENABLE_NEEDS);
-                        else if ((flags & (AA_FLAG_AUTO_ENABLE_WANTS | _AA_FLAG_IS_WANTS))
-                                == (AA_FLAG_AUTO_ENABLE_WANTS | _AA_FLAG_IS_WANTS))
-                            ae_cb (buf_dst + l_dst + 1, AA_FLAG_AUTO_ENABLE_WANTS);
-                    }
                 }
             }
             else if (S_ISDIR (st.st_mode))
@@ -254,13 +247,11 @@ copy_dir (const char        *src,
                     if (depth == 0)
                     {
                         /* flag to enable auto-rename of files above */
-                        if (str_equal (satmp.s + i, "needs"))
-                            flags |= _AA_FLAG_IS_NEEDS;
-                        else if (str_equal (satmp.s + i, "wants"))
-                            flags |= _AA_FLAG_IS_WANTS;
-                        else if (str_equal (satmp.s + i, "before")
+                        if (str_equal (satmp.s + i, "needs")
+                                || str_equal (satmp.s + i, "wants")
+                                || str_equal (satmp.s + i, "before")
                                 || str_equal (satmp.s + i, "after"))
-                            flags |= _AA_FLAG_IS_BEF_AFT;
+                            flags |= _AA_FLAG_IS_1OF4;
                     }
                     r = copy_dir (buf_src, buf_dst, st.st_mode, depth + 1,
                             warn_fn, flags, ae_cb, instance);
@@ -426,6 +417,18 @@ copy_from_source (const char        *name,
     return 0;
 }
 
+static int
+it_cb (direntry *d, void *_data)
+{
+    struct {
+        aa_auto_enable_cb cb;
+        unsigned int flag;
+    } *data = _data;
+
+    data->cb (d->d_name, data->flag);
+    return 0;
+}
+
 int
 aa_enable_service (const char       *_name,
                    aa_warn_fn        warn_fn,
@@ -510,6 +513,52 @@ aa_enable_service (const char       *_name,
         }
         else if (r < 0 && errno == ENOENT)
             r = 0;
+    }
+
+    if (ae_cb && flags & (AA_FLAG_AUTO_ENABLE_NEEDS | AA_FLAG_AUTO_ENABLE_WANTS))
+    {
+        stralloc sa = STRALLOC_ZERO;
+        struct {
+            aa_auto_enable_cb cb;
+            unsigned int flag;
+        } data = { .cb = ae_cb };
+
+        if (!stralloc_catb (&sa, name, l_name))
+        {
+            errno = ENOMEM;
+            return -1;
+        }
+
+        if (flags & AA_FLAG_AUTO_ENABLE_NEEDS)
+        {
+            if (!stralloc_cats (&sa, "/needs") || !stralloc_0 (&sa))
+            {
+                stralloc_free (&sa);
+                errno = ENOMEM;
+                return -1;
+            }
+            data.flag = AA_FLAG_AUTO_ENABLE_NEEDS;
+            r = aa_scan_dir (&sa, 1, it_cb, &data);
+            if (r == -ERR_IO && errno == ENOENT)
+                r = 0;
+            sa.len = l_name;
+        }
+
+        if (r == 0 && flags & AA_FLAG_AUTO_ENABLE_WANTS)
+        {
+            if (!stralloc_cats (&sa, "/wants") || !stralloc_0 (&sa))
+            {
+                stralloc_free (&sa);
+                errno = ENOMEM;
+                return -1;
+            }
+            data.flag = AA_FLAG_AUTO_ENABLE_WANTS;
+            r = aa_scan_dir (&sa, 1, it_cb, &data);
+            if (r == -ERR_IO && errno == ENOENT)
+                r = 0;
+        }
+
+        stralloc_free (&sa);
     }
 
     return r;
