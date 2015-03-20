@@ -205,6 +205,13 @@ copy_dir (const char        *src,
                         && (satmp.s[i] == '-' || satmp.s[i] == '+'))
                 {
                     byte_copy (buf_dst + l_dst + 1, len, satmp.s + i + 1);
+                    /* for any file in one of the 4 special places that ends
+                     * with a '@' we append our instance name
+                     * (don't make much sense for '+' but useful for '-' to
+                     * remove "generic" ordering/dependencies) */
+                    if (depth == 1 && instance && (flags & _AA_FLAG_IS_1OF4)
+                            && satmp.s[i + len - 1] == '@')
+                        byte_copy (buf_dst + l_dst + len, l_inst + 1, instance);
 
                     if (satmp.s[i] == '-')
                     {
