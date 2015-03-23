@@ -510,6 +510,7 @@ aa_exec_service (int si, aa_mode mode)
          * we use common code for aa-start & aa-stop, so... yeah */
         _exec_cb (si, 0, (pid_t) mode);
 
+    tain_copynow (&aa_service (si)->ts_exec);
     if (aa_service (si)->st.type == AA_TYPE_ONESHOT)
         r = _exec_oneshot (si, mode);
     else

@@ -107,25 +107,96 @@ draw_password ()
 void
 draw_waiting (int already_drawn)
 {
-    static int n = 0;
-    const char busy[] = "-\\|/";
-    int l_b = (sizeof (busy) / sizeof (*busy)) - 1;
+    static int n = 1;
+    static int tick = -1;
     char buf[UINT_FMT];
     int nb;
+    int si;
+    tain_t ts;
+    int secs;
 
     if (already_drawn)
         aa_is_noflush (AA_OUT, ANSI_CLEAR_BEFORE ANSI_START_LINE);
 
-    nb = nb_wait_longrun + genalloc_len (pid_t, &ga_pid);
-    aa_is_noflush (AA_OUT, "Waiting on ");
-    buf[uint_fmt (buf, nb)] = '\0';
-    aa_is_noflush (AA_OUT, buf);
-    aa_is_noflush (AA_OUT, " service");
-    aa_is_noflush (AA_OUT, ("s... " + ((nb > 1) ? 0 : 1)));
+    nb = genalloc_len (pid_t, &ga_pid) + nb_wait_longrun;
+    if (nb <= 0)
+        return;
+    else if (n > nb)
+    {
+        n = 1;
+        tick = 0;
+    }
+    else if (tick > 1)
+    {
+        tick = 0;
+        if (++n > nb)
+            n = 1;
+    }
+    else
+        ++tick;
 
-    aa_ib_flush (AA_OUT, busy + n, 1);
-    if (++n >= l_b)
-        n = 0;
+    if (n <= genalloc_len (pid_t, &ga_pid))
+        si = list_get (&aa_tmp_list, n - 1);
+    else
+    {
+        int l = genalloc_len (int, &aa_main_list);
+        int i;
+        int j;
+
+        j = n - genalloc_len (pid_t, &ga_pid);
+        for (i = 0; i < l && j < n; ++i)
+            if (aa_service (list_get (&aa_main_list, i))->ft_id > 0)
+                ++j;
+        if (j < n)
+            return;
+        si = list_get (&aa_main_list, i);
+    }
+
+    if (!tain_sub (&ts, &STAMP, &aa_service (si)->ts_exec))
+        secs = -1;
+    else
+    {
+        secs = tain_to_millisecs (&ts);
+        if (secs > 0)
+            secs /= 1000;
+    }
+
+    if (nb > 1 || secs >= 0)
+        aa_is_noflush (AA_OUT, "[");
+
+    if (nb > 1)
+    {
+        buf[uint_fmt (buf, n)] = '\0';
+        aa_is_noflush (AA_OUT, buf);
+        aa_is_noflush (AA_OUT, "/");
+        buf[uint_fmt (buf, nb)] = '\0';
+        aa_is_noflush (AA_OUT, buf);
+        if (secs >= 0)
+            aa_is_noflush (AA_OUT, "; ");
+    }
+
+    if (secs >= 0)
+    {
+        int mins;
+
+        mins = secs / 60;
+        secs -= 60 * mins;
+
+        if (mins > 0)
+        {
+            buf[uint_fmt (buf, mins)] = '\0';
+            aa_is_noflush (AA_OUT, buf);
+            aa_is_noflush (AA_OUT, "m");
+        }
+        buf[uint_fmt (buf, secs)] = '\0';
+        aa_is_noflush (AA_OUT, buf);
+        aa_is_noflush (AA_OUT, "s");
+    }
+
+    if (nb > 1 || secs >= 0)
+        aa_is_noflush (AA_OUT, "] ");
+
+    aa_is_flush (AA_OUT, aa_service_name (aa_service (si)));
 
     draw |= DRAW_CUR_WAITING;
 }
@@ -230,12 +301,7 @@ refresh_draw ()
         draw_waiting ((old_draw & DRAW_CUR_WAITING) && !(draw & DRAW_CUR_PROGRESS));
 
     if (draw & DRAW_CUR_WAITING)
-    {
-        tain_t t;
-
-        tain_from_millisecs (&t, 108);
-        tain_add_g (&iol_deadline, &t);
-    }
+        iol_deadline_addsec (1);
     else
         iol_deadline_addsec (TIMEOUT_SECS);
 }

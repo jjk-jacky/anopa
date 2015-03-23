@@ -6,6 +6,7 @@
 #include <skalibs/stralloc.h>
 #include <skalibs/genalloc.h>
 #include <skalibs/uint16.h>
+#include <skalibs/tai.h>
 #include <s6/ftrigr.h>
 #include <anopa/service_status.h>
 
@@ -59,6 +60,7 @@ typedef struct
     genalloc after;
     aa_ls ls;
     aa_service_status st;
+    tain_t ts_exec;
     /* longrun */
     uint16 ft_id;
     int gets_ready;

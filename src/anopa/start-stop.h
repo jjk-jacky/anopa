@@ -9,7 +9,7 @@
 #include <anopa/progress.h>
 #include <anopa/output.h>
 
-#define TIMEOUT_SECS                2
+#define TIMEOUT_SECS                3
 
 #define ANSI_PREV_LINE              "\x1B[F"
 #define ANSI_CLEAR_AFTER            "\x1B[K"
