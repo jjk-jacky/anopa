@@ -12,6 +12,7 @@
 #include <skalibs/genalloc.h>
 #include <skalibs/strerr2.h>
 #include <skalibs/error.h>
+#include <skalibs/uint.h>
 #include <skalibs/tai.h>
 #include <skalibs/djbunix.h>
 #include <anopa/common.h>
@@ -150,6 +151,7 @@ dieusage (int rc)
             " -D, --double-output           Enable double-output mode\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
             " -k, --skip SERVICE            Skip (do not stop) SERVICE\n"
+            " -t, --timeout SECS            Use SECS seconds as default timeout\n"
             " -a, --all                     Stop all running services\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
@@ -170,6 +172,7 @@ main (int argc, char * const argv[])
     int mode_both = 0;
     int i;
 
+    aa_secs_timeout = DEFAULT_TIMEOUT_SECS;
     for (;;)
     {
         struct option longopts[] = {
@@ -178,12 +181,13 @@ main (int argc, char * const argv[])
             { "help",               no_argument,        NULL,   'h' },
             { "skip",               required_argument,  NULL,   'k' },
             { "repodir",            required_argument,  NULL,   'r' },
+            { "timeout",            required_argument,  NULL,   't' },
             { "version",            no_argument,        NULL,   'V' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "aDhk:r:V", longopts, NULL);
+        c = getopt_long (argc, argv, "aDhk:r:t:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -206,6 +210,11 @@ main (int argc, char * const argv[])
             case 'r':
                 unslash (optarg);
                 path_repo = optarg;
+                break;
+
+            case 't':
+                if (!uint0_scan (optarg, &aa_secs_timeout))
+                    strerr_diefu2sys (ERR_IO, "set default timeout to ", optarg);
                 break;
 
             case 'V':
@@ -251,10 +260,12 @@ main (int argc, char * const argv[])
     put_title (1, PROG, "Completed.", 1);
     aa_show_stat_nb (nb_already, "Not up", ANSI_HIGHLIGHT_GREEN_ON);
     aa_show_stat_nb (nb_done, "Stopped", ANSI_HIGHLIGHT_GREEN_ON);
+    show_stat_service_names (&ga_timedout, "Timed out", ANSI_HIGHLIGHT_RED_ON);
     show_stat_service_names (&ga_failed, "Failed", ANSI_HIGHLIGHT_RED_ON);
     aa_show_stat_names (aa_names.s, &ga_io, "I/O error", ANSI_HIGHLIGHT_RED_ON);
     aa_show_stat_names (aa_names.s, &ga_unknown, "Unknown", ANSI_HIGHLIGHT_RED_ON);
 
+    genalloc_free (int, &ga_timedout);
     genalloc_free (int, &ga_failed);
     genalloc_free (int, &ga_unknown);
     genalloc_free (int, &ga_io);

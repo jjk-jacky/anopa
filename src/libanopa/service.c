@@ -6,6 +6,7 @@
 #include <skalibs/genalloc.h>
 #include <skalibs/bytestr.h>
 #include <skalibs/direntry.h>
+#include <skalibs/uint.h>
 #include <skalibs/tai.h>
 #include <skalibs/strerr2.h>
 #include <s6/s6-supervise.h>
@@ -245,6 +246,24 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
             &it_data);
     if (r < 0 && (r != -ERR_IO || errno != ENOENT))
         goto err;
+
+    {
+        stralloc sa_to = STRALLOC_ZERO;
+
+        sa.len -= strlen ("before") + 1;
+        stralloc_catb (&sa, "timeout", strlen ("timeout") + 1);
+        if (openreadclose (sa.s, &sa_to, 0) == 0 && sa_to.len > 0)
+        {
+            r = uint_scan (sa_to.s, &aa_service (si)->secs_timeout);
+            if (!r || (sa_to.s[r] != '\n' && sa_to.s[r] != '\0'))
+            {
+                strerr_warnwu3x ("read timeout for ", aa_service_name (aa_service (si)), "; using default");
+                aa_service (si)->secs_timeout = aa_secs_timeout;
+            }
+        }
+        else
+            aa_service (si)->secs_timeout = aa_secs_timeout;
+    }
 
     stralloc_free (&sa);
     aa_service (si)->ls = AA_LOAD_DONE;

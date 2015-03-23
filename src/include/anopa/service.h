@@ -19,6 +19,7 @@ extern stralloc aa_names;
 extern genalloc aa_main_list;
 extern genalloc aa_tmp_list;
 extern genalloc aa_pid_list;
+extern int aa_secs_timeout;
 
 #define aa_service(i)               (&((aa_service *) aa_services.s)[i])
 #define aa_service_name(service)    (aa_names.s + (service)->offset_name)
@@ -58,6 +59,7 @@ typedef struct
     genalloc needs;
     genalloc wants;
     genalloc after;
+    int secs_timeout;
     aa_ls ls;
     aa_service_status st;
     tain_t ts_exec;
@@ -70,6 +72,7 @@ typedef struct
     stralloc sa_out;
     int fd_progress;
     int pi;
+    int timedout;
 } aa_service;
 
 typedef void (*aa_close_fd_fn) (int fd);

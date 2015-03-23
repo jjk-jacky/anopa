@@ -9,7 +9,8 @@
 #include <anopa/progress.h>
 #include <anopa/output.h>
 
-#define TIMEOUT_SECS                3
+#define SECS_BEFORE_WAITING         7
+#define DEFAULT_TIMEOUT_SECS        300
 
 #define ANSI_PREV_LINE              "\x1B[F"
 #define ANSI_CLEAR_AFTER            "\x1B[K"
@@ -25,6 +26,7 @@ extern int nb_already;
 extern int nb_done;
 extern int nb_wait_longrun;
 extern genalloc ga_failed;
+extern genalloc ga_timedout;
 extern int cols;
 extern int is_utf8;
 extern int ioloop;
@@ -58,10 +60,11 @@ struct progress
     aa_progress aa_pg;
     int si;
     int is_drawn;
+    int secs_timeout;
 };
 
 void free_progress (struct progress *pg);
-void refresh_draw ();
+int refresh_draw ();
 void draw_waiting (int already_drawn);
 void draw_progress_for (int si);
 void clear_draw ();

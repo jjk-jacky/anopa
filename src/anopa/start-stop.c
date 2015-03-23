@@ -31,6 +31,7 @@ int nb_already = 0;
 int nb_done = 0;
 int nb_wait_longrun = 0;
 genalloc ga_failed = GENALLOC_ZERO;
+genalloc ga_timedout = GENALLOC_ZERO;
 int cols = 80;
 int is_utf8 = 0;
 int ioloop = 1;
@@ -102,6 +103,29 @@ draw_password ()
     aa_is_noflush (AA_OUT, pg->aa_pg.sa.s);
     aa_is_flush (AA_OUT, " : ");
     draw |= DRAW_CUR_PASSWORD;
+}
+
+static void
+is_noflush_time (int secs)
+{
+    char buf[UINT_FMT];
+    int mins;
+
+    mins = secs / 60;
+    secs -= 60 * mins;
+
+    if (mins > 0)
+    {
+        buf[uint_fmt (buf, mins)] = '\0';
+        aa_is_noflush (AA_OUT, buf);
+        aa_is_noflush (AA_OUT, "m");
+    }
+    if (secs > 0)
+    {
+        buf[uint_fmt (buf, secs)] = '\0';
+        aa_is_noflush (AA_OUT, buf);
+        aa_is_noflush (AA_OUT, "s");
+    }
 }
 
 void
@@ -177,20 +201,14 @@ draw_waiting (int already_drawn)
 
     if (secs >= 0)
     {
-        int mins;
-
-        mins = secs / 60;
-        secs -= 60 * mins;
-
-        if (mins > 0)
-        {
-            buf[uint_fmt (buf, mins)] = '\0';
-            aa_is_noflush (AA_OUT, buf);
-            aa_is_noflush (AA_OUT, "m");
-        }
-        buf[uint_fmt (buf, secs)] = '\0';
-        aa_is_noflush (AA_OUT, buf);
-        aa_is_noflush (AA_OUT, "s");
+        is_noflush_time (secs);
+        aa_is_noflush (AA_OUT, "/");
+        if (aa_service (si)->secs_timeout > 0)
+            is_noflush_time (aa_service (si)->secs_timeout);
+        else if (is_utf8)
+            aa_is_noflush (AA_OUT, "\u221e"); /* infinity sign */
+        else
+            aa_is_noflush (AA_OUT, "Inf");
     }
 
     if (nb > 1 || secs >= 0)
@@ -227,7 +245,7 @@ term_set_echo (int on)
     return tcsetattr (0, TCSANOW, &termios);
 }
 
-void
+int
 refresh_draw ()
 {
     unsigned int old_draw = draw;
@@ -300,10 +318,7 @@ refresh_draw ()
     if (draw & DRAW_NEED_WAITING)
         draw_waiting ((old_draw & DRAW_CUR_WAITING) && !(draw & DRAW_CUR_PROGRESS));
 
-    if (draw & DRAW_CUR_WAITING)
-        iol_deadline_addsec (1);
-    else
-        iol_deadline_addsec (TIMEOUT_SECS);
+    return 1000 * ((draw & DRAW_CUR_WAITING) ? 1 : SECS_BEFORE_WAITING);
 }
 
 void
@@ -311,12 +326,6 @@ add_name_to_ga (const char *name, genalloc *ga)
 {
     int offset = aa_add_name (name);
     genalloc_append (int, ga, &offset);
-}
-
-void
-iol_deadline_addsec (int n)
-{
-    tain_addsec_g (&iol_deadline, n);
 }
 
 void
@@ -493,6 +502,9 @@ handle_fd_progress (int si)
         draw |= DRAW_NEED_PASSWORD;
         /* clear in order to "reset" any WAITING */
         clear_draw ();
+        /* store timeout and disable it for now */
+        pg->secs_timeout = s->secs_timeout;
+        s->secs_timeout = 0;
         return 0;
     }
     else if (pg->is_drawn < 0)
@@ -604,6 +616,11 @@ end_si_password (void)
     pg->aa_pg.sa.len = 0;
     s->pi = -1;
     si_password = -1;
+    /* restore timeout */
+    s->secs_timeout = pg->secs_timeout;
+    pg->secs_timeout = 0;
+    /* reset ts */
+    tain_copynow (&s->ts_exec);
 
     r = term_set_echo (1);
     if (r < 0)
@@ -695,34 +712,52 @@ handle_oneshot (int is_start)
     else
     {
         aa_service_status *svst = &aa_service (si)->st;
-        char buf[20];
 
-        svst->event = (is_start) ? AA_EVT_START_FAILED: AA_EVT_STOP_FAILED;
-        svst->code = wstat;
-        tain_copynow (&svst->stamp);
-        aa_service_status_set_msg (svst, "");
-        if (aa_service_status_write (svst, aa_service_name (aa_service (si))) < 0)
-            strerr_warnwu2sys ("write service status file for ", aa_service_name (aa_service (si)));
-
-        if (WIFEXITED (wstat))
+        /* if this is the SIGTERM we sent on timeout, treat it as timed out */
+        if (aa_service (si)->timedout && !WIFEXITED (wstat) && WTERMSIG (wstat) == SIGTERM)
         {
-            byte_copy (buf, 9, "exitcode ");
-            buf[9 + uint_fmt (buf + 9, WEXITSTATUS (wstat))] = '\0';
+            svst->event = (is_start) ? AA_EVT_STARTING_FAILED: AA_EVT_STOPPING_FAILED;
+            svst->code = ERR_TIMEDOUT;
+            tain_copynow (&svst->stamp);
+            aa_service_status_set_msg (svst, "");
+            if (aa_service_status_write (svst, aa_service_name (aa_service (si))) < 0)
+                strerr_warnwu2sys ("write service status file for ", aa_service_name (aa_service (si)));
+
+            put_err_service (aa_service_name (aa_service (si)), ERR_TIMEDOUT, 1);
+            genalloc_append (int, &ga_timedout, &si);
         }
         else
         {
-            const char *name;
+            char buf[20];
 
-            name = sig_name (WTERMSIG (wstat));
-            byte_copy (buf, 10, "signal SIG");
-            byte_copy (buf + 10, strlen (name) + 1, name);
+            svst->event = (is_start) ? AA_EVT_START_FAILED: AA_EVT_STOP_FAILED;
+            svst->code = wstat;
+            tain_copynow (&svst->stamp);
+            aa_service_status_set_msg (svst, "");
+            if (aa_service_status_write (svst, aa_service_name (aa_service (si))) < 0)
+                strerr_warnwu2sys ("write service status file for ", aa_service_name (aa_service (si)));
+
+            if (WIFEXITED (wstat))
+            {
+                byte_copy (buf, 9, "exitcode ");
+                buf[9 + uint_fmt (buf + 9, WEXITSTATUS (wstat))] = '\0';
+            }
+            else
+            {
+                const char *name;
+
+                name = sig_name (WTERMSIG (wstat));
+                byte_copy (buf, 10, "signal SIG");
+                byte_copy (buf + 10, strlen (name) + 1, name);
+            }
+
+            put_err_service (aa_service_name (aa_service (si)), ERR_FAILED, 0);
+            add_err (": ");
+            add_err (buf);
+            end_err ();
+            genalloc_append (int, &ga_failed, &si);
         }
 
-        put_err_service (aa_service_name (aa_service (si)), ERR_FAILED, 0);
-        add_err (": ");
-        add_err (buf);
-        end_err ();
-        genalloc_append (int, &ga_failed, &si);
         if (is_start)
             check_essential (si);
     }
@@ -959,6 +994,152 @@ exec_cb (int si, aa_evt evt, pid_t pid)
     }
 }
 
+int
+process_timeouts (aa_mode mode, aa_scan_cb scan_cb)
+{
+    int si;
+    int l;
+    int i;
+    tain_t ts_timeout;
+    tain_t ts;
+    tain_t tms;
+    int ms = -1;
+    int scan = 0;
+
+    l = genalloc_len (int, &aa_tmp_list);
+    for (i = 0; i < l; ++i)
+    {
+        si = list_get (&aa_tmp_list, i);
+        /* no limit? */
+        if (aa_service (si)->secs_timeout == 0)
+            continue;
+
+        tain_from_millisecs (&ts_timeout, 1000 * aa_service (si)->secs_timeout);
+        tain_add (&ts, &aa_service (si)->ts_exec, &ts_timeout);
+        /* timeout expired? */
+        if (tain_less (&ts, &STAMP))
+        {
+            /* not yet signaled? */
+            if (!aa_service (si)->timedout)
+            {
+                kill (genalloc_s (pid_t, &ga_pid)[i], SIGTERM);
+                aa_service (si)->timedout = 1;
+            }
+
+            tain_addsec (&tms, &ts, 2);
+            if (!tain_less (&tms, &STAMP))
+            {
+                aa_service_status *svst = &aa_service (si)->st;
+
+                kill (genalloc_s (pid_t, &ga_pid)[i], SIGKILL);
+
+                remove_from_list (&aa_tmp_list, si);
+                ga_remove (pid_t, &ga_pid, i);
+                if (si == si_password)
+                    end_si_password ();
+                if (aa_service (si)->fd_in > 0)
+                    close_fd_for (aa_service (si)->fd_in, si);
+                if (aa_service (si)->fd_out > 0)
+                    close_fd_for (aa_service (si)->fd_out, si);
+                if (aa_service (si)->fd_progress > 0)
+                    close_fd_for (aa_service (si)->fd_progress, si);
+
+                svst->event = (mode == AA_MODE_START) ? AA_EVT_STARTING_FAILED: AA_EVT_STOPPING_FAILED;
+                svst->code = ERR_TIMEDOUT;
+                tain_copynow (&svst->stamp);
+                aa_service_status_set_msg (svst, "");
+                if (aa_service_status_write (svst, aa_service_name (aa_service (si))) < 0)
+                    strerr_warnwu2sys ("write service status file for ", aa_service_name (aa_service (si)));
+
+                put_err_service (aa_service_name (aa_service (si)), ERR_TIMEDOUT, 1);
+                genalloc_append (int, &ga_timedout, &si);
+                if (mode == AA_MODE_START)
+                    check_essential (si);
+
+                remove_from_list (&aa_main_list, si);
+                scan = 1;
+            }
+            else
+            {
+                int _ms;
+
+                ts = tms;
+                tain_sub (&tms, &ts, &STAMP);
+                _ms = tain_to_millisecs (&tms);
+                if (_ms > 0 && (ms < 0 || _ms < ms))
+                    ms = _ms;
+            }
+        }
+        else
+        {
+            int _ms;
+
+            tain_sub (&tms, &ts, &STAMP);
+            _ms = tain_to_millisecs (&tms);
+            if (ms < 0 || _ms < ms)
+                ms = _ms;
+        }
+    }
+
+    if (nb_wait_longrun > 0)
+    {
+        int j = 0;
+
+        l = genalloc_len (int, &aa_main_list);
+
+        for (i = 0; i < l && j < nb_wait_longrun; ++i)
+            if (aa_service (list_get (&aa_main_list, i))->ft_id > 0)
+            {
+                ++j;
+                si = list_get (&aa_main_list, i);
+                /* no limit? */
+                if (aa_service (si)->secs_timeout == 0)
+                    continue;
+
+                tain_from_millisecs (&ts_timeout, 1000 * aa_service (si)->secs_timeout);
+                tain_add (&ts, &aa_service (si)->ts_exec, &ts_timeout);
+                /* timeout expired? */
+                if (tain_less (&ts, &STAMP))
+                {
+                    aa_service_status *svst = &aa_service (si)->st;
+
+                    aa_unsubscribe_for (aa_service (si)->ft_id);
+                    aa_service (si)->ft_id = 0;
+                    --nb_wait_longrun;
+
+                    svst->event = (mode == AA_MODE_START) ? AA_EVT_STARTING_FAILED: AA_EVT_STOPPING_FAILED;
+                    svst->code = ERR_TIMEDOUT;
+                    tain_copynow (&svst->stamp);
+                    aa_service_status_set_msg (svst, "");
+                    if (aa_service_status_write (svst, aa_service_name (aa_service (si))) < 0)
+                        strerr_warnwu2sys ("write service status file for ", aa_service_name (aa_service (si)));
+
+                    put_err_service (aa_service_name (aa_service (si)), ERR_TIMEDOUT, 1);
+                    genalloc_append (int, &ga_timedout, &si);
+                    if (mode == AA_MODE_START)
+                        check_essential (si);
+
+                    remove_from_list (&aa_main_list, si);
+                    scan = 1;
+                }
+                else
+                {
+                    int _ms;
+
+                    tain_sub (&tms, &ts, &STAMP);
+                    _ms = tain_to_millisecs (&tms);
+                    if (ms < 0 || _ms < ms)
+                        ms = _ms;
+                }
+            }
+    }
+
+    if (scan)
+        aa_scan_mainlist (scan_cb, mode);
+
+    return ms;
+}
+
 void
 mainloop (aa_mode mode, aa_scan_cb scan_cb)
 {
@@ -1003,15 +1184,23 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
     {
         int nb_iop;
         int r;
+        int ms1, ms2;
+        tain_t tms;
 
-        refresh_draw ();
+        ms1 = process_timeouts (mode, scan_cb);
+        ms2 = refresh_draw ();
+        tain_from_millisecs (&tms, (ms1 < 0 || ms2 < ms1) ? ms2 : ms1);
+        tain_add (&iol_deadline, &STAMP, &tms);
 
         nb_iop = genalloc_len (iopause_fd, &ga_iop);
         r = iopause_g (genalloc_s (iopause_fd, &ga_iop), nb_iop, &iol_deadline);
         if (r < 0)
             strerr_diefu1sys (ERR_IO, "iopause");
         else if (r == 0)
-            draw |= DRAW_NEED_WAITING;
+        {
+            if (ms1 < 0 || ms2 < ms1)
+                draw |= DRAW_NEED_WAITING;
+        }
         else
         {
             iopause_fd *iofd;

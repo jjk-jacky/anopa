@@ -5,7 +5,7 @@ aa-start - Start services
 =head1 SYNOPSIS
 
 B<aa-start> [B<-D>] [B<-r> I<repodir>] [B<-l> I<listdir>] [B<-w>]
-[I<service...>]
+[B<-t> I<timeout>] [I<service...>]
 
 =head1 OPTIONS
 
@@ -32,6 +32,11 @@ than once the last one will be used.
 Use I<dir> as repository directory. This is where servicedirs will be looked
 for.
 
+=item B<-t, --timeout> I<timeout>
+
+Set default timeout to I<timeout> seconds. You can use 0 for no timeout.
+Timeout can also be set in service in a file I<timeout> in its servicedir.
+
 =item B<-V, --version>
 
 Show version information and exit.
@@ -50,6 +55,29 @@ found in directories I<needs> or I<wants> are also auto-started, though it is
 possible not to auto-start the ones from I<wants> via B<--no-wants>.
 
 Refer to B<anopa>(1) for descriptions of servicedirs and service dependencies.
+
+=head1 TIMEOUTS
+
+When starting a service, a timestamp is collected. If the service fails to be
+started/ready before the number of seconds specified either in a file I<timeout>
+in its servicedir or using the default value (300 (5 min) by default, unless
+set via B<--timeout>), the service is considered to have timed out.
+
+For long-run services, B<aa-start>(1) will simply stop waiting for event and
+mark the service as timed out.
+
+For one-shot services, signal TERM will be sent to the process, which is then
+given up to 2 seconds to react. If it exits during that time, it will be
+processed as usual, with the exception that if SIGTERM is the cause the service
+will then be marked as timed out (i.e. it could exit with a specified exit code,
+and be then marked failed, or even return 0 and be successfully started).
+
+If the process hasn't ended after those 2 seconds, signal KILL is sent to the
+process and the service marked as timed out.
+
+Note that using a value of 0 as time out (either via I<timeout> file or
+B<--timeout> option) means it never times out, and B<aa-start>(1) will wait for
+it forever; Use with caution.
 
 =head1 STARTING A LONG-RUN SERVICE
 
@@ -141,3 +169,7 @@ simply doing the same again.
 
 Note that it is not possible to show a progress bar while asking for user input,
 not that there should be a need for it anyways.
+
+Also note that once B<aa-start>(1) received a demand of password input, it will
+disable the service's timeout, restoring it once it has been processed (e.g.
+user input has been written to the service's stdin) and resetting its timer.

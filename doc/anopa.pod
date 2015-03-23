@@ -110,6 +110,12 @@ be logged; the I<log> service is called the service's logger.
 See B<aa-enable>(1) for how you can use a file instead, to automatically use the
 same logger for all services.
 
+=item An optional regular file I<timeout>
+
+If such a file exists, it should contain the number of seconds before the
+service is considered to be in time out; i.e. B<aa-start>(1)/B<aa-stop>(1) will
+stop waiting for them (killing the process for one-shot services).
+
 =back
 
 For completeness, the following "internals" are also supported.
@@ -169,6 +175,12 @@ end successfully (return non-zero).
 
 You would usually use such a file for the service mounting the root filesystem
 in initramfs, or launching getty.
+
+=item An optional regular file I<timeout>
+
+If such a file exists, it should contain the number of seconds before the
+service is considered to be in time out; i.e. B<aa-start>(1)/B<aa-stop>(1) will
+stop waiting for them (killing the process for one-shot services).
 
 =back
 
