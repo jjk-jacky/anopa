@@ -111,37 +111,37 @@ main (int argc, char * const argv[])
     if (lstat (argv[0], &st) < 0)
     {
         if (errno != ENOENT)
-            strerr_diefu2sys (1, "stat ", argv[0]);
+            strerr_diefu2sys (2, "stat ", argv[0]);
         else
-            return 1;
+            return 3;
     }
 
     switch (test)
     {
         case 'b':
-            return (S_ISBLK (st.st_mode)) ? 0 : 1;
+            return (S_ISBLK (st.st_mode)) ? 0 : 4;
 
         case 'd':
-            return (S_ISDIR (st.st_mode)) ? 0 : 1;
+            return (S_ISDIR (st.st_mode)) ? 0 : 4;
 
         case 'e':
             return 0;
 
         case 'f':
-            return (S_ISREG (st.st_mode)) ? 0 : 1;
+            return (S_ISREG (st.st_mode)) ? 0 : 4;
 
         case 'L':
-            return (S_ISLNK (st.st_mode)) ? 0 : 1;
+            return (S_ISLNK (st.st_mode)) ? 0 : 4;
 
         case 'p':
-            return (S_ISFIFO (st.st_mode)) ? 0 : 1;
+            return (S_ISFIFO (st.st_mode)) ? 0 : 4;
 
         case 'r':
             mode = R_OK;
             break;
 
         case 'S':
-            return (S_ISSOCK (st.st_mode)) ? 0 : 1;
+            return (S_ISSOCK (st.st_mode)) ? 0 : 4;
 
         case 'w':
             mode = W_OK;
@@ -162,7 +162,7 @@ main (int argc, char * const argv[])
         else if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
             return 0;
         else
-            return 1;
+            return 4;
     }
 
     if (st.st_uid == euid)
@@ -170,5 +170,5 @@ main (int argc, char * const argv[])
     else if (is_group_member (st.st_gid))
         mode <<= 3;
 
-    return (st.st_mode & mode) ? 0 : 1;
+    return (st.st_mode & mode) ? 0 : 4;
 }

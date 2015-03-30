@@ -64,4 +64,12 @@ Test whether I<FILE> exists and execute (search) permission is granted
 =head1 DESCRIPTION
 
 B<aa-test>(1) is a simple tool to check file types/permissions as specified, and
-return 0 when true, else 1.
+return 0 when true, else:
+
+1: Syntax error (e.g. invalid option)
+
+2: System error (e.g. permission denied)
+
+3: I<FILE> doesn't exist
+
+4: I<File> exists, but the rest of the test failed (e.g. wrong type)
