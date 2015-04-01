@@ -126,6 +126,34 @@ aa_get_service (const char *name, int *si, int new_in_main)
 }
 
 int
+aa_preload_service (int si)
+{
+    aa_service_status *svst = &aa_service (si)->st;
+    int l_sn = strlen (aa_service_name (aa_service (si)));
+    char buf[l_sn + 1 + sizeof (AA_GETS_READY_FILENAME)];
+
+    byte_copy (buf, l_sn, aa_service_name (aa_service (si)));
+    byte_copy (buf + l_sn, 5, "/run");
+
+    if (access (buf, F_OK) < 0)
+    {
+        if (errno != ENOENT)
+            return -ERR_IO;
+        else
+            svst->type = AA_TYPE_ONESHOT;
+    }
+    else
+    {
+        svst->type = AA_TYPE_LONGRUN;
+
+        byte_copy (buf + l_sn, 1 + sizeof (AA_GETS_READY_FILENAME), "/" AA_GETS_READY_FILENAME);
+        aa_service (si)->gets_ready = (access (buf, F_OK) == 0) ? 1 : 0;
+    }
+
+    return 0;
+}
+
+int
 aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf_cb)
 {
     stralloc sa = STRALLOC_ZERO;
@@ -137,29 +165,9 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
     else if (aa_service (si)->ls == AA_LOAD_FAIL)
         return -aa_service (si)->st.code;
 
-    {
-        aa_service_status *svst = &aa_service (si)->st;
-        int l_sn = strlen (aa_service_name (aa_service (si)));
-        char buf[l_sn + 1 + sizeof (AA_GETS_READY_FILENAME)];
-
-        byte_copy (buf, l_sn, aa_service_name (aa_service (si)));
-        byte_copy (buf + l_sn, 5, "/run");
-
-        if (access (buf, F_OK) < 0)
-        {
-            if (errno != ENOENT)
-                return -ERR_IO;
-            else
-                svst->type = AA_TYPE_ONESHOT;
-        }
-        else
-        {
-            svst->type = AA_TYPE_LONGRUN;
-
-            byte_copy (buf + l_sn, 1 + sizeof (AA_GETS_READY_FILENAME), "/" AA_GETS_READY_FILENAME);
-            aa_service (si)->gets_ready = (access (buf, F_OK) == 0) ? 1 : 0;
-        }
-    }
+    r = aa_preload_service (si);
+    if (r < 0)
+        return r;
 
     {
         aa_service_status *svst = &aa_service (si)->st;

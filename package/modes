@@ -16,6 +16,7 @@ aa-stage2               0755
 aa-stage3               0755
 aa-stage4               0755
 aa-start                0755
+aa-status               0755
 aa-stop                 0755
 aa-sync                 0755
 aa-terminate            0755

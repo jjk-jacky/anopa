@@ -11,6 +11,7 @@ aa-reboot \
 aa-service \
 aa-setready \
 aa-start \
+aa-status \
 aa-stop \
 aa-sync \
 aa-terminate \
@@ -47,6 +48,7 @@ aa-stage2.1 \
 aa-stage3.1 \
 aa-stage4.1 \
 aa-start.1 \
+aa-status.1 \
 aa-stop.1 \
 aa-sync.1 \
 aa-terminate.1 \

@@ -3,6 +3,7 @@ die_usage.o
 die_version.o
 enable_service.o
 errmsg.o
+eventmsg.o
 exec_longrun.o
 exec_oneshot.o
 ga_int_list.o

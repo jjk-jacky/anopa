@@ -1,0 +1,115 @@
+=head1 NAME
+
+aa-status - Show status of services
+
+=head1 SYNOPSIS
+
+B<aa-status> [B<-D>] [B<-r> I<repodir>] [B<-a>] [B<-l>] [I<service...>]
+
+=head1 OPTIONS
+
+=over
+
+=item B<-a, --all>
+
+Show status of all (enabled) services. This will list all folders (servicedirs)
+in the repository and show their status.
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-l, --list>
+
+Show statuses as a list, with one service per line, elipsizing service name
+and/or status if needed.
+
+=item B<-r, --repodir> I<dir>
+
+Use I<dir> as repository directory. This is where servicedirs will be looked
+for.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-status>(1) will show the status of one or more services. It does so by
+reading the I<status.anopa> file created by either B<aa-start>(1) or
+B<aa-stop>(1) as well as the I<status> file from B<s6> for long-run services,
+using whichever one has more recent information.
+
+For long-run services it will also check for the I<ready> file to determine
+whether the service is "Up" or "Ready" (using the timestamp from the I<ready>
+file in the later case).
+
+=head1 POSSIBLE STATUS
+
+The different possible statuses are :
+
+=over
+
+=item B<Unknown status>
+
+E.g. if no status file exist.
+
+=item B<Error>
+
+An error occured while processing the service, e.g. a dependency failed.
+An additionnal message will be present.
+
+=item B<Starting failed> / B<Stopping failed>
+
+(I<one-shot services only.>)
+
+The script I<start>/I<stop> could not be started; E.g. a permission error
+prevented its execution. An additionnal message might be present.
+
+=item B<Start failed> / B<Stop failed>
+
+(I<one-shot services only.>)
+
+The script I<start>/I<stop> did not return zero on exit. It will say either
+which value was returned, or which signal killed it.
+
+=item B<Starting> / B<Stopping>
+
+The script I<start>/I<stop> is currently running; or the command has been sent
+to the B<s6-supervise> of the service.
+
+=item B<Started> / B<Stopped>
+
+(I<one-shot services only.>)
+
+This script I<start>/I<stop> succesfully ran (i.e. and returned 0).
+
+=item B<Up>
+
+(I<long-run services only.>)
+
+The script I<run> is currently running; Its PID will be specified.
+
+=item B<Ready>
+
+(I<long-run services only.>)
+
+The script I<run> is currently running; Its PID will be specified.
+
+=item B<Down>
+
+(I<long-run services only.>)
+
+The script I<run> isn't running anymore. Its exitcode or which signal killed it
+will be specified.
+
+=back

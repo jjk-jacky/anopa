@@ -20,6 +20,8 @@ typedef enum
     _AA_NB_EVT
 } aa_evt;
 
+extern const char const *eventmsg[_AA_NB_EVT];
+
 enum
 {
     AA_TYPE_UNKNOWN = 0,
