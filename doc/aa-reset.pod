@@ -1,0 +1,59 @@
+=head1 NAME
+
+aa-reset - Reset status of one-shot services
+
+=head1 SYNOPSIS
+
+B<aa-reset> [B<-D>] [B<-r> I<repodir>] [B<-A> | B<-a> | B<-o>] [I<service...>]
+
+=head1 OPTIONS
+
+=over
+
+=item B<-A, --auto>
+
+Automatic mode; See L<B<DESCRIPTION>|/DESCRIPTION> below for what will be done.
+
+=item B<-a, --started>
+
+Reset to "Started"
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-o, --stopped>
+
+Reset to "Stopped"
+
+=item B<-r, --repodir> I<dir>
+
+Use I<dir> as repository directory. This is where servicedirs will be looked
+for.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-reset>(1) will reset the status of the specified one-shot services as
+specified:
+
+- to "Started" if B<--started> was specified,
+
+- to "Stopped" if B<--stopped> was specified,
+
+- or when B<--auto> was specified it will reset "Starting failed" and "Start
+failed" to "Started"; and "Stopping failed" and "Stop failed" to "Stopped"
+
+Note that a service either "Starting" or "Stopping" will never be reset.

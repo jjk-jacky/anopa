@@ -8,6 +8,7 @@ aa-mount \
 aa-mvlog \
 aa-pivot \
 aa-reboot \
+aa-reset \
 aa-service \
 aa-setready \
 aa-start \
@@ -39,6 +40,7 @@ aa-mount.1 \
 aa-mvlog.1 \
 aa-pivot.1 \
 aa-reboot.1 \
+aa-reset.1 \
 aa-service.1 \
 aa-setready.1 \
 aa-shutdown.1 \
