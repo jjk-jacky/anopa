@@ -284,6 +284,9 @@ main (int argc, char * const argv[])
             strerr_diefu2sys (1, "init repository ", path_repo);
     }
 
+    /* process listdir (path_list) first, to ensure if the service was also
+     * specified on cmdline (and will fail: already exists) the one processed is
+     * the one with (potentially) a config dir */
     if (path_list)
     {
         stralloc_catb (&sa_pl, path_list, strlen (path_list) + 1);
