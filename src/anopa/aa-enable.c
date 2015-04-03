@@ -84,7 +84,17 @@ enable_service (const char *name, int from_next)
         /* skip what's already planned to be done next (added via auto-enable) */
         for (i = 0; i < genalloc_len (int, &ga_next); ++i)
             if (str_equal (cur_name, names.s + list_get (&ga_next, i)))
-                return 0;
+            {
+                /* just a name, we can skip it (and process it later). Saves the
+                 * memmove needed to remove from ga_next */
+                if (cur_name == name)
+                    goto done;
+                /* there's a config folder, so we need to process it right now
+                 * (and remove it from ga_next) */
+                offset = list_get (&ga_next, i);
+                ga_remove (int, &ga_next, i);
+                goto process;
+            }
 
         offset = names.len;
         stralloc_catb (&names, cur_name, strlen (cur_name) + 1);
@@ -92,6 +102,7 @@ enable_service (const char *name, int from_next)
     else
         offset = from_next - 1;
 
+process:
     if (skip && str_equal (cur_name, skip))
         flags |= AA_FLAG_SKIP_DOWN;
     r = aa_enable_service (name, warn_cb, flags, ae_cb);
@@ -114,6 +125,7 @@ enable_service (const char *name, int from_next)
     }
 
     ++nb_enabled;
+done:
     cur_name = NULL;
     return 0;
 }
