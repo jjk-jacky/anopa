@@ -31,6 +31,7 @@ extern int cols;
 extern int is_utf8;
 extern int ioloop;
 extern int si_password;
+extern int si_active;
 
 enum
 {

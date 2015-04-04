@@ -36,6 +36,7 @@ int cols = 80;
 int is_utf8 = 0;
 int ioloop = 1;
 int si_password = -1;
+int si_active = -1;
 
 /* aa-start.c */
 void check_essential (int si);
@@ -56,6 +57,7 @@ clear_draw ()
     {
         aa_is_flush (AA_OUT, ANSI_CLEAR_BEFORE ANSI_START_LINE);
         draw &= ~DRAW_NEED_WAITING;
+        si_active = -1;
     }
 
     if (draw & DRAW_CUR_PROGRESS)
@@ -217,6 +219,7 @@ draw_waiting (int already_drawn)
     aa_is_flush (AA_OUT, aa_service_name (aa_service (si)));
 
     draw |= DRAW_CUR_WAITING;
+    si_active = si;
 }
 
 static int
@@ -869,6 +872,14 @@ handle_signals (aa_mode mode)
                     break;
                 }
 
+            case SIGINT:
+                if (si_active > -1)
+                    /* set the timeout for the "active" service (i.e. the one
+                     * whose name was shown as DRAW_CUR_WAITING) which will in
+                     * effect cause it to be timed out instantly */
+                    aa_service (si_active)->secs_timeout = 1;
+                break;
+
             case SIGTERM:
             case SIGQUIT:
                 ioloop = 0;
@@ -1167,6 +1178,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
     sigaddset (&set, SIGCHLD);
     sigaddset (&set, SIGTERM);
     sigaddset (&set, SIGQUIT);
+    sigaddset (&set, SIGINT);
     sigaddset (&set, SIGWINCH);
     if (selfpipe_trapset (&set) < 0)
         strerr_diefu1sys (ERR_IO, "trap signals");

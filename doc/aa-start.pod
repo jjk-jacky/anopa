@@ -79,6 +79,39 @@ Note that using a value of 0 as time out (either via I<timeout> file or
 B<--timeout> option) means it never times out, and B<aa-start>(1) will wait for
 it forever; Use with caution.
 
+=head2 Which services are we waiting for?
+
+When waiting for a service, and if there is no other activity (i.e. no services
+being started or showing messages, etc) then B<aa-start>(1) will show an
+indication of the service being waited for, including how much time has elapsed
+since it was started and its timeout, e.g:
+
+    [23s/5m] foobar
+
+Indicates that service I<foobar> is being waited for, it was started 23 seconds
+ago and will timeout when reaching 5 minutes. In case more than one service is
+being waited for, the "index" of the service and the number of services being
+waited for will be prefixed, and it will go through all services, e.g:
+
+    [1/2; 23s/5m] foo
+
+for a couple of seconds, then:
+
+    [2/2; 42s/2m30] bar
+
+Looping through them again until some activity occurs. The service whose name is
+currently being shown is called the "active" service.
+
+=head2 Manual trigger of time out
+
+When the name of the "active" service is shown, if B<aa-start>(1) receives
+signal INT (e.g. you pressed Ctrl+C) it will then reset the service's timeout
+to 1 second, effectively causing it to be processed as timed out immediately.
+
+This could be useful if you know a service won't work and eventually time out,
+and do not wish to wait until it actually gets there. This also works for
+services with an infinite timeout (i.e. set to 0).
+
 =head1 STARTING A LONG-RUN SERVICE
 
 When starting a long-run service, B<aa-start>(1) first connects to the I<event>
