@@ -43,13 +43,14 @@ ALL_SCRIPTS := $(LIBEXEC_SCRIPTS_TARGET) $(BIN_SCRIPTS_TARGET)
 all: $(ALL_LIBS) $(ALL_BINS) $(ALL_SCRIPTS) $(ALL_INCLUDES) $(DOC_TARGETS)
 
 clean:
-	@exec rm -f $(ALL_LIBS) $(ALL_BINS) $(BIN_SCRIPTS_TARGET) $(wildcard src/*/*.o src/*/*.lo) $(EXTRA_TARGETS)
+	@exec rm -f $(ALL_LIBS) $(ALL_BINS) $(ALL_SCRIPTS) $(wildcard src/*/*.o src/*/*.lo) $(EXTRA_TARGETS)
 
 distclean: clean
-	@exec rm -f config.mak src/include/${package}/config.h $(DOC_TARGETS)
+	@exec rm -f config.mak package/deps.mak src/include/${package}/config.h $(DOC_TARGETS)
 
-tgz: distclean
-	@. package/info && \
+tgz: distclean $(DOC_TARGETS)
+	@./tools/gen-deps.sh > package/deps.mak 2> /dev/null && \
+	. package/info && \
 	rm -rf /tmp/$$package-$$version && \
 	cp -a . /tmp/$$package-$$version && \
 	cd /tmp && \
