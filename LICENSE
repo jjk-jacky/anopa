@@ -1,0 +1,5 @@
+anopa is released under the GNU General Public License v3+
+  Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+  See COPYING
+
+Build system based on s6's by Laurent Bercot.
