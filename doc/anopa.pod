@@ -110,11 +110,17 @@ be logged; the I<log> service is called the service's logger.
 See B<aa-enable>(1) for how you can use a file instead, to automatically use the
 same logger for all services.
 
-=item An optional regular file I<timeout>
+=item An optional, empty, regular file named I<gets-ready>
+
+This is B<anopa>-specific, and if present indicates to B<aa-start>(1) that the
+service supports readiness, so it will wait for event 'U' (instead of 'u') when
+starting it.
+
+=item An optional regular file named I<timeout>
 
 If such a file exists, it should contain the number of seconds before the
 service is considered to be in time out; i.e. B<aa-start>(1)/B<aa-stop>(1) will
-stop waiting for them (killing the process for one-shot services).
+stop waiting for them.
 
 =back
 
@@ -136,12 +142,6 @@ used to send notifications when the service goes up/down.
 
 If such a file exists, the default state of the service is considered down, not
 up, and it isn't automatically started by B<s6-supervise>.
-
-=item An optional, empty, regular file named I<gets-ready>
-
-This is B<anopa>-specific, and if present indicates to B<aa-start>(1) that the
-service supports readiness, so it will wait for event 'U' (instead of 'u') when
-starting it.
 
 =back
 
@@ -180,7 +180,7 @@ in initramfs, or launching getty.
 
 If such a file exists, it should contain the number of seconds before the
 service is considered to be in time out; i.e. B<aa-start>(1)/B<aa-stop>(1) will
-stop waiting for them (killing the process for one-shot services).
+stop waiting for them, killing the process. See B<aa-start>(1) for more.
 
 =back
 
@@ -338,11 +338,8 @@ You can also see B<aa-stage0>(1) and B<aa-stage4>(1) for how to use B<anopa> in
 your initramfs.
 
 Note that this is of course only a possible solution to set up your system, you
-are of course free to organize things differently, only the tool(s) you need
-from B<anopa> however you want.
-
-
-
+are of course free to organize things differently, using only the tool(s) you
+need from B<anopa> however you wish.
 
 =head1 LINKS
 
