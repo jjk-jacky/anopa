@@ -20,6 +20,7 @@
  * anopa. If not, see http://www.gnu.org/licenses/
  */
 
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <skalibs/allreadwrite.h>
@@ -49,7 +50,9 @@ aa_service_status_read (aa_service_status *svst, const char *dir)
     if (!openreadfileclose (file, &svst->sa, AA_SVST_FIXED_SIZE + AA_SVST_MAX_MSG_SIZE + 1)
             || svst->sa.len < AA_SVST_FIXED_SIZE)
     {
+        int e = errno;
         tain_now_g ();
+        errno = e;
         return -1;
     }
     tain_now_g ();
@@ -74,6 +77,7 @@ aa_service_status_write (aa_service_status *svst, const char *dir)
     char file[len + 1 + sizeof (AA_SVST_FILENAME)];
     mode_t mask;
     int r;
+    int e;
 
     if (!stralloc_ready_tuned (&svst->sa, AA_SVST_FIXED_SIZE, 0, 0, 1))
         return -1;
@@ -93,9 +97,11 @@ aa_service_status_write (aa_service_status *svst, const char *dir)
         r = -1;
     else
         r = 0;
+    e = errno;
     umask (mask);
 
     tain_now_g ();
+    errno = e;
     return r;
 }
 
