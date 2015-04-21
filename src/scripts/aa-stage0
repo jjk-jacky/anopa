@@ -45,7 +45,7 @@ umask 022
 # Start services
 foreground { if -n
 {
-  if { emptyenv -c aa-start -D -r /services -l /etc/anopa/onboot }
+  if { emptyenv -c s6-setsid aa-ctty -s aa-start -D -r /services -l /etc/anopa/onboot }
   foreground {
     # if "break" was specified on kernel cmdline, let's open a shell
     if -t { aa-incmdline -qf /root-fs/proc/cmdline break }

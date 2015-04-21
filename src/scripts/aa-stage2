@@ -35,14 +35,20 @@ fdmove 2 4
 
 if -n -t
 {
-  # Reopen the console for stdin/stdout
-  redirfd -r 0 /dev/console
+  # We want the actual tty on stdin
+  backtick -n TTY { aa-tty }
+  import -u TTY
+  redirfd -r 0 ${TTY}
+  # Reopen the console for stdout
   redirfd -w 1 /dev/console
   # And start everything
   foreground { aa-echo -DB "Stage 2: Initializing system..." }
   backtick -n -D default LISTDIR { aa-incmdline -rs aa }
   import -u LISTDIR
-  if { emptyenv -c aa-start -D -l /etc/anopa/onboot/${LISTDIR} }
+  # We have a tty in stdin, become session leader and set controlling terminal.
+  # This is so Ctrl+C will trigger a SIGINT to aa-start, so one can manually
+  # timeout a service.
+  if { emptyenv -c s6-setsid aa-ctty aa-start -D -l /etc/anopa/onboot/${LISTDIR} }
   foreground { aa-echo -DB "System ready." }
   # close logger
   fdmove -c 2 1

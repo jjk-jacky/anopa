@@ -35,14 +35,16 @@ fdmove 2 4
 
 # Make sure we're sane
 cd /
-redirfd -r 0 /dev/console
+backtick -n TTY { aa-tty }
+import -u TTY
+redirfd -r 0 ${TTY}
 redirfd -w 1 /dev/console
 
 foreground { aa-echo -DB "Stage 3: Preparing ${1}..." }
 # Stop all running services -- s6-svscan did only exec into us, leaving the
 # whole supervised tree intact. Here we stop everything (longrun & oneshot) in
 # order.
-foreground { emptyenv -c aa-stop -D -ak uncaught-logs }
+foreground { emptyenv -c s6-setsid aa-ctty -s aa-stop -D -ak uncaught-logs }
 # We left the catch-all running (in case), make sure everything will exit
 # properly when we send TERM
 foreground { s6-svc -x /run/services/uncaught-logs }
