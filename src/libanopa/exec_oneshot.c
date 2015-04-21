@@ -24,9 +24,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <signal.h>
 #include <skalibs/allreadwrite.h>
 #include <skalibs/djbunix.h>
+#include <skalibs/sig.h>
 #include <skalibs/selfpipe.h>
 #include <skalibs/bytestr.h>
 #include <skalibs/tai.h>
@@ -184,8 +184,8 @@ _exec_oneshot (int si, aa_mode mode)
 
         selfpipe_finish ();
         /* Ignore SIGINT to make sure one can ^C to timeout a service without
-         * issue. Mostly useful when e.g. aa-start is ran from terminal. */
-        sigset (SIGINT, SIG_IGN);
+         * issue. */
+        sig_ignore (SIGINT);
         fd_close (p_int[0]);
         fd_close (p_in[1]);
         fd_close (p_out[0]);
