@@ -1188,6 +1188,9 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
     iop.events = IOPAUSE_READ;
     genalloc_append (iopause_fd, &ga_iop, &iop);
 
+    /* ignore SIGINT so it will be blocked for s6-trigr, else a ^C would have
+     * SIGINT resulting in "Broken pipe" errors */
+    sig_ignore (SIGINT);
     iop.fd = aa_prepare_mainlist (prepare_cb, exec_cb);
     if (iop.fd < 0)
         strerr_diefu1sys (ERR_IO, "prepare mainlist");
