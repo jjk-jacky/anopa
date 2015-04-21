@@ -17,6 +17,7 @@ aa-stop \
 aa-sync \
 aa-terminate \
 aa-test \
+aa-tty \
 aa-umount
 
 BIN_SCRIPTS_TARGET := \
@@ -55,6 +56,7 @@ aa-stop.1 \
 aa-sync.1 \
 aa-terminate.1 \
 aa-test.1 \
+aa-tty.1 \
 aa-umount.1
 
 ifdef DO_ALLSTATIC

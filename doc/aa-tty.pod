@@ -1,0 +1,27 @@
+=head1 NAME
+
+aa-tty - Prints the device name of the active tty
+
+=head1 SYNOPSIS
+
+B<aa-tty>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-tty>(1) is a small tool that will print to device name of the active tty.
+It determines it by reading I<active> files in I</sys/class/tty> starting with
+I</sys/class/tty/console/active> and "going up" as much as possible.

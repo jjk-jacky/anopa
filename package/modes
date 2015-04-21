@@ -22,4 +22,5 @@ aa-stop                 0755
 aa-sync                 0755
 aa-terminate            0755
 aa-test                 0755
+aa-tty                  0755
 aa-umount               0755
