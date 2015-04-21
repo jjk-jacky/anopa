@@ -1,0 +1,39 @@
+=head1 NAME
+
+aa-ctty - Helper for execline script to set controlling terminal
+
+=head1 SYNOPSIS
+
+B<aa-ctty> [B<-f> I<FD>] [B<-s>] I<PROG...>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-f, --fd> I<FD>
+
+Use file descriptor I<FD> as terminal; Defaults to stdin (0).
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-s, --steal>
+
+Steal controlling terminal if already controlling terminal of a different
+session.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-ctty>(1) will set the controlling terminal (via ioctl(TIOCSCTTY)) to that
+of the device open as file descriptor 0, or specified with B<--fd>. In typical
+B<execline> fashion, it then executes into the rest of its command line.
+
+If the ioctl call fails, a warning is printed and it still executes into the
+rest of its command line. If it fails to do so, it returns 111.

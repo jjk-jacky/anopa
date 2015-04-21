@@ -1,5 +1,6 @@
 BIN_TARGETS := \
 aa-chroot \
+aa-ctty \
 aa-echo \
 aa-enable \
 aa-incmdline \
@@ -33,6 +34,7 @@ aa-stage4
 DOC_TARGETS := \
 anopa.1 \
 aa-chroot.1 \
+aa-ctty.1 \
 aa-echo.1 \
 aa-enable.1 \
 aa-incmdline.1 \
