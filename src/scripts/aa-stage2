@@ -43,12 +43,12 @@ if -n -t
   redirfd -w 1 /dev/console
   # And start everything
   foreground { aa-echo -DB "Stage 2: Initializing system..." }
-  backtick -n -D default LISTDIR { aa-incmdline -rs aa }
+  backtick -n -D onboot LISTDIR { aa-incmdline -rs aa }
   import -u LISTDIR
   # We have a tty in stdin, become session leader and set controlling terminal.
   # This is so Ctrl+C will trigger a SIGINT to aa-start, so one can manually
   # timeout a service.
-  if { emptyenv -c s6-setsid aa-ctty aa-start -D -l /etc/anopa/onboot/${LISTDIR} }
+  if { emptyenv -c s6-setsid aa-ctty aa-start -D -l /etc/anopa/listdirs/${LISTDIR} }
   foreground { aa-echo -DB "System ready." }
   # close logger
   fdmove -c 2 1

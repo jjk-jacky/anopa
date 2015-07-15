@@ -17,8 +17,12 @@ B<s6-tai64n>.
 
 It doesn't do much in itself, the bulk of the work being done via services, much
 like during system init (stage 1/2). It will simply call B<aa-start>(1) using
-I</servives> as repodir, and I</etc/anopa/onboot> as listdir for services to
-start.
+I</services> as repodir, and I</etc/anopa/listdirs/onboot> as listdir for
+services to start.
+
+Note that this refer to the initramfs itself, so the content of
+I</etc/anopa/listdirs/onboot> would differ on that from the system, or more
+likely be the same as I</etc/anopa/initramfs/listdirs/onboot> from the root fs.
 
 Services are meant to mount the root file system on to I</root-fs> and mount all
 API file systems in there as well: I</root-fs/dev>, I</root-fs/proc>,

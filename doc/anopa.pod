@@ -304,7 +304,7 @@ into the servicedir.
 
 Used by B<aa-enable>(1) from B<aa-stage1>(1).
 
-=item I</etc/anopa/onboot/default>
+=item I</etc/anopa/listdirs/onboot>
 
 List directory containing empty regular files, whose name is the name of a
 service to start on boot. Used by B<aa-start>(1) from B<aa-stage2>(1).

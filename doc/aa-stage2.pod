@@ -15,9 +15,9 @@ perform all initialization tasks.
 It will log messages into file I</run/initramfs/boot.log>, prefixing them with a
 TAI timestamp via B<s6-tai64n>.
 
-It starts all services via B<aa-start>(1) using I</etc/anopa/onboot/default> as
+It starts all services via B<aa-start>(1) using I</etc/anopa/listdirs/onboot> as
 listdir, unless argument B<aa> was specified on kernel command line, in which
-case I</etc/anopa/onboot/ARGVALUE> is used as listdir intead.
+case I</etc/anopa/listdirs/ARGVALUE> is used as listdir intead.
 
 If B<aa-start>(1) exits non-zero, it assumes there might not even be a getty
 running, and will try to open a shell (I<sh -i>).
