@@ -4,7 +4,7 @@ aa-status - Show status of services
 
 =head1 SYNOPSIS
 
-B<aa-status> [B<-D>] [B<-r> I<repodir>] [B<-a>] [B<-l>] [I<service...>]
+B<aa-status> [B<-D>] [B<-r> I<repodir>] [B<-a>] [B<-L>] [I<service...>]
 
 =head1 OPTIONS
 
@@ -26,7 +26,7 @@ shown on console and logged.
 
 Show help screen and exit.
 
-=item B<-l, --list>
+=item B<-L, --list>
 
 Show statuses as a list, with one service per line, elipsizing service name
 and/or status if needed.

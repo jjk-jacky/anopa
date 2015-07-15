@@ -569,7 +569,7 @@ dieusage (int rc)
             " -D, --double-output           Enable double-output mode\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
             " -a, --all                     Show status of all services\n"
-            " -l, --list                    Show statuses as one-liners list\n"
+            " -L, --list                    Show statuses as one-liners list\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -592,14 +592,14 @@ main (int argc, char * const argv[])
             { "all",                no_argument,        NULL,   'a' },
             { "double-output",      no_argument,        NULL,   'D' },
             { "help",               no_argument,        NULL,   'h' },
-            { "list",               no_argument,        NULL,   'l' },
+            { "list",               no_argument,        NULL,   'L' },
             { "repodir",            required_argument,  NULL,   'r' },
             { "version",            no_argument,        NULL,   'V' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "aDhlr:V", longopts, NULL);
+        c = getopt_long (argc, argv, "aDhLr:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -615,7 +615,7 @@ main (int argc, char * const argv[])
             case 'h':
                 dieusage (0);
 
-            case 'l':
+            case 'L':
                 cfg.mode_list = 1;
                 break;
 
