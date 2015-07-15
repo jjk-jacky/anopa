@@ -49,6 +49,7 @@
 #include <anopa/service_status.h>
 #include <anopa/err.h>
 #include "util.h"
+#include "common.h"
 
 struct config
 {
@@ -562,12 +563,22 @@ it_all (direntry *d, void *data)
     return 0;
 }
 
+static int
+it_listdir (direntry *d, void *data)
+{
+    if (*d->d_name == '.')
+        return 0;
+    load_service (d->d_name, data);
+    return 0;
+}
+
 static void
 dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...] [service...]",
             " -D, --double-output           Enable double-output mode\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
+            " -l, --listdir DIR             Use DIR to list services to get status of\n"
             " -a, --all                     Show status of all services\n"
             " -L, --list                    Show statuses as one-liners list\n"
             " -h, --help                    Show this help screen and exit\n"
@@ -580,6 +591,7 @@ main (int argc, char * const argv[])
 {
     PROG = "aa-status";
     const char *path_repo = "/run/services";
+    const char *path_list = NULL;
     int mode_both = 0;
     struct config cfg = { 0, };
     int all = 0;
@@ -592,6 +604,7 @@ main (int argc, char * const argv[])
             { "all",                no_argument,        NULL,   'a' },
             { "double-output",      no_argument,        NULL,   'D' },
             { "help",               no_argument,        NULL,   'h' },
+            { "listdir",            required_argument,  NULL,   'l' },
             { "list",               no_argument,        NULL,   'L' },
             { "repodir",            required_argument,  NULL,   'r' },
             { "version",            no_argument,        NULL,   'V' },
@@ -599,7 +612,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "aDhLr:V", longopts, NULL);
+        c = getopt_long (argc, argv, "aDhl:Lr:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -614,6 +627,11 @@ main (int argc, char * const argv[])
 
             case 'h':
                 dieusage (0);
+
+            case 'l':
+                unslash (optarg);
+                path_list = optarg;
+                break;
 
             case 'L':
                 cfg.mode_list = 1;
@@ -636,7 +654,7 @@ main (int argc, char * const argv[])
 
     aa_init_output (mode_both);
 
-    if (!all && argc < 1)
+    if (!all && !path_list && argc < 1)
         dieusage (1);
 
     r = aa_init_repo (path_repo, AA_REPO_READ);
@@ -666,6 +684,21 @@ main (int argc, char * const argv[])
         r = aa_scan_dir (&sa, 0, it_all, &cfg);
         if (r < 0)
             strerr_diefu2sys (-r, "scan repo directory ", path_repo);
+    }
+    else if (path_list)
+    {
+        stralloc sa = STRALLOC_ZERO;
+        int r;
+
+        if (*path_list != '/' && *path_list != '.')
+            stralloc_cats (&sa, LISTDIR_PREFIX);
+        stralloc_catb (&sa, path_list, strlen (path_list) + 1);
+        r = aa_scan_dir (&sa, 1, it_listdir, &cfg);
+        stralloc_free (&sa);
+        if (r < 0)
+            strerr_diefu3sys (-r, "read list directory ",
+                    (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
+                    (*path_list != '/' && *path_list != '.') ? path_list : "");
     }
     else
         for (i = 0; i < argc; ++i)
