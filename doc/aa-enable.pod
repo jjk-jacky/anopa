@@ -50,6 +50,9 @@ The directory will be read, and names of files/directories within be used as
 service name to enable. For directories, their content will be merged/copied
 into the servicedir; See below for more.
 
+If I<LISTDIR> doesn't start with a slash or dot, it will be prefixed with
+I</etc/anopa/listdirs/>
+
 =item B<-n, --no-needs>
 
 Don't auto-enable any services listed under directory I<needs> of a service

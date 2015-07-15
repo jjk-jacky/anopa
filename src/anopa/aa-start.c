@@ -56,6 +56,7 @@
 #include <anopa/stats.h>
 #include "start-stop.h"
 #include "util.h"
+#include "common.h"
 
 
 #define ESSENTIAL_FILENAME      "essential"
@@ -306,11 +307,15 @@ main (int argc, char * const argv[])
         stralloc sa = STRALLOC_ZERO;
         int r;
 
+        if (*path_list != '/' && *path_list != '.')
+            stralloc_cats (&sa, LISTDIR_PREFIX);
         stralloc_catb (&sa, path_list, strlen (path_list) + 1);
         r = aa_scan_dir (&sa, 1, it_start, NULL);
         stralloc_free (&sa);
         if (r < 0)
-            strerr_diefu2sys (-r, "read list directory ", path_list);
+            strerr_diefu3sys (-r, "read list directory ",
+                    (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
+                    (*path_list != '/' && *path_list != '.') ? path_list : "");
     }
 
     tain_now_g ();

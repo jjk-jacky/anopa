@@ -27,6 +27,9 @@ Show help screen and exit.
 Use I<dir> to list services to start. Only one can be set, if specified more
 than once the last one will be used.
 
+If I<dir> doesn't start with a slash or dot, it will be prefixed with
+I</etc/anopa/listdirs/>
+
 =item B<-r, --repodir> I<dir>
 
 Use I<dir> as repository directory. This is where servicedirs will be looked

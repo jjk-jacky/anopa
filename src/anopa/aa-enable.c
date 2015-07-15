@@ -48,6 +48,7 @@
 #include <anopa/stats.h>
 #include <anopa/err.h>
 #include "util.h"
+#include "common.h"
 
 
 #define SVSCANDIR       ".scandir/.s6-svscan"
@@ -310,10 +311,14 @@ main (int argc, char * const argv[])
      * the one with (potentially) a config dir */
     if (path_list)
     {
+        if (*path_list != '/' && *path_list != '.')
+            stralloc_cats (&sa_pl, LISTDIR_PREFIX);
         stralloc_catb (&sa_pl, path_list, strlen (path_list) + 1);
         r = aa_scan_dir (&sa_pl, 0, it_list, NULL);
         if (r < 0)
-            strerr_diefu2sys (-r, "read list directory ", path_list);
+            strerr_diefu3sys (-r, "read list directory ",
+                    (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
+                    (*path_list != '/' && *path_list != '.') ? path_list : "");
     }
 
     for (i = 0; i < argc; ++i)
