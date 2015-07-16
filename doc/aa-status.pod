@@ -5,7 +5,7 @@ aa-status - Show status of services
 =head1 SYNOPSIS
 
 B<aa-status> [B<-D>] [B<-r> I<repodir>] [B<-a>] [B<-f> I<filter>] [B<-L>]
-[B<-l> I<listdir>] [I<service...>]
+[B<-n>] [B<-l> I<listdir>] [I<service...>]
 
 =head1 OPTIONS
 
@@ -44,6 +44,10 @@ I</etc/anopa/listdirs/>
 
 Show statuses as a list, with one service per line, elipsizing service name
 and/or status if needed.
+
+=item B<-n, --dry-list>
+
+Only show service names, one per line.
 
 =item B<-r, --repodir> I<dir>
 

@@ -51,9 +51,16 @@
 #include "util.h"
 #include "common.h"
 
+enum
+{
+    MODE_NORMAL = 0,
+    MODE_LIST,
+    MODE_DRY_LIST
+};
+
 struct config
 {
-    int mode_list;
+    int mode;
     int cols;
     int max_name;
 };
@@ -229,7 +236,7 @@ put_list_header (struct config *cfg)
                     if (len < len)
                     {
                         strerr_warn1x ("Terminal too small, disabling list mode");
-                        cfg->mode_list = 0;
+                        cfg->mode = MODE_NORMAL;
                         return 0;
                     }
                     cols[1].len = 0;
@@ -279,7 +286,7 @@ put_s_max (const char *s, int max, int pad)
 }
 
 #define put_s(s)                        \
-    if (cfg->mode_list)                 \
+    if (cfg->mode == MODE_LIST)         \
         max -= put_s_max (s, max, 0);   \
     else                                \
         aa_bs_noflush (AA_OUT, s);
@@ -291,7 +298,13 @@ status_service (struct serv *serv, struct config *cfg)
     aa_service *s = aa_service (serv->si);
     const char *msg;
 
-    if (cfg->mode_list)
+    if (cfg->mode == MODE_DRY_LIST)
+    {
+        aa_bs_noflush (AA_OUT, aa_service_name (s));
+        aa_bs_flush (AA_OUT, "\n");
+        return;
+    }
+    else if (cfg->mode == MODE_LIST)
     {
         if (first && !put_list_header (cfg))
             aa_bs_noflush (AA_OUT, "\n");
@@ -299,7 +312,7 @@ status_service (struct serv *serv, struct config *cfg)
     else if (!first)
         aa_bs_noflush (AA_OUT, "\n");
 
-    if (cfg->mode_list)
+    if (cfg->mode == MODE_LIST)
     {
         put_s_max (aa_service_name (s), cols[0].len, 1);
 
@@ -403,7 +416,7 @@ status_service (struct serv *serv, struct config *cfg)
                 aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_RED_ON);
                 put_s (eventmsg[s->st.event]);
                 aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
-                if (cfg->mode_list && max <= 6)
+                if (cfg->mode == MODE_LIST && max <= 6)
                 {
                     if (max > 1)
                         aa_bb_noflush (AA_OUT, "...", (max > 4) ? 3 : max - 1);
@@ -427,7 +440,7 @@ status_service (struct serv *serv, struct config *cfg)
                 aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_RED_ON);
                 put_s (eventmsg[s->st.event]);
                 aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
-                if (cfg->mode_list && max <= 6)
+                if (cfg->mode == MODE_LIST && max <= 6)
                 {
                     if (max > 1)
                         aa_bb_noflush (AA_OUT, "...", (max > 4) ? 3 : max - 1);
@@ -603,7 +616,7 @@ load_service (const char *name, struct config *cfg)
     if (filter_status != FILTER_NONE && !match_status (&serv, filter_status))
         return;
 
-    if (cfg->mode_list)
+    if (cfg->mode == MODE_LIST)
     {
         int l = strlen (name);
 
@@ -668,6 +681,7 @@ dieusage (int rc)
             " -f, --filter FILTER           Only process services matching FILTER, one of:\n"
             "   oneshot, longrun, up, down, error   (see aa-status(1) for more)\n"
             " -L, --list                    Show statuses as one-liners list\n"
+            " -n, --dry-list                Only show service names\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -694,13 +708,14 @@ main (int argc, char * const argv[])
             { "help",               no_argument,        NULL,   'h' },
             { "listdir",            required_argument,  NULL,   'l' },
             { "list",               no_argument,        NULL,   'L' },
+            { "dry-list",           no_argument,        NULL,   'n' },
             { "repodir",            required_argument,  NULL,   'r' },
             { "version",            no_argument,        NULL,   'V' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "aDf:hl:Lr:V", longopts, NULL);
+        c = getopt_long (argc, argv, "aDf:hl:Lnr:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -727,7 +742,11 @@ main (int argc, char * const argv[])
                 break;
 
             case 'L':
-                cfg.mode_list = 1;
+                cfg.mode = MODE_LIST;
+                break;
+
+            case 'n':
+                cfg.mode = MODE_DRY_LIST;
                 break;
 
             case 'r':
@@ -754,7 +773,7 @@ main (int argc, char * const argv[])
     if (r < 0)
         strerr_diefu2sys (2, "init repository ", path_repo);
 
-    if (cfg.mode_list)
+    if (cfg.mode == MODE_LIST)
     {
         struct winsize win;
 
