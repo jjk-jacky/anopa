@@ -408,7 +408,7 @@ status_service (struct serv *serv, struct config *cfg)
                     put_s (": ");
                     put_s (errmsg[s->st.code]);
                     msg = aa_service_status_get_msg (&s->st);
-                    if (msg)
+                    if (msg && *msg)
                     {
                         put_s (": ");
                         put_s (msg);
