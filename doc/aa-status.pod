@@ -79,10 +79,11 @@ An additionnal message will be present.
 
 =item B<Starting failed> / B<Stopping failed>
 
-(I<one-shot services only.>)
+For oneshot services, the script I<start>/I<stop> could not be started; E.g. a
+permission error prevented its execution; For longrun services, it can occur if
+e.g. anopa failed to communicate with s6
 
-The script I<start>/I<stop> could not be started; E.g. a permission error
-prevented its execution. An additionnal message might be present.
+An additionnal message might be present.
 
 =item B<Start failed> / B<Stop failed>
 
@@ -112,7 +113,8 @@ The script I<run> is currently running; Its PID will be specified.
 
 (I<long-run services only.>)
 
-The script I<run> is currently running; Its PID will be specified.
+The script I<run> is currently running, and readiness was signaled; Its PID will
+be specified.
 
 =item B<Down>
 
