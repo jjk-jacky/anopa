@@ -383,6 +383,12 @@ status_service (struct serv *serv, struct config *cfg)
                 aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
                 put_s (": ");
                 put_s (errmsg[s->st.code]);
+                msg = aa_service_status_get_msg (&s->st);
+                if (msg && *msg)
+                {
+                    put_s (": ");
+                    put_s (msg);
+                }
                 break;
 
             case AA_EVT_STARTING:
