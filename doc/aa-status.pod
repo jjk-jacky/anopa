@@ -4,8 +4,8 @@ aa-status - Show status of services
 
 =head1 SYNOPSIS
 
-B<aa-status> [B<-D>] [B<-r> I<repodir>] [B<-a>] [B<-L>] [B<-l> I<listdir>]
-[I<service...>]
+B<aa-status> [B<-D>] [B<-r> I<repodir>] [B<-a>] [B<-f> I<filter>] [B<-L>]
+[B<-l> I<listdir>] [I<service...>]
 
 =head1 OPTIONS
 
@@ -22,6 +22,11 @@ Enable double-output mode. Instead of using stdout for regular output, and
 stderr for warnings and errors, everything is sent both to stdout and stderr.
 This is intended to redirect stderr to a log file, so full output can be both
 shown on console and logged.
+
+=item B<-f, --filter> I<filter>
+
+Only process services matching I<filter>. See L<B<FILTERING>|/FILTERING> below
+for more.
 
 =item B<-h, --help>
 
@@ -62,7 +67,76 @@ For long-run services it will also check for the I<ready> file to determine
 whether the service is "Up" or "Ready" (using the timestamp from the I<ready>
 file in the later case).
 
-=head1 POSSIBLE STATUS
+=head1 FILTERING
+
+You can use B<--filter> to filter which services to process amongst those
+provided (meaning to filter all enabled services you need to combine it with
+B<--all>).
+
+There are two kinds of filters available, by type and by status.
+
+=head2 Filter by type
+
+=over
+
+=item I<oneshot>; I<os>
+
+To only process oneshot services.
+
+=item I<longrun>; I<lr>
+
+To only process longrun services.
+
+=back
+
+=head2 Filter by status
+
+=over
+
+=item I<start>; I<started>; I<up>
+
+To only process services that are up/started. Note that this includes services
+that might be in error state, e.g. that failed to be stopped.
+
+=item I<stop>; I<stopped>; I<down>
+
+To only process services that are down/stopped. Note that this includes services
+that might be in error state, e.g. that failed to be started.
+
+=item I<fail>; I<failed>; I<error>
+
+To only process services that are in error state.
+
+=back
+
+As noted below, a given service can match more than one filter, e.g. a service
+that failed to be started will show up both under I<stopped> and I<failed>
+
+You can specify more than one B<--filter> option, though it only make sense to
+combine filters of different kinds. If more than one filter of the same kind is
+given, only the last one is used.
+
+=head2 Examples
+
+To list all oneshot services in error state:
+
+    aa-status --list --all --filter oneshot --filter error
+
+The same could be done using e.g:
+
+    aa-status -Laf fail -f os
+
+To show statues of all longrun process currently up:
+
+    aa-status -a -f longrun -f started
+
+This will list all oneshot services (only the last filter is used since they're
+both of the same kind) :
+
+    aa-status -Laf longrun --filter os
+
+
+=head1 POSSIBLE STATUSES
 
 The different possible statuses are :
 
@@ -70,7 +144,7 @@ The different possible statuses are :
 
 =item B<Unknown status>
 
-E.g. if no status file exist.
+E.g. if no status file exist. Such services will be filtered as I<stopped>.
 
 =item B<Error>
 
@@ -96,6 +170,9 @@ which value was returned, or which signal killed it.
 
 The script I<start>/I<stop> is currently running; or the command has been sent
 to the B<s6-supervise> of the service.
+
+Such services will be filtered according to their current state, e.g. a service
+that is starting will be matched via I<stopped>.
 
 =item B<Started> / B<Stopped>
 

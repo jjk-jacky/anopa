@@ -66,7 +66,18 @@ struct serv
     tain_t stamp;
 };
 
+enum
+{
+    FILTER_NONE = 0,
+    FILTER_UP,
+    FILTER_DOWN,
+    FILTER_ERROR
+};
+
 static genalloc ga_serv = GENALLOC_ZERO;
+
+static unsigned int filter_type = AA_TYPE_UNKNOWN;
+static unsigned int filter_status = FILTER_NONE;
 
 static int put_s_max (const char *s, int max, int pad);
 
@@ -443,6 +454,43 @@ status_service (struct serv *serv, struct config *cfg)
         first = 0;
 }
 
+static int
+match_status (struct serv *serv, unsigned int filter)
+{
+    unsigned int current;
+
+    if (serv->is_s6)
+        current = (serv->st6.pid && !serv->st6.flagfinishing) ? FILTER_UP : FILTER_DOWN;
+    else
+        switch (aa_service (serv->si)->st.event)
+        {
+            case AA_EVT_STARTED:
+            case AA_EVT_STOPPING:
+                current = FILTER_UP;
+                break;
+
+            case AA_EVT_NONE:
+            case AA_EVT_STOPPED:
+            case AA_EVT_STARTING:
+                current = FILTER_DOWN;
+                break;
+
+            case AA_EVT_ERROR: /* == ERR_DEPEND */
+            case AA_EVT_STARTING_FAILED:
+            case AA_EVT_START_FAILED:
+                return filter == FILTER_ERROR || filter == FILTER_DOWN;
+
+            case AA_EVT_STOPPING_FAILED:
+            case AA_EVT_STOP_FAILED:
+                return filter == FILTER_ERROR || filter == FILTER_UP;
+
+            case _AA_NB_EVT: /* silence warning */
+                break;
+        }
+
+    return current == filter;
+}
+
 static void
 load_service (const char *name, struct config *cfg)
 {
@@ -474,6 +522,9 @@ load_service (const char *name, struct config *cfg)
         aa_end_err ();
         return;
     }
+
+    if (filter_type != AA_TYPE_UNKNOWN && s->st.type != filter_type)
+        return;
 
     if (s->st.type == AA_TYPE_LONGRUN)
     {
@@ -543,6 +594,9 @@ load_service (const char *name, struct config *cfg)
         }
     }
 
+    if (filter_status != FILTER_NONE && !match_status (&serv, filter_status))
+        return;
+
     if (cfg->mode_list)
     {
         int l = strlen (name);
@@ -572,6 +626,31 @@ it_listdir (direntry *d, void *data)
     return 0;
 }
 
+static int
+set_filter (const char *filter)
+{
+    if (str_equal (filter, "os") || str_equal (filter, "oneshot"))
+        filter_type = AA_TYPE_ONESHOT;
+    else if (str_equal (filter, "lr") || str_equal (filter, "longrun"))
+        filter_type = AA_TYPE_LONGRUN;
+    else if (str_equal (filter, "up") || str_equal (filter, "start")
+            || str_equal (filter, "started"))
+        filter_status = FILTER_UP;
+    else if (str_equal (filter, "down") || str_equal (filter, "stop")
+            || str_equal (filter, "stopped"))
+        filter_status = FILTER_DOWN;
+    else if (str_equal (filter, "error") || str_equal (filter, "fail")
+            || str_equal (filter, "failed"))
+        filter_status = FILTER_ERROR;
+    else
+    {
+        errno = EINVAL;
+        return 0;
+    }
+
+    return 1;
+}
+
 static void
 dieusage (int rc)
 {
@@ -580,6 +659,8 @@ dieusage (int rc)
             " -r, --repodir DIR             Use DIR as repository directory\n"
             " -l, --listdir DIR             Use DIR to list services to get status of\n"
             " -a, --all                     Show status of all services\n"
+            " -f, --filter FILTER           Only process services matching FILTER, one of:\n"
+            "   oneshot, longrun, up, down, error   (see aa-status(1) for more)\n"
             " -L, --list                    Show statuses as one-liners list\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
@@ -603,6 +684,7 @@ main (int argc, char * const argv[])
         struct option longopts[] = {
             { "all",                no_argument,        NULL,   'a' },
             { "double-output",      no_argument,        NULL,   'D' },
+            { "filter",             required_argument,  NULL,   'f' },
             { "help",               no_argument,        NULL,   'h' },
             { "listdir",            required_argument,  NULL,   'l' },
             { "list",               no_argument,        NULL,   'L' },
@@ -612,7 +694,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "aDhl:Lr:V", longopts, NULL);
+        c = getopt_long (argc, argv, "aDf:hl:Lr:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -623,6 +705,11 @@ main (int argc, char * const argv[])
 
             case 'D':
                 mode_both = 1;
+                break;
+
+            case 'f':
+                if (!set_filter (optarg))
+                    strerr_diefu3sys (1, "set filter '", optarg, "'");
                 break;
 
             case 'h':
