@@ -122,7 +122,7 @@ add_service (const char *name)
     if (type < 0)
         r = type;
     else
-        r = aa_mark_service (si, type == AA_SERVICE_FROM_MAIN, no_wants, load_fail_cb);
+        r = aa_mark_service (mode, si, type == AA_SERVICE_FROM_MAIN, no_wants, load_fail_cb);
     if (r < 0)
     {
         if (r == -ERR_UNKNOWN)
@@ -273,7 +273,10 @@ main (int argc, char * const argv[])
                 break;
 
             case 'n':
-                mode |= AA_MODE_IS_DRY;
+                if (mode & AA_MODE_IS_DRY)
+                    mode |= AA_MODE_IS_DRY_FULL;
+                else
+                    mode |= AA_MODE_IS_DRY;
                 break;
 
             case 'r':

@@ -34,6 +34,9 @@ I</etc/anopa/listdirs/>
 
 Only print the name of the services, but do not start anything.
 
+Specify a second time to list services that need to be up instead of those that
+would be started, i.e. include those already up.
+
 =item B<-r, --repodir> I<dir>
 
 Use I<dir> as repository directory. This is where servicedirs will be looked

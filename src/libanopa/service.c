@@ -178,7 +178,12 @@ int
 aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf_cb)
 {
     stralloc sa = STRALLOC_ZERO;
-    struct it_data it_data = { .si = si, .no_wants = no_wants, .lf_cb = lf_cb };
+    struct it_data it_data = {
+        .mode = mode,
+        .si = si,
+        .no_wants = no_wants,
+        .lf_cb = lf_cb
+    };
     int r;
 
     if (aa_service (si)->ls == AA_LOAD_DONE || aa_service (si)->ls == AA_LOAD_ING)
@@ -215,23 +220,28 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
                     || svst->event == AA_EVT_STOPPING_FAILED
                     || svst->event == AA_EVT_STOP_FAILED);
 
-        if ((mode & AA_MODE_START) && is_up)
+        /* DRY_FULL means process (i.e. list) even services that are already in
+         * the right state, so skip that bit then */
+        if (!(mode & AA_MODE_IS_DRY_FULL))
         {
-            /* if already good, we "fail" because there's no need to load the
-             * service, it's already good. This error will be silently ignored
-             * */
-            aa_service (si)->ls = AA_LOAD_FAIL;
-            /* this isn't actually true, but we won't save it to file */
-            svst->code = ERR_ALREADY_UP;
-            return -ERR_ALREADY_UP;
-        }
-        else if ((mode & (AA_MODE_STOP | AA_MODE_STOP_ALL)) && !is_up)
-        {
-            /* if not up, we "fail" because we can't stop it */
-            aa_service (si)->ls = AA_LOAD_FAIL;
-            /* this isn't actually true, but we won't save it to file */
-            svst->code = ERR_NOT_UP;
-            return -ERR_NOT_UP;
+            if ((mode & AA_MODE_START) && is_up)
+            {
+                /* if already good, we "fail" because there's no need to load the
+                 * service, it's already good. This error will be silently ignored
+                 * */
+                aa_service (si)->ls = AA_LOAD_FAIL;
+                /* this isn't actually true, but we won't save it to file */
+                svst->code = ERR_ALREADY_UP;
+                return -ERR_ALREADY_UP;
+            }
+            else if ((mode & (AA_MODE_STOP | AA_MODE_STOP_ALL)) && !is_up)
+            {
+                /* if not up, we "fail" because we can't stop it */
+                aa_service (si)->ls = AA_LOAD_FAIL;
+                /* this isn't actually true, but we won't save it to file */
+                svst->code = ERR_NOT_UP;
+                return -ERR_NOT_UP;
+            }
         }
     }
 

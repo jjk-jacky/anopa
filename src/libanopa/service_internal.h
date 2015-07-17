@@ -31,6 +31,7 @@ extern aa_exec_cb _exec_cb;
 
 struct it_data
 {
+    aa_mode mode;
     int si;
     int no_wants;
     aa_load_fail_cb lf_cb;

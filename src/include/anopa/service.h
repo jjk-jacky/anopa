@@ -56,7 +56,8 @@ typedef enum
     AA_MODE_START       = (1 << 0),
     AA_MODE_STOP        = (1 << 1),
     AA_MODE_STOP_ALL    = (1 << 2),
-    AA_MODE_IS_DRY      = (1 << 3)
+    AA_MODE_IS_DRY      = (1 << 3),
+    AA_MODE_IS_DRY_FULL = (1 << 4)
 } aa_mode;
 
 typedef enum
@@ -107,7 +108,7 @@ extern void aa_free_services (aa_close_fd_fn close_fd_fn);
 extern int  aa_add_name (const char *name);
 extern int  aa_get_service (const char *name, int *si, int new_in_main);
 extern void aa_unmark_service (int si);
-extern int  aa_mark_service (int si, int in_main, int no_wants, aa_load_fail_cb lf_cb);
+extern int  aa_mark_service (aa_mode mode, int si, int in_main, int no_wants, aa_load_fail_cb lf_cb);
 extern int  aa_preload_service (int si);
 extern int  aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf_cb);
 extern int  aa_prepare_mainlist (aa_prepare_cb prepare_cb, aa_exec_cb exec_cb);

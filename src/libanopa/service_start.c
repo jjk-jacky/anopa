@@ -47,11 +47,11 @@ aa_unmark_service (int si)
 }
 
 int
-aa_mark_service (int si, int in_main, int no_wants, aa_load_fail_cb lf_cb)
+aa_mark_service (aa_mode mode, int si, int in_main, int no_wants, aa_load_fail_cb lf_cb)
 {
     int r;
 
-    r = aa_ensure_service_loaded (si, AA_MODE_START, no_wants, lf_cb);
+    r = aa_ensure_service_loaded (si, mode, no_wants, lf_cb);
     if (r < 0)
     {
         if (in_main)
@@ -85,7 +85,7 @@ _it_start_needs (direntry *d, void *data)
     if (type < 0)
         r = type;
     else
-        r = aa_mark_service (sni, type == AA_SERVICE_FROM_MAIN,
+        r = aa_mark_service (it_data->mode, sni, type == AA_SERVICE_FROM_MAIN,
                 it_data->no_wants, it_data->lf_cb);
     if (r == -ERR_ALREADY_UP)
         return 0;
@@ -138,7 +138,7 @@ _it_start_wants (direntry *d, void *data)
     if (type < 0)
         r = type;
     else
-        r = aa_mark_service (swi, type == AA_SERVICE_FROM_MAIN,
+        r = aa_mark_service (it_data->mode, swi, type == AA_SERVICE_FROM_MAIN,
                 it_data->no_wants, it_data->lf_cb);
     if (r == -ERR_ALREADY_UP)
         return 0;
