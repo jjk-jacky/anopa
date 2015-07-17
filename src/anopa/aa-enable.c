@@ -185,8 +185,8 @@ dieusage (int rc)
             " -l, --listdir DIR             Use DIR to list services to enable\n"
             " -f, --set-finish TARGET       Create s6-svscan symlink finish to TARGET\n"
             " -c, --set-crash TARGET        Create s6-svscan symlink crash to TARGET\n"
-            " -n, --no-needs                Don't auto-enable services from 'needs'\n"
-            " -w, --no-wants                Don't auto-enable services from 'wants'\n"
+            " -N, --no-needs                Don't auto-enable services from 'needs'\n"
+            " -W, --no-wants                Don't auto-enable services from 'wants'\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -218,17 +218,17 @@ main (int argc, char * const argv[])
             { "help",               no_argument,        NULL,   'h' },
             { "skip-down",          required_argument,  NULL,   'k' },
             { "listdir",            required_argument,  NULL,   'l' },
-            { "no-needs",           no_argument,        NULL,   'n' },
+            { "no-needs",           no_argument,        NULL,   'N' },
             { "repodir",            required_argument,  NULL,   'r' },
             { "reset-source",       required_argument,  NULL,   'S' },
             { "source",             required_argument,  NULL,   's' },
             { "version",            no_argument,        NULL,   'V' },
-            { "no-wants",           no_argument,        NULL,   'w' },
+            { "no-wants",           no_argument,        NULL,   'W' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "c:Df:hk:l:nr:S:s:Vw", longopts, NULL);
+        c = getopt_long (argc, argv, "c:Df:hk:l:Nr:S:s:VW", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -257,7 +257,7 @@ main (int argc, char * const argv[])
                 path_list = optarg;
                 break;
 
-            case 'n':
+            case 'N':
                 flags &= ~AA_FLAG_AUTO_ENABLE_NEEDS;
                 break;
 
@@ -279,7 +279,7 @@ main (int argc, char * const argv[])
             case 'V':
                 aa_die_version ();
 
-            case 'w':
+            case 'W':
                 flags &= ~AA_FLAG_AUTO_ENABLE_WANTS;
                 break;
 

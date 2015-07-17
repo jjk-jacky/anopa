@@ -214,7 +214,7 @@ dieusage (int rc)
             " -D, --double-output           Enable double-output mode\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
             " -l, --listdir DIR             Use DIR to list services to start\n"
-            " -w, --no-wants                Don't auto-start services from 'wants'\n"
+            " -W, --no-wants                Don't auto-start services from 'wants'\n"
             " -t, --timeout SECS            Use SECS seconds as default timeout\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
@@ -246,12 +246,12 @@ main (int argc, char * const argv[])
             { "repodir",            required_argument,  NULL,   'r' },
             { "timeout",            required_argument,  NULL,   't' },
             { "version",            no_argument,        NULL,   'V' },
-            { "no-wants",           no_argument,        NULL,   'w' },
+            { "no-wants",           no_argument,        NULL,   'W' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "Dhl:r:t:Vw", longopts, NULL);
+        c = getopt_long (argc, argv, "Dhl:r:t:VW", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -281,7 +281,7 @@ main (int argc, char * const argv[])
             case 'V':
                 aa_die_version ();
 
-            case 'w':
+            case 'W':
                 no_wants = 1;
                 break;
 

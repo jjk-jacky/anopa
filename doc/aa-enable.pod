@@ -6,7 +6,7 @@ aa-enable - Enable services, i.e. copy servicedirs to repodir
 
 B<aa-enable> [B<-D>] [B<-r> I<REPODIR>] [B<-c> I<CRASH>] [B<-f> I<FINISH>]
 [B<-k> I<SERVICE>] [B<-S> I<SOURCEDIR>] [B<-s> I<SOURCEDIR>] [B<-l> I<LISTDIR>]
-[B<-n>] [B<-w>] [I<SERVICE...>]
+[B<-N>] [B<-W>] [I<SERVICE...>]
 
 =head1 OPTIONS
 
@@ -53,7 +53,7 @@ into the servicedir; See below for more.
 If I<LISTDIR> doesn't start with a slash or dot, it will be prefixed with
 I</etc/anopa/listdirs/>
 
-=item B<-n, --no-needs>
+=item B<-N, --no-needs>
 
 Don't auto-enable any services listed under directory I<needs> of a service
 being (auto-)enabled.
@@ -77,7 +77,7 @@ directories will be processed in the order they were added.
 
 Show version information and exit.
 
-=item B<-w, --no-wants>
+=item B<-W, --no-wants>
 
 Don't auto-enable any services listed under directory I<wants> of a service
 being (auto-)enabled.

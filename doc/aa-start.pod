@@ -4,7 +4,7 @@ aa-start - Start services
 
 =head1 SYNOPSIS
 
-B<aa-start> [B<-D>] [B<-r> I<repodir>] [B<-l> I<listdir>] [B<-w>]
+B<aa-start> [B<-D>] [B<-r> I<repodir>] [B<-l> I<listdir>] [B<-W>]
 [B<-t> I<timeout>] [I<service...>]
 
 =head1 OPTIONS
@@ -44,7 +44,7 @@ Timeout can also be set in service in a file I<timeout> in its servicedir.
 
 Show version information and exit.
 
-=item B<-w, --no-wants>
+=item B<-W, --no-wants>
 
 Don't auto-start any services listed under directory I<wants> of a service
 being (auto-)started.
