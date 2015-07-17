@@ -53,9 +53,10 @@ typedef enum
 
 typedef enum
 {
-    AA_MODE_START = 0,
-    AA_MODE_STOP,
-    AA_MODE_STOP_ALL
+    AA_MODE_START       = (1 << 0),
+    AA_MODE_STOP        = (1 << 1),
+    AA_MODE_STOP_ALL    = (1 << 2),
+    AA_MODE_IS_DRY      = (1 << 3)
 } aa_mode;
 
 typedef enum

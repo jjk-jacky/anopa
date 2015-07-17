@@ -40,7 +40,7 @@ _exec_longrun (int si, aa_mode mode)
     int l_sn = strlen (aa_service_name (s));
     char fifodir[l_sn + 1 + sizeof (S6_SUPERVISE_EVENTDIR)];
     tain_t deadline;
-    int is_start = (mode == AA_MODE_START) ? 1 : 0;
+    int is_start = (mode & AA_MODE_START) ? 1 : 0;
     char *event = (is_start) ? "u" : "d";
     int already = 0;
 
@@ -117,7 +117,7 @@ _exec_longrun (int si, aa_mode mode)
         }
     }
 
-    if (mode == AA_MODE_STOP_ALL)
+    if (mode & AA_MODE_STOP_ALL)
     {
         char dir[l_sn + 5 + sizeof (S6_SUPERVISE_CTLDIR) + 8];
 
@@ -136,8 +136,8 @@ _exec_longrun (int si, aa_mode mode)
         byte_copy (dir, l_sn, aa_service_name (s));
         byte_copy (dir + l_sn, 9 + sizeof (S6_SUPERVISE_CTLDIR), "/" S6_SUPERVISE_CTLDIR "/control");
 
-        r = s6_svc_write (dir, (mode == AA_MODE_STOP_ALL) ? "dx" : event,
-                (mode == AA_MODE_STOP_ALL) ? 2 : 1);
+        r = s6_svc_write (dir, (mode & AA_MODE_STOP_ALL) ? "dx" : event,
+                (mode & AA_MODE_STOP_ALL) ? 2 : 1);
         if (r <= 0 && !already)
         {
             tain_addsec_g (&deadline, 1);

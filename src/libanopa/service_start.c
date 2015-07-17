@@ -92,23 +92,27 @@ _it_start_needs (direntry *d, void *data)
     else if (r < 0)
     {
         aa_service *s = aa_service (it_data->si);
-        const char *name = aa_service_name (s);
-        int l_n = strlen (name);
-        int l_em = strlen (errmsg[-r]);
-        char buf[l_n + 2 + l_em + 1];
         int l = genalloc_len (int, &s->needs);
         int i;
 
         for (i = 0; i < l; ++i)
             aa_unmark_service (list_get (&s->needs, i));
 
-        byte_copy (buf, l_n, name);
-        byte_copy (buf + l_n, 2, ": ");
-        byte_copy (buf + l_n + 2, l_em + 1, errmsg[-r]);
+        if (!(it_data->mode & AA_MODE_IS_DRY))
+        {
+            const char *name = aa_service_name (s);
+            int l_n = strlen (name);
+            int l_em = strlen (errmsg[-r]);
+            char buf[l_n + 2 + l_em + 1];
 
-        aa_service_status_set_err (&s->st, ERR_DEPEND, buf);
-        if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
-            strerr_warnwu2sys ("write service status file for ", aa_service_name (s));
+            byte_copy (buf, l_n, name);
+            byte_copy (buf + l_n, 2, ": ");
+            byte_copy (buf + l_n + 2, l_em + 1, errmsg[-r]);
+
+            aa_service_status_set_err (&s->st, ERR_DEPEND, buf);
+            if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
+                strerr_warnwu2sys ("write service status file for ", aa_service_name (s));
+        }
 
         if (it_data->lf_cb)
             it_data->lf_cb (it_data->si, AA_LOADFAIL_NEEDS, d->d_name, -r);

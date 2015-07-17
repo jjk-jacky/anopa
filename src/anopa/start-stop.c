@@ -810,7 +810,7 @@ handle_longrun (aa_mode mode, uint16 id, char event)
     }
 
     si = list_get (&aa_main_list, i);
-    if (mode == AA_MODE_START && aa_service (si)->gets_ready)
+    if ((mode & AA_MODE_START) && aa_service (si)->gets_ready)
     {
         if (event == 'u' || event == 'd')
         {
@@ -828,7 +828,7 @@ handle_longrun (aa_mode mode, uint16 id, char event)
 
     aa_service (si)->ft_id = 0;
     put_title (1, aa_service_name (aa_service (si)),
-            (mode == AA_MODE_START) ?
+            (mode & AA_MODE_START) ?
             ((aa_service (si)->gets_ready) ? "Ready" : "Started")
             : "Stopped", 1);
     ++nb_done;
@@ -884,7 +884,7 @@ handle_signals (aa_mode mode)
                 {
                     for (;;)
                     {
-                        int rr = handle_oneshot (mode == AA_MODE_START);
+                        int rr = handle_oneshot (mode & AA_MODE_START);
                         if (rr > 0)
                             r += rr;
                         else
@@ -964,10 +964,11 @@ exec_cb (int si, aa_evt evt, pid_t pid)
         /* ugly hack thing; see aa_exec_service() */
         case 0:
             clear_draw ();
-            aa_bs_noflush (AA_OUT,
-                    (pid == AA_MODE_START) ? "Starting " : "Stopping ");
+            if (!(pid & AA_MODE_IS_DRY))
+                aa_bs_noflush (AA_OUT,
+                        (pid & AA_MODE_START) ? "Starting " : "Stopping ");
             aa_bs_noflush (AA_OUT, aa_service_name (aa_service (si)));
-            aa_bs_flush (AA_OUT, "...\n");
+            aa_bs_flush (AA_OUT, (pid & AA_MODE_IS_DRY) ? "\n" : "...\n");
             break;
 
         case AA_EVT_STARTING:
@@ -1076,7 +1077,7 @@ process_timeouts (aa_mode mode, aa_scan_cb scan_cb)
                 if (aa_service (si)->fd_progress > 0)
                     close_fd_for (aa_service (si)->fd_progress, si);
 
-                svst->event = (mode == AA_MODE_START) ? AA_EVT_STARTING_FAILED: AA_EVT_STOPPING_FAILED;
+                svst->event = (mode & AA_MODE_START) ? AA_EVT_STARTING_FAILED: AA_EVT_STOPPING_FAILED;
                 svst->code = ERR_TIMEDOUT;
                 tain_copynow (&svst->stamp);
                 aa_service_status_set_msg (svst, "");
@@ -1085,7 +1086,7 @@ process_timeouts (aa_mode mode, aa_scan_cb scan_cb)
 
                 put_err_service (aa_service_name (aa_service (si)), ERR_TIMEDOUT, 1);
                 genalloc_append (int, &ga_timedout, &si);
-                if (mode == AA_MODE_START)
+                if (mode & AA_MODE_START)
                     check_essential (si);
 
                 remove_from_list (&aa_main_list, si);
@@ -1139,7 +1140,7 @@ process_timeouts (aa_mode mode, aa_scan_cb scan_cb)
                     aa_service (si)->ft_id = 0;
                     --nb_wait_longrun;
 
-                    svst->event = (mode == AA_MODE_START) ? AA_EVT_STARTING_FAILED: AA_EVT_STOPPING_FAILED;
+                    svst->event = (mode & AA_MODE_START) ? AA_EVT_STARTING_FAILED: AA_EVT_STOPPING_FAILED;
                     svst->code = ERR_TIMEDOUT;
                     tain_copynow (&svst->stamp);
                     aa_service_status_set_msg (svst, "");
@@ -1148,7 +1149,7 @@ process_timeouts (aa_mode mode, aa_scan_cb scan_cb)
 
                     put_err_service (aa_service_name (aa_service (si)), ERR_TIMEDOUT, 1);
                     genalloc_append (int, &ga_timedout, &si);
-                    if (mode == AA_MODE_START)
+                    if (mode & AA_MODE_START)
                         check_essential (si);
 
                     remove_from_list (&aa_main_list, si);
@@ -1222,6 +1223,26 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
         int r;
         int ms1, ms2;
         tain_t tms;
+
+        if (mode & AA_MODE_IS_DRY)
+        {
+            /* in DRY mode, anything w/out after-s should have been "started"
+             * already, so we just remove them... */
+            for (i = 0; i < genalloc_len (int, &aa_main_list); )
+            {
+                int si;
+
+                si = list_get (&aa_main_list, i);
+                if (genalloc_len (int, &aa_service (si)->after) == 0)
+                    remove_from_list (&aa_main_list, si);
+                else
+                    ++i;
+            }
+
+            /* and we can scan again, to keep processing until we're done */
+            aa_scan_mainlist (scan_cb, mode);
+            continue;
+        }
 
         ms1 = process_timeouts (mode, scan_cb);
         ms2 = refresh_draw ();

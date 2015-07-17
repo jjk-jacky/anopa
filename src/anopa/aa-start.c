@@ -65,6 +65,7 @@ static genalloc ga_depend = GENALLOC_ZERO;
 static genalloc ga_skipped = GENALLOC_ZERO;
 static genalloc ga_unknown = GENALLOC_ZERO;
 static genalloc ga_io = GENALLOC_ZERO;
+static aa_mode mode = AA_MODE_START;
 static int no_wants = 0;
 static int rc = 0;
 
@@ -154,7 +155,8 @@ add_service (const char *name)
         }
         else if (r == -ERR_ALREADY_UP)
         {
-            put_title (1, name, errmsg[-r], 1);
+            if (!(mode & AA_MODE_IS_DRY))
+                put_title (1, name, errmsg[-r], 1);
             ++nb_already;
             r = 0;
         }
@@ -216,6 +218,7 @@ dieusage (int rc)
             " -l, --listdir DIR             Use DIR to list services to start\n"
             " -W, --no-wants                Don't auto-start services from 'wants'\n"
             " -t, --timeout SECS            Use SECS seconds as default timeout\n"
+            " -n, --dry-list                Only show service names (don't start anything)\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -243,6 +246,7 @@ main (int argc, char * const argv[])
             { "double-output",      no_argument,        NULL,   'D' },
             { "help",               no_argument,        NULL,   'h' },
             { "listdir",            required_argument,  NULL,   'l' },
+            { "dry-list",           no_argument,        NULL,   'n' },
             { "repodir",            required_argument,  NULL,   'r' },
             { "timeout",            required_argument,  NULL,   't' },
             { "version",            no_argument,        NULL,   'V' },
@@ -251,7 +255,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "Dhl:r:t:VW", longopts, NULL);
+        c = getopt_long (argc, argv, "Dhl:nr:t:VW", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -266,6 +270,10 @@ main (int argc, char * const argv[])
             case 'l':
                 unslash (optarg);
                 path_list = optarg;
+                break;
+
+            case 'n':
+                mode |= AA_MODE_IS_DRY;
                 break;
 
             case 'r':
@@ -323,18 +331,21 @@ main (int argc, char * const argv[])
     for (i = 0; i < argc; ++i)
         add_service (argv[i]);
 
-    mainloop (AA_MODE_START, scan_cb);
+    mainloop (mode, scan_cb);
 
-    aa_bs_noflush (AA_OUT, "\n");
-    put_title (1, PROG, "Completed.", 1);
-    aa_show_stat_nb (nb_already, "Already up", ANSI_HIGHLIGHT_GREEN_ON);
-    aa_show_stat_nb (nb_done, "Started", ANSI_HIGHLIGHT_GREEN_ON);
-    show_stat_service_names (&ga_timedout, "Timed out", ANSI_HIGHLIGHT_RED_ON);
-    show_stat_service_names (&ga_failed, "Failed", ANSI_HIGHLIGHT_RED_ON);
-    show_stat_service_names (&ga_depend, "Dependency failed", ANSI_HIGHLIGHT_RED_ON);
-    aa_show_stat_names (aa_names.s, &ga_io, "I/O error", ANSI_HIGHLIGHT_RED_ON);
-    aa_show_stat_names (aa_names.s, &ga_unknown, "Unknown", ANSI_HIGHLIGHT_RED_ON);
-    aa_show_stat_names (aa_names.s, &ga_skipped, "Skipped", ANSI_HIGHLIGHT_YELLOW_ON);
+    if (!(mode & AA_MODE_IS_DRY))
+    {
+        aa_bs_noflush (AA_OUT, "\n");
+        put_title (1, PROG, "Completed.", 1);
+        aa_show_stat_nb (nb_already, "Already up", ANSI_HIGHLIGHT_GREEN_ON);
+        aa_show_stat_nb (nb_done, "Started", ANSI_HIGHLIGHT_GREEN_ON);
+        show_stat_service_names (&ga_timedout, "Timed out", ANSI_HIGHLIGHT_RED_ON);
+        show_stat_service_names (&ga_failed, "Failed", ANSI_HIGHLIGHT_RED_ON);
+        show_stat_service_names (&ga_depend, "Dependency failed", ANSI_HIGHLIGHT_RED_ON);
+        aa_show_stat_names (aa_names.s, &ga_io, "I/O error", ANSI_HIGHLIGHT_RED_ON);
+        aa_show_stat_names (aa_names.s, &ga_unknown, "Unknown", ANSI_HIGHLIGHT_RED_ON);
+        aa_show_stat_names (aa_names.s, &ga_skipped, "Skipped", ANSI_HIGHLIGHT_YELLOW_ON);
+    }
 
     genalloc_free (int, &ga_timedout);
     genalloc_free (int, &ga_failed);

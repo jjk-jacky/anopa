@@ -215,7 +215,7 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
                     || svst->event == AA_EVT_STOPPING_FAILED
                     || svst->event == AA_EVT_STOP_FAILED);
 
-        if (mode == AA_MODE_START && is_up)
+        if ((mode & AA_MODE_START) && is_up)
         {
             /* if already good, we "fail" because there's no need to load the
              * service, it's already good. This error will be silently ignored
@@ -225,7 +225,7 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
             svst->code = ERR_ALREADY_UP;
             return -ERR_ALREADY_UP;
         }
-        else if ((mode == AA_MODE_STOP || mode == AA_MODE_STOP_ALL) && !is_up)
+        else if ((mode & (AA_MODE_STOP | AA_MODE_STOP_ALL)) && !is_up)
         {
             /* if not up, we "fail" because we can't stop it */
             aa_service (si)->ls = AA_LOAD_FAIL;
@@ -241,7 +241,7 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
 
     stralloc_catb (&sa, "/needs", strlen ("/needs") + 1);
     r = aa_scan_dir (&sa, 1,
-            (mode == AA_MODE_START) ? _it_start_needs : _it_stop_after,
+            (mode & AA_MODE_START) ? _it_start_needs : _it_stop_after,
             &it_data);
     /* we can get ERR_IO either from aa_scan_dir() itself, or from the iterator
      * function. But since we haven't checked that the directory (needs) does
@@ -252,7 +252,7 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
         goto err;
 
     sa.len -= strlen ("needs") + 1;
-    if (mode == AA_MODE_START && !no_wants)
+    if ((mode & AA_MODE_START) && !no_wants)
     {
         stralloc_catb (&sa, "wants", strlen ("wants") + 1);
         r = aa_scan_dir (&sa, 1, _it_start_wants, &it_data);
@@ -263,7 +263,7 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
     }
     stralloc_catb (&sa, "after", strlen ("after") + 1);
     r = aa_scan_dir (&sa, 1,
-            (mode == AA_MODE_START) ? _it_start_after : _it_stop_after,
+            (mode & AA_MODE_START) ? _it_start_after : _it_stop_after,
             &it_data);
     if (r < 0 && (r != -ERR_IO || errno != ENOENT))
         goto err;
@@ -271,7 +271,7 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
     sa.len -= strlen ("after") + 1;
     stralloc_catb (&sa, "before", strlen ("before") + 1);
     r = aa_scan_dir (&sa, 1,
-            (mode == AA_MODE_START) ? _it_start_before : _it_stop_before,
+            (mode & AA_MODE_START) ? _it_start_before : _it_stop_before,
             &it_data);
     if (r < 0 && (r != -ERR_IO || errno != ENOENT))
         goto err;
@@ -499,7 +499,8 @@ aa_scan_mainlist (aa_scan_cb scan_cb, aa_mode mode)
                 continue;
             }
 
-            if (service_is_ok (aa_service (sni)))
+            /* if DRY we assume it's ok, since it wasn't really started */
+            if ((mode & AA_MODE_IS_DRY) || service_is_ok (aa_service (sni)))
             {
                 remove_from_list (&s->needs, sni);
                 remove_from_list (&s->after, sni);
@@ -536,9 +537,15 @@ aa_scan_mainlist (aa_scan_cb scan_cb, aa_mode mode)
         }
 
         if (genalloc_len (int, &s->after) == 0
-                && ((mode == AA_MODE_START && s->st.event != AA_EVT_STARTING)
-                    || ((mode == AA_MODE_STOP || mode == AA_MODE_STOP_ALL)
-                        && s->st.event != AA_EVT_STOPPING))
+                && (
+                    /* either we're in DRY mode (i.e. we should start it) */
+                    (mode & AA_MODE_IS_DRY)
+                    ||
+                    /* or make sure it's in the right state */
+                    (((mode & AA_MODE_START) && s->st.event != AA_EVT_STARTING)
+                     || ((mode & (AA_MODE_STOP | AA_MODE_STOP_ALL))
+                         && s->st.event != AA_EVT_STOPPING))
+                    )
                 && aa_exec_service (si, mode) < 0)
             /* failed to exec service, was removed from main_list, so we need to
              * rescan from top */
@@ -551,7 +558,7 @@ aa_scan_mainlist (aa_scan_cb scan_cb, aa_mode mode)
 int
 aa_exec_service (int si, aa_mode mode)
 {
-    int r;
+    int r = 0;
 
     if (_exec_cb)
         /* ugly hack to announce "Starting/Stopping foobar..."; needed because
@@ -559,13 +566,16 @@ aa_exec_service (int si, aa_mode mode)
         _exec_cb (si, 0, (pid_t) mode);
 
     tain_copynow (&aa_service (si)->ts_exec);
-    if (aa_service (si)->st.type == AA_TYPE_ONESHOT)
-        r = _exec_oneshot (si, mode);
-    else
-        r = _exec_longrun (si, mode);
+    if (!(mode & AA_MODE_IS_DRY))
+    {
+        if (aa_service (si)->st.type == AA_TYPE_ONESHOT)
+            r = _exec_oneshot (si, mode);
+        else
+            r = _exec_longrun (si, mode);
 
-    if (r < 0)
-        remove_from_list (&aa_main_list, si);
+        if (r < 0)
+            remove_from_list (&aa_main_list, si);
+    }
 
     return r;
 }
