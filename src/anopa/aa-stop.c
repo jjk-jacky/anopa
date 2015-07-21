@@ -53,9 +53,9 @@
 
 static genalloc ga_unknown = GENALLOC_ZERO;
 static genalloc ga_io = GENALLOC_ZERO;
+static aa_mode mode = AA_MODE_STOP;
 static int rc = 0;
 static const char *skip = NULL;
-static int all = 0;
 
 void
 check_essential (int si)
@@ -115,9 +115,10 @@ add_service (const char *name)
         }
         else if (r == -ERR_NOT_UP)
         {
-            if (!all)
+            if (!(mode & AA_MODE_STOP_ALL))
             {
-                put_title (1, name, errmsg[-r], 1);
+                if (!(mode & AA_MODE_IS_DRY))
+                    put_title (1, name, errmsg[-r], 1);
                 ++nb_already;
             }
             r = 0;
@@ -176,6 +177,7 @@ dieusage (int rc)
             " -k, --skip SERVICE            Skip (do not stop) SERVICE\n"
             " -t, --timeout SECS            Use SECS seconds as default timeout\n"
             " -a, --all                     Stop all running services\n"
+            " -n, --dry-list                Only show service names (don't stop anything)\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -205,6 +207,7 @@ main (int argc, char * const argv[])
             { "help",               no_argument,        NULL,   'h' },
             { "skip",               required_argument,  NULL,   'k' },
             { "listdir",            required_argument,  NULL,   'l' },
+            { "dry-list",           no_argument,        NULL,   'n' },
             { "repodir",            required_argument,  NULL,   'r' },
             { "timeout",            required_argument,  NULL,   't' },
             { "version",            no_argument,        NULL,   'V' },
@@ -212,13 +215,13 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "aDhk:l:r:t:V", longopts, NULL);
+        c = getopt_long (argc, argv, "aDhk:l:nr:t:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
         {
             case 'a':
-                all = 1;
+                mode = AA_MODE_STOP_ALL | (mode & AA_MODE_IS_DRY);
                 break;
 
             case 'D':
@@ -235,6 +238,10 @@ main (int argc, char * const argv[])
             case 'l':
                 unslash (optarg);
                 path_list = optarg;
+                break;
+
+            case 'n':
+                mode |= AA_MODE_IS_DRY;
                 break;
 
             case 'r':
@@ -261,13 +268,14 @@ main (int argc, char * const argv[])
     cols = get_cols (1);
     is_utf8 = is_locale_utf8 ();
 
-    if ((all && (path_list || argc > 0)) || (!all && !path_list && argc < 1))
+    if ((mode & AA_MODE_STOP_ALL && (path_list || argc > 0))
+            || (!(mode & AA_MODE_STOP_ALL) && !path_list && argc < 1))
         dieusage (1);
 
     if (aa_init_repo (path_repo, AA_REPO_WRITE) < 0)
         strerr_diefu2sys (ERR_IO, "init repository ", path_repo);
 
-    if (all)
+    if (mode & AA_MODE_STOP_ALL)
     {
         stralloc sa = STRALLOC_ZERO;
         int r;
@@ -299,16 +307,19 @@ main (int argc, char * const argv[])
 
     tain_now_g ();
 
-    mainloop ((all) ? AA_MODE_STOP_ALL : AA_MODE_STOP, NULL);
+    mainloop (mode, NULL);
 
-    aa_bs_noflush (AA_OUT, "\n");
-    put_title (1, PROG, "Completed.", 1);
-    aa_show_stat_nb (nb_already, "Not up", ANSI_HIGHLIGHT_GREEN_ON);
-    aa_show_stat_nb (nb_done, "Stopped", ANSI_HIGHLIGHT_GREEN_ON);
-    show_stat_service_names (&ga_timedout, "Timed out", ANSI_HIGHLIGHT_RED_ON);
-    show_stat_service_names (&ga_failed, "Failed", ANSI_HIGHLIGHT_RED_ON);
-    aa_show_stat_names (aa_names.s, &ga_io, "I/O error", ANSI_HIGHLIGHT_RED_ON);
-    aa_show_stat_names (aa_names.s, &ga_unknown, "Unknown", ANSI_HIGHLIGHT_RED_ON);
+    if (!(mode & AA_MODE_IS_DRY))
+    {
+        aa_bs_noflush (AA_OUT, "\n");
+        put_title (1, PROG, "Completed.", 1);
+        aa_show_stat_nb (nb_already, "Not up", ANSI_HIGHLIGHT_GREEN_ON);
+        aa_show_stat_nb (nb_done, "Stopped", ANSI_HIGHLIGHT_GREEN_ON);
+        show_stat_service_names (&ga_timedout, "Timed out", ANSI_HIGHLIGHT_RED_ON);
+        show_stat_service_names (&ga_failed, "Failed", ANSI_HIGHLIGHT_RED_ON);
+        aa_show_stat_names (aa_names.s, &ga_io, "I/O error", ANSI_HIGHLIGHT_RED_ON);
+        aa_show_stat_names (aa_names.s, &ga_unknown, "Unknown", ANSI_HIGHLIGHT_RED_ON);
+    }
 
     genalloc_free (int, &ga_timedout);
     genalloc_free (int, &ga_failed);
