@@ -100,7 +100,7 @@ _it_start_needs (direntry *d, void *data)
 
         if (!(it_data->mode & AA_MODE_IS_DRY))
         {
-            const char *name = aa_service_name (s);
+            const char *name = d->d_name;
             int l_n = strlen (name);
             int l_em = strlen (errmsg[-r]);
             char buf[l_n + 2 + l_em + 1];
