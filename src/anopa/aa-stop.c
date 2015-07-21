@@ -52,6 +52,7 @@
 
 
 static genalloc ga_unknown = GENALLOC_ZERO;
+static genalloc ga_depend = GENALLOC_ZERO;
 static genalloc ga_io = GENALLOC_ZERO;
 static aa_mode mode = AA_MODE_STOP;
 static int rc = 0;
@@ -64,6 +65,60 @@ check_essential (int si)
 }
 
 static int
+preload_service (const char *name)
+{
+    int si = -1;
+    int type;
+    int r;
+
+    if (skip && str_equal (name, skip))
+        return 0;
+
+    type = aa_get_service (name, &si, 0);
+    if (type < 0)
+        r = type;
+    else
+        r = aa_ensure_service_loaded (si, AA_MODE_STOP, 0, NULL);
+    if (r < 0)
+    {
+        /* there should be much errors possible here... basically only ERR_IO or
+         * ERR_NOT_UP should be possible, and the later should be silently
+         * ignored... so: */
+        if (r == -ERR_IO)
+        {
+            /* ERR_IO from aa_get_service() means we don't have a si (it is
+             * actually set to the return value); but from aa_mark_service()
+             * (e.g. to read "needs") then we do */
+            if (si < 0)
+                put_err_service (name, ERR_IO, 1);
+            else
+            {
+                int e = errno;
+
+                put_err_service (name, ERR_IO, 0);
+                add_err (": ");
+                add_err (error_str (e));
+                end_err ();
+            }
+        }
+    }
+
+    return 0;
+}
+
+static int
+it_preload (direntry *d, void *data)
+{
+    if (*d->d_name == '.' || d->d_type != DT_DIR)
+        return 0;
+
+    tain_now_g ();
+    preload_service (d->d_name);
+
+    return 0;
+}
+
+static int
 add_service (const char *name)
 {
     int si = -1;
@@ -73,18 +128,13 @@ add_service (const char *name)
     if (skip && str_equal (name, skip))
         return 0;
 
-    type = aa_get_service (name, &si, 1);
+    type = aa_get_service (name, &si, 0);
     if (type < 0)
-        r = type;
-    else
-        r = aa_ensure_service_loaded (si, AA_MODE_STOP, 0, NULL);
-    if (r < 0)
     {
-        if (type == AA_SERVICE_FROM_MAIN)
-        {
-            add_to_list (&aa_tmp_list, si, 1);
-            remove_from_list (&aa_main_list, si);
-        }
+        r = type;
+
+        /* since everything was preloaded (and so we don't ensure_loaded here),
+         * it can only be ERR_UNKNOWN or possibly ERR_IO, nothing else */
 
         if (r == -ERR_UNKNOWN)
         {
@@ -113,58 +163,62 @@ add_service (const char *name)
                 genalloc_append (int, &ga_failed, &si);
             }
         }
-        else if (r == -ERR_NOT_UP)
+    }
+    else if (type == AA_SERVICE_FROM_TMP)
+    {
+        /* it could be an ERR_NOT_UP, that was on tmp from preload */
+        if (aa_service (si)->ls == AA_LOAD_FAIL)
         {
-            if (!(mode & AA_MODE_STOP_ALL))
+            /* sanity check */
+            if (aa_service (si)->st.code != ERR_NOT_UP)
             {
-                if (!(mode & AA_MODE_IS_DRY))
-                    put_title (1, name, errmsg[-r], 1);
-                ++nb_already;
+                errno = EINVAL;
+                strerr_diefu1sys (ERR_IO, "add service");
             }
+
+            if (!(mode & AA_MODE_IS_DRY))
+                put_title (1, name, errmsg[ERR_NOT_UP], 1);
+            ++nb_already;
             r = 0;
         }
         else
         {
-            aa_service *s = aa_service (si);
-            const char *msg = aa_service_status_get_msg (&s->st);
-            int has_msg;
+            int i;
 
-            has_msg = s->st.event == AA_EVT_ERROR && s->st.code == -r && !!msg;
-            put_err_service (name, -r, !has_msg);
-            if (has_msg)
-            {
-                add_err (": ");
-                add_err (msg);
-                end_err ();
-            }
-
-            genalloc_append (int, &ga_failed, &si);
-        }
-    }
-    else
-    {
-        if (type == AA_SERVICE_FROM_TMP)
-        {
-            add_to_list (&aa_main_list, si, 1);
+            add_to_list (&aa_main_list, si, 0);
             remove_from_list (&aa_tmp_list, si);
-        }
 
-        r = 0;
+            for (i = 0; i < genalloc_len (int, &aa_service (si)->needs); ++i)
+            {
+                int sni = list_get (&aa_service (si)->needs, i);
+                add_service (aa_service_name (aa_service (sni)));
+            }
+        }
     }
 
-    return r;
+    return 0;
 }
 
 static int
 it_stop (direntry *d, void *data)
 {
-    if (*d->d_name == '.' || (data && d->d_type != DT_DIR))
+    if (*d->d_name == '.')
         return 0;
 
     tain_now_g ();
     add_service (d->d_name);
 
     return 0;
+}
+
+static void
+scan_cb (int si, int sni)
+{
+    put_err_service (aa_service_name (aa_service (si)), ERR_DEPEND, 0);
+    add_err (": ");
+    add_err (aa_service_name (aa_service (sni)));
+    end_err ();
+    genalloc_append (int, &ga_depend, &si);
 }
 
 static void
@@ -275,16 +329,43 @@ main (int argc, char * const argv[])
     if (aa_init_repo (path_repo, AA_REPO_WRITE) < 0)
         strerr_diefu2sys (ERR_IO, "init repository ", path_repo);
 
-    if (mode & AA_MODE_STOP_ALL)
+    /* let's "preload" every services from the repo. This will have everything
+     * in tmp list, either LOAD_DONE when up, or LOAD_FAIL when not
+     * (ERR_NOT_UP).
+     * The idea is to load dependencies, so in case service A needs B, we've
+     * added into the "needs" of B the service A, i.e. stopping B means a need
+     * to also stop A (as always, an "after" will handle the ordering).
+     */
     {
         stralloc sa = STRALLOC_ZERO;
         int r;
 
         stralloc_catb (&sa, ".", 2);
-        r = aa_scan_dir (&sa, 0, it_stop, (void *) 1);
+        r = aa_scan_dir (&sa, 0, it_preload, NULL);
         stralloc_free (&sa);
         if (r < 0)
             strerr_diefu1sys (-r, "read repository directory");
+    }
+
+    if (mode & AA_MODE_STOP_ALL)
+    {
+        /* to stop all (up) services, since we've preloaded everything, simply
+         * means moving all services from tmp to main list. We just need to make
+         * sure to process "valid" services, since there could be LOAD_FAIL ones
+         * (ERR_NOT_UP) that we should simply ignore.
+         */
+        for (i = 0; i < genalloc_len (int, &aa_tmp_list); )
+        {
+            int si = list_get (&aa_tmp_list, i);
+
+            if (aa_service (si)->ls == AA_LOAD_DONE)
+            {
+                add_to_list (&aa_main_list, si, 0);
+                remove_from_list (&aa_tmp_list, si);
+            }
+            else
+                ++i;
+        }
     }
     else if (path_list)
     {
@@ -294,7 +375,7 @@ main (int argc, char * const argv[])
         if (*path_list != '/' && *path_list != '.')
             stralloc_cats (&sa, LISTDIR_PREFIX);
         stralloc_catb (&sa, path_list, strlen (path_list) + 1);
-        r = aa_scan_dir (&sa, 1, it_stop, (void *) 0);
+        r = aa_scan_dir (&sa, 1, it_stop, NULL);
         stralloc_free (&sa);
         if (r < 0)
             strerr_diefu3sys (-r, "read list directory ",
@@ -307,7 +388,7 @@ main (int argc, char * const argv[])
 
     tain_now_g ();
 
-    mainloop (mode, NULL);
+    mainloop (mode, scan_cb);
 
     if (!(mode & AA_MODE_IS_DRY))
     {
@@ -317,6 +398,7 @@ main (int argc, char * const argv[])
         aa_show_stat_nb (nb_done, "Stopped", ANSI_HIGHLIGHT_GREEN_ON);
         show_stat_service_names (&ga_timedout, "Timed out", ANSI_HIGHLIGHT_RED_ON);
         show_stat_service_names (&ga_failed, "Failed", ANSI_HIGHLIGHT_RED_ON);
+        show_stat_service_names (&ga_depend, "Dependency failed", ANSI_HIGHLIGHT_RED_ON);
         aa_show_stat_names (aa_names.s, &ga_io, "I/O error", ANSI_HIGHLIGHT_RED_ON);
         aa_show_stat_names (aa_names.s, &ga_unknown, "Unknown", ANSI_HIGHLIGHT_RED_ON);
     }
@@ -324,6 +406,7 @@ main (int argc, char * const argv[])
     genalloc_free (int, &ga_timedout);
     genalloc_free (int, &ga_failed);
     genalloc_free (int, &ga_unknown);
+    genalloc_free (int, &ga_depend);
     genalloc_free (int, &ga_io);
     genalloc_free (pid_t, &ga_pid);
     genalloc_free (int, &aa_tmp_list);

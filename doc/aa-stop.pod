@@ -15,7 +15,14 @@ B<aa-stop> [B<-D>] [B<-r> I<repodir>] [B<-l> I<listdir>] [B<-a>]
 
 Stops all running/started services. This option is intended to be used during
 stage 3; When used, you shouldn't specify any service on the command line.
-See below for its implications.
+
+Note that when used, failing dependencies will not cause not to stop services.
+That is, is A needs B, stopping B would depend on stopping A first, and if that
+failed B wouldn't be stopped (Stopping failed: Failed dependency: A).
+However with this option B would be stopped, as if A had been successfully
+stopped.
+
+Also see below for more implications.
 
 =item B<-D, --double-output>
 
@@ -64,12 +71,13 @@ Show version information and exit.
 
 =head1 DESCRIPTION
 
-B<aa-stop>(1) allows to stop one or more services. Unlike B<aa-start>(1) it
-doesn't take into account any dependency relation, and the only services that
-will be stopped are those asked to be stopped.
+B<aa-stop>(1) allows to stop one or more services. It works in similar fashion
+to B<aa-start>(1) but processing order and dependencies "in reverse" so to
+speak.
 
-It does however accounts for I<after> and I<before> to stop services in reverse
-order they were started in, treating I<needs> exactly as it does I<after>.
+That is to say if service A was to be started after service B, then it will be
+stopped before B. And if A had a dependency (I<needs>) on C, then stopping C
+will also cause for A to be stopped.
 
 Refer to B<anopa>(1) for descriptions of servicedirs and service dependencies.
 

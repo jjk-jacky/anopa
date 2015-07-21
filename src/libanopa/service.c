@@ -251,7 +251,7 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
 
     stralloc_catb (&sa, "/needs", strlen ("/needs") + 1);
     r = aa_scan_dir (&sa, 1,
-            (mode & AA_MODE_START) ? _it_start_needs : _it_stop_after,
+            (mode & AA_MODE_START) ? _it_start_needs : _it_stop_needs,
             &it_data);
     /* we can get ERR_IO either from aa_scan_dir() itself, or from the iterator
      * function. But since we haven't checked that the directory (needs) does
@@ -456,14 +456,23 @@ aa_prepare_mainlist (aa_prepare_cb prepare_cb, aa_exec_cb exec_cb)
 }
 
 static int
-service_is_ok (aa_service *s)
+service_is_ok (aa_mode mode, aa_service *s)
 {
     aa_service_status *svst = &s->st;
     s6_svstatus_t st6 = S6_SVSTATUS_ZERO;
+    aa_evt event;
     int r;
 
+    /* if DRY we assume it's ok, since it wasn't really started/stopped.
+     * if STOP_ALL we pretend it's ok since we're trying to stop everything. */
+    if (mode & (AA_MODE_IS_DRY | AA_MODE_STOP_ALL))
+        return 1;
+
     if (svst->type == AA_TYPE_ONESHOT)
-        return (svst->event == AA_EVT_STARTED) ? 1 : 0;
+    {
+        event = (mode & AA_MODE_START) ? AA_EVT_STARTED : AA_EVT_STOPPED;
+        return (svst->event == event) ? 1 : 0;
+    }
 
     /* TYPE_LONGRUN -- we make assumptions here:
      * - we have a local status, since we started the service
@@ -474,8 +483,9 @@ service_is_ok (aa_service *s)
      *   for the 'U' event (ready)). Actually we'll allow for our event to be
      *   EVT_STARTING because there's a possible race condition there.
      */
+    event = (mode & AA_MODE_START) ? AA_EVT_STARTING : AA_EVT_STOPPING;
     if (s6_svstatus_read (aa_service_name (s), &st6)
-            && (tain_less (&svst->stamp, &st6.stamp) || svst->event == AA_EVT_STARTING))
+            && (tain_less (&svst->stamp, &st6.stamp) || svst->event == event))
         r = 1;
     else
         r = 0;
@@ -501,6 +511,7 @@ aa_scan_mainlist (aa_scan_cb scan_cb, aa_mode mode)
         for (j = 0; j < genalloc_len (int, &s->needs); )
         {
             int sni;
+            aa_service_status *svst;
 
             sni = list_get (&s->needs, j);
             if (is_in_list (&aa_main_list, sni))
@@ -509,16 +520,19 @@ aa_scan_mainlist (aa_scan_cb scan_cb, aa_mode mode)
                 continue;
             }
 
-            /* if DRY we assume it's ok, since it wasn't really started */
-            if ((mode & AA_MODE_IS_DRY) || service_is_ok (aa_service (sni)))
+            if (service_is_ok (mode, aa_service (sni)))
             {
                 remove_from_list (&s->needs, sni);
                 remove_from_list (&s->after, sni);
                 continue;
             }
 
-            aa_service_status_set_err (&s->st, ERR_DEPEND, aa_service_name (aa_service (sni)));
-            if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
+            svst = &s->st;
+            svst->event = (mode & AA_MODE_START) ? AA_EVT_STARTING_FAILED: AA_EVT_STOPPING_FAILED;
+            svst->code = ERR_DEPEND;
+            tain_copynow (&svst->stamp);
+            aa_service_status_set_msg (svst,aa_service_name (aa_service (sni)));
+            if (aa_service_status_write (svst, aa_service_name (s)) < 0)
                 strerr_warnwu2sys ("write service status file for ", aa_service_name (s));
 
             remove_from_list (&aa_main_list, si);
