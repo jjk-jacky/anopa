@@ -48,6 +48,7 @@
 #include <anopa/stats.h>
 #include "start-stop.h"
 #include "util.h"
+#include "common.h"
 
 
 static genalloc ga_unknown = GENALLOC_ZERO;
@@ -156,7 +157,7 @@ add_service (const char *name)
 static int
 it_stop (direntry *d, void *data)
 {
-    if (*d->d_name == '.' || d->d_type != DT_DIR)
+    if (*d->d_name == '.' || (data && d->d_type != DT_DIR))
         return 0;
 
     tain_now_g ();
@@ -171,6 +172,7 @@ dieusage (int rc)
     aa_die_usage (rc, "[OPTION...] [service...]",
             " -D, --double-output           Enable double-output mode\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
+            " -l, --listdir DIR             Use DIR to list services to start\n"
             " -k, --skip SERVICE            Skip (do not stop) SERVICE\n"
             " -t, --timeout SECS            Use SECS seconds as default timeout\n"
             " -a, --all                     Stop all running services\n"
@@ -190,6 +192,7 @@ main (int argc, char * const argv[])
 {
     PROG = "aa-stop";
     const char *path_repo = "/run/services";
+    const char *path_list = NULL;
     int mode_both = 0;
     int i;
 
@@ -201,6 +204,7 @@ main (int argc, char * const argv[])
             { "double-output",      no_argument,        NULL,   'D' },
             { "help",               no_argument,        NULL,   'h' },
             { "skip",               required_argument,  NULL,   'k' },
+            { "listdir",            required_argument,  NULL,   'l' },
             { "repodir",            required_argument,  NULL,   'r' },
             { "timeout",            required_argument,  NULL,   't' },
             { "version",            no_argument,        NULL,   'V' },
@@ -208,7 +212,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "aDhk:r:t:V", longopts, NULL);
+        c = getopt_long (argc, argv, "aDhk:l:r:t:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -226,6 +230,11 @@ main (int argc, char * const argv[])
 
             case 'k':
                 skip = optarg;
+                break;
+
+            case 'l':
+                unslash (optarg);
+                path_list = optarg;
                 break;
 
             case 'r':
@@ -252,7 +261,7 @@ main (int argc, char * const argv[])
     cols = get_cols (1);
     is_utf8 = is_locale_utf8 ();
 
-    if ((all && argc > 0) || (!all && argc < 1))
+    if ((all && (path_list || argc > 0)) || (!all && !path_list && argc < 1))
         dieusage (1);
 
     if (aa_init_repo (path_repo, AA_REPO_WRITE) < 0)
@@ -264,10 +273,25 @@ main (int argc, char * const argv[])
         int r;
 
         stralloc_catb (&sa, ".", 2);
-        r = aa_scan_dir (&sa, 0, it_stop, NULL);
+        r = aa_scan_dir (&sa, 0, it_stop, (void *) 1);
         stralloc_free (&sa);
         if (r < 0)
             strerr_diefu1sys (-r, "read repository directory");
+    }
+    else if (path_list)
+    {
+        stralloc sa = STRALLOC_ZERO;
+        int r;
+
+        if (*path_list != '/' && *path_list != '.')
+            stralloc_cats (&sa, LISTDIR_PREFIX);
+        stralloc_catb (&sa, path_list, strlen (path_list) + 1);
+        r = aa_scan_dir (&sa, 1, it_stop, (void *) 0);
+        stralloc_free (&sa);
+        if (r < 0)
+            strerr_diefu3sys (-r, "read list directory ",
+                    (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
+                    (*path_list != '/' && *path_list != '.') ? path_list : "");
     }
     else
         for (i = 0; i < argc; ++i)

@@ -4,8 +4,8 @@ aa-stop - Stop services
 
 =head1 SYNOPSIS
 
-B<aa-stop> [B<-D>] [B<-r> I<repodir>] [B<-a>] [B<-k> I<service>]
-[B<-t> I<timeout>] [I<service...>]
+B<aa-stop> [B<-D>] [B<-r> I<repodir>] [B<-l> I<listdir>] [B<-a>]
+[B<-k> I<service>] [B<-t> I<timeout>] [I<service...>]
 
 =head1 OPTIONS
 
@@ -33,6 +33,14 @@ Show help screen and exit.
 If I<service> was asked to be stopped, silently ignore it. This is intended for
 use alongside B<--all> to keep the catch-all logger service running as long as
 possible (It will be stopped when sending SIGTERM to all running processes.).
+
+=item B<-l, --listdir> I<dir>
+
+Use I<dir> to list services to start. Only one can be set, if specified more
+than once the last one will be used.
+
+If I<dir> doesn't start with a slash or dot, it will be prefixed with
+I</etc/anopa/listdirs/>
 
 =item B<-r, --repodir> I<dir>
 
