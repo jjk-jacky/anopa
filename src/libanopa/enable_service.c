@@ -309,7 +309,7 @@ copy_dir (const char        *src,
 next:
             if (r < 0)
             {
-                warn_fn (buf_src, errno);
+                warn_fn (buf_dst, errno);
                 goto err;
             }
 
