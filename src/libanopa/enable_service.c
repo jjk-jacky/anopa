@@ -20,6 +20,8 @@
  * anopa. If not, see http://www.gnu.org/licenses/
  */
 
+#define _BSD_SOURCE
+
 #include <errno.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -105,6 +107,91 @@ copy_log (const char *name, const char *cfg, mode_t mode, aa_warn_fn warn_fn)
 }
 
 static int
+clear_dir (const char *path, int excludes, aa_warn_fn warn_fn)
+{
+    DIR *dir;
+    int salen = satmp.len;
+
+    dir = opendir (path);
+    if (!dir)
+        return -ERR_IO;
+    errno = 0;
+    for (;;)
+    {
+        direntry *d;
+        int r = 0;
+
+        d = readdir (dir);
+        if (!d)
+            break;
+        if (d->d_name[0] == '.'
+                && (d->d_name[1] == '\0' || (d->d_name[1] == '.' && d->d_name[2] == '\0')))
+            continue;
+
+        if (stralloc_cats (&satmp, path) < 0)
+            goto err;
+        if (stralloc_catb (&satmp, "/", 1) < 0)
+            goto err;
+        if (stralloc_cats (&satmp, d->d_name) < 0)
+            goto err;
+        if (!stralloc_0 (&satmp))
+            goto err;
+
+        if (d->d_type == DT_UNKNOWN)
+        {
+            struct stat st;
+
+            r = stat (satmp.s + salen, &st);
+            if (r < 0)
+                goto err;
+
+            if (S_ISREG (st.st_mode))
+                d->d_type = DT_REG;
+            else if (S_ISDIR (st.st_mode))
+                d->d_type = DT_DIR;
+        }
+
+        if (excludes)
+        {
+            if (d->d_type == DT_REG
+                    && (str_equal (d->d_name, "status.anopa")
+                        || str_equal (d->d_name, "down")))
+                goto skip;
+            else if (d->d_type == DT_DIR
+                    && (str_equal (d->d_name, "supervise")
+                        || str_equal (d->d_name, "event")))
+                goto skip;
+        }
+
+        if (d->d_type == DT_DIR)
+        {
+            r = clear_dir (satmp.s + salen, 0, warn_fn);
+            if (r == 0)
+                r = rmdir (satmp.s + salen);
+        }
+        else
+            r = unlink (satmp.s + salen);
+err:
+        if (r < 0)
+            warn_fn (satmp.s + salen, errno);
+skip:
+        satmp.len = salen;
+        if (r < 0)
+            break;
+    }
+    if (errno)
+    {
+        int e = errno;
+        dir_close (dir);
+        errno = e;
+        return -ERR_IO;
+    }
+    dir_close (dir);
+
+    return 0;
+}
+
+static int
 copy_dir (const char        *src,
           const char        *dst,
           mode_t             mode,
@@ -150,7 +237,9 @@ copy_dir (const char        *src,
             l_max = len;
         if (!stralloc_catb (&satmp, d->d_name, len + 1))
             break;
-        if (depth == 0 && (flags & _AA_FLAG_IS_SERVICEDIR))
+        if (depth == 0 && (flags & _AA_FLAG_IS_SERVICEDIR)
+                /* if UPGRADE we don't need this, so skip those tests */
+                && !(flags & AA_FLAG_UPGRADE_SERVICEDIR))
         {
             if (!has.run && str_equal (d->d_name, "run"))
                 has.run = 1;
@@ -167,19 +256,35 @@ copy_dir (const char        *src,
     }
     dir_close (dir);
 
-    if (mkdir (dst, S_IRWXU) < 0)
+    if ((flags & (_AA_FLAG_IS_SERVICEDIR | AA_FLAG_UPGRADE_SERVICEDIR))
+            == (_AA_FLAG_IS_SERVICEDIR | AA_FLAG_UPGRADE_SERVICEDIR))
     {
-        if (errno != EEXIST || stat (dst, &st) < 0)
+        if (stat (dst, &st) < 0)
             goto err;
         else if (!S_ISDIR (st.st_mode))
         {
             errno = ENOTDIR;
             goto err;
         }
-        else if (flags & _AA_FLAG_IS_SERVICEDIR)
-        {
-            errno = EEXIST;
+        else if (clear_dir (dst, 1, warn_fn) < 0)
             goto err;
+    }
+    else
+    {
+        if (mkdir (dst, S_IRWXU) < 0)
+        {
+            if (errno != EEXIST || stat (dst, &st) < 0)
+                goto err;
+            else if (!S_ISDIR (st.st_mode))
+            {
+                errno = ENOTDIR;
+                goto err;
+            }
+            else if (flags & _AA_FLAG_IS_SERVICEDIR)
+            {
+                errno = EEXIST;
+                goto err;
+            }
         }
     }
 
@@ -316,7 +421,7 @@ next:
             i += len + 1;
         }
 
-        if (has.run)
+        if (has.run && !(flags & AA_FLAG_UPGRADE_SERVICEDIR))
         {
             if (!has.down)
             {

@@ -31,10 +31,11 @@ typedef enum
     AA_FLAG_AUTO_ENABLE_NEEDS   = (1 << 0),
     AA_FLAG_AUTO_ENABLE_WANTS   = (1 << 1),
     AA_FLAG_SKIP_DOWN           = (1 << 2),
+    AA_FLAG_UPGRADE_SERVICEDIR  = (1 << 3),
     /* private */
-    _AA_FLAG_IS_SERVICEDIR      = (1 << 3),
-    _AA_FLAG_IS_CONFIGDIR       = (1 << 4),
-    _AA_FLAG_IS_1OF4            = (1 << 5)
+    _AA_FLAG_IS_SERVICEDIR      = (1 << 4),
+    _AA_FLAG_IS_CONFIGDIR       = (1 << 5),
+    _AA_FLAG_IS_1OF4            = (1 << 6)
 } aa_enable_flags;
 
 extern stralloc aa_sa_sources;

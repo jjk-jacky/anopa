@@ -6,7 +6,7 @@ aa-enable - Enable services, i.e. copy servicedirs to repodir
 
 B<aa-enable> [B<-D>] [B<-r> I<REPODIR>] [B<-c> I<CRASH>] [B<-f> I<FINISH>]
 [B<-k> I<SERVICE>] [B<-S> I<SOURCEDIR>] [B<-s> I<SOURCEDIR>] [B<-l> I<LISTDIR>]
-[B<-N>] [B<-W>] [I<SERVICE...>]
+[B<-N>] [B<-W>] [B<-u>] [I<SERVICE...>]
 
 =head1 OPTIONS
 
@@ -72,6 +72,10 @@ B<--source>. This is useful to unset the defaults.
 
 Add I<SOURCEDIR> as new source. Can be specified multiple times; Source
 directories will be processed in the order they were added.
+
+=item B<-u, --upgrade>
+
+Upgrade servicedirs instead of creating them. See below for implications.
 
 =item B<-V, --version>
 
@@ -198,3 +202,30 @@ destination servicedir, if it exists.
 
 - A file I<+foobar> will have its content be appended to I<foobar> in the
 destination servicedir.
+
+=head2 Upgrading servicedirs
+
+You can upgrade servicedirs using the B<--upgrade> option. This is meant to
+apply changes (from source directories and/or configuration) into existing
+servicedirs.
+
+When used, B<aa-enable>(1) will behave as usual with the following changes:
+
+- The repodir (and the contained scandir) must already exist;
+
+- Each servicedir must already exist as well. Before copying anything, all its
+  content will be recursively removed except for regular file I<status.anopa>,
+  regular file I<down>, folder I<supervise> and folder I<event> (and their
+  content);
+
+- For longruns, no I<down> file will be created, nor will a symlink be added
+  into the scandir;
+
+- If used, options B<--set-finish> and B<--set-crash> are ignored.
+
+Services auto-added from I<needs> or I<wants> will also be processed differently
+that those specified:
+
+- If servicedir already exists in repodir, nothing is done
+
+- Else, they are enabled as usual (i.e. as if without the B<--upgrade> option)

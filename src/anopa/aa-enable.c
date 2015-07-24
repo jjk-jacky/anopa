@@ -103,16 +103,17 @@ enable_service (const char *name, intptr_t from_next)
 
     if (!from_next)
     {
-        /* skip what's already planned to be done next (added via auto-enable) */
+        /* check if it was already added to be done next (via auto-enable), in
+         * which case we need to remove it.
+         * We do this instead of simply skipping it and having it done later
+         * because:
+         * - if there's a folder here, we want to use it as config folder
+         * - in upgrade mode, the auto-added are treated differently, so
+         *   anything specified needs to be treated now (even w/out folder)
+         */
         for (i = 0; i < genalloc_len (int, &ga_next); ++i)
             if (str_equal (cur_name, names.s + list_get (&ga_next, i)))
             {
-                /* just a name, we can skip it (and process it later). Saves the
-                 * memmove needed to remove from ga_next */
-                if (cur_name == name)
-                    goto done;
-                /* there's a config folder, so we need to process it right now
-                 * (and remove it from ga_next) */
                 offset = list_get (&ga_next, i);
                 ga_remove (int, &ga_next, i);
                 goto process;
@@ -147,7 +148,6 @@ process:
     }
 
     ++nb_enabled;
-done:
     cur_name = NULL;
     return 0;
 }
@@ -182,6 +182,7 @@ dieusage (int rc)
             " -S, --reset-source DIR        Reset list of source directories to DIR\n"
             " -s, --source DIR              Add DIR as source directories\n"
             " -k, --skip-down SERVICE       Don't create file 'down' for SERVICE\n"
+            " -u, --upgrade                 Upgrade service dirs instead of creating them\n"
             " -l, --listdir DIR             Use DIR to list services to enable\n"
             " -f, --set-finish TARGET       Create s6-svscan symlink finish to TARGET\n"
             " -c, --set-crash TARGET        Create s6-svscan symlink crash to TARGET\n"
@@ -222,13 +223,14 @@ main (int argc, char * const argv[])
             { "repodir",            required_argument,  NULL,   'r' },
             { "reset-source",       required_argument,  NULL,   'S' },
             { "source",             required_argument,  NULL,   's' },
+            { "upgrade",            no_argument,        NULL,   'u' },
             { "version",            no_argument,        NULL,   'V' },
             { "no-wants",           no_argument,        NULL,   'W' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "c:Df:hk:l:Nr:S:s:VW", longopts, NULL);
+        c = getopt_long (argc, argv, "c:Df:hk:l:Nr:S:s:uVW", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -276,6 +278,10 @@ main (int argc, char * const argv[])
                     strerr_diefu1sys (1, "stralloc_catb");
                 break;
 
+            case 'u':
+                flags |= AA_FLAG_UPGRADE_SERVICEDIR;
+                break;
+
             case 'V':
                 aa_die_version ();
 
@@ -295,7 +301,8 @@ main (int argc, char * const argv[])
     if (!path_list && argc < 1)
         dieusage (1);
 
-    r = aa_init_repo (path_repo, AA_REPO_CREATE);
+    r = aa_init_repo (path_repo,
+            (flags & AA_FLAG_UPGRADE_SERVICEDIR) ? AA_REPO_WRITE : AA_REPO_CREATE);
     if (r < 0)
     {
         if (r == -ERR_IO_REPODIR)
@@ -337,7 +344,32 @@ main (int argc, char * const argv[])
         i = genalloc_len (int, &ga_next) - 1;
         offset = list_get (&ga_next, i);
         genalloc_setlen (int, &ga_next, i);
-        enable_service (names.s + offset, 1 + offset);
+        if (!(flags & AA_FLAG_UPGRADE_SERVICEDIR))
+            enable_service (names.s + offset, 1 + offset);
+        else
+        {
+            /* upgrade mode: check if it already exists or not. If so, we do
+             * nothing. If not however, we do the "standard" enabling */
+
+            if (access (names.s + offset, F_OK) < 0)
+            {
+                if (errno != ENOENT)
+                {
+                    int e = errno;
+
+                    aa_put_err (names.s + offset, errmsg[ERR_IO], 1);
+                    aa_bs_noflush (AA_ERR, ": " "unable to check for existing servicedir" ": ");
+                    aa_bs_noflush (AA_ERR, error_str (e));
+                    aa_end_err ();
+                }
+                else
+                {
+                    flags &= ~AA_FLAG_UPGRADE_SERVICEDIR;
+                    enable_service (names.s + offset, 1 + offset);
+                    flags |= AA_FLAG_UPGRADE_SERVICEDIR;
+                }
+            }
+        }
     }
 
     aa_bs_noflush (AA_OUT, "\n");
@@ -345,12 +377,15 @@ main (int argc, char * const argv[])
     aa_show_stat_nb (nb_enabled, "Enabled", ANSI_HIGHLIGHT_GREEN_ON);
     aa_show_stat_names (names.s, &ga_failed, "Failed", ANSI_HIGHLIGHT_RED_ON);
 
-    if ((set_crash || set_finish) && mkdir (SVSCANDIR, S_IRWXU) < 0)
-        aa_put_err ("Failed to create " SVSCANDIR, error_str (errno), 1);
-    if (set_crash && symlink (set_crash, SCANDIR_CRASH) < 0)
-        aa_put_err ("Failed to create symlink " SCANDIR_CRASH, error_str (errno), 1);
-    if (set_finish && symlink (set_finish, SCANDIR_FINISH) < 0)
-        aa_put_err ("Failed to create symlink " SCANDIR_FINISH, error_str (errno), 1);
+    if (!(flags & AA_FLAG_UPGRADE_SERVICEDIR))
+    {
+        if ((set_crash || set_finish) && mkdir (SVSCANDIR, S_IRWXU) < 0)
+            aa_put_err ("Failed to create " SVSCANDIR, error_str (errno), 1);
+        if (set_crash && symlink (set_crash, SCANDIR_CRASH) < 0)
+            aa_put_err ("Failed to create symlink " SCANDIR_CRASH, error_str (errno), 1);
+        if (set_finish && symlink (set_finish, SCANDIR_FINISH) < 0)
+            aa_put_err ("Failed to create symlink " SCANDIR_FINISH, error_str (errno), 1);
+    }
 
     genalloc_free (int, &ga_failed);
     genalloc_free (int, &ga_next);
