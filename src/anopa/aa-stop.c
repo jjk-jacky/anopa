@@ -119,7 +119,7 @@ it_preload (direntry *d, void *data)
 }
 
 static int
-add_service (const char *name)
+add_service (const char *name, void *data)
 {
     int si = -1;
     int type;
@@ -191,7 +191,7 @@ add_service (const char *name)
             for (i = 0; i < genalloc_len (int, &aa_service (si)->needs); ++i)
             {
                 int sni = list_get (&aa_service (si)->needs, i);
-                add_service (aa_service_name (aa_service (sni)));
+                add_service (aa_service_name (aa_service (sni)), NULL);
             }
         }
     }
@@ -206,7 +206,7 @@ it_stop (direntry *d, void *data)
         return 0;
 
     tain_now_g ();
-    add_service (d->d_name);
+    add_service (d->d_name, NULL);
 
     return 0;
 }
@@ -384,7 +384,13 @@ main (int argc, char * const argv[])
     }
     else
         for (i = 0; i < argc; ++i)
-            add_service (argv[i]);
+            if (str_equal (argv[i], "-"))
+            {
+                if (process_names_from_stdin ((names_cb) add_service, NULL) < 0)
+                    strerr_diefu1sys (ERR_IO, "process names from stdin");
+            }
+            else
+                add_service (argv[i], NULL);
 
     tain_now_g ();
 

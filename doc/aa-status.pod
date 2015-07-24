@@ -71,6 +71,9 @@ For long-run services it will also check for the I<ready> file to determine
 whether the service is "Up" or "Ready" (using the timestamp from the I<ready>
 file in the later case).
 
+You can use B<-> as service name to read actual service names from stdin, where
+there must be one name per line.
+
 =head1 FILTERING
 
 You can use B<--filter> to filter which services to process amongst those

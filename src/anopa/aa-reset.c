@@ -46,7 +46,7 @@ enum
 };
 
 static void
-reset_service (const char *name, int mode)
+reset_service (const char *name, intptr_t mode)
 {
     aa_service *s;
     int si;
@@ -149,7 +149,7 @@ main (int argc, char * const argv[])
     PROG = "aa-reset";
     const char *path_repo = "/run/services";
     int mode_both = 0;
-    int mode = MODE_NONE;
+    intptr_t mode = MODE_NONE;
     int i;
     int r;
 
@@ -216,7 +216,13 @@ main (int argc, char * const argv[])
         strerr_diefu2sys (2, "init repository ", path_repo);
 
     for (i = 0; i < argc; ++i)
-        reset_service (argv[i], mode);
+        if (str_equal (argv[i], "-"))
+        {
+            if (process_names_from_stdin ((names_cb) reset_service, (void *) mode) < 0)
+                strerr_diefu1sys (ERR_IO, "process names from stdin");
+        }
+        else
+            reset_service (argv[i], mode);
 
     return 0;
 }

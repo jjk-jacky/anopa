@@ -112,7 +112,7 @@ load_fail_cb (int si, aa_lf lf, const char *name, int err)
 }
 
 static int
-add_service (const char *name)
+add_service (const char *name, void *data)
 {
     int si = -1;
     int type;
@@ -194,7 +194,7 @@ it_start (direntry *d, void *data)
     if (*d->d_name == '.')
         return 0;
     tain_now_g ();
-    add_service (d->d_name);
+    add_service (d->d_name, NULL);
     return 0;
 }
 
@@ -332,7 +332,13 @@ main (int argc, char * const argv[])
     tain_now_g ();
 
     for (i = 0; i < argc; ++i)
-        add_service (argv[i]);
+        if (str_equal (argv[i], "-"))
+        {
+            if (process_names_from_stdin ((names_cb) add_service, NULL) < 0)
+                strerr_diefu1sys (ERR_IO, "process names from stdin");
+        }
+        else
+            add_service (argv[i], NULL);
 
     mainloop (mode, scan_cb);
 

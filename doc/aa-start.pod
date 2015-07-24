@@ -64,6 +64,9 @@ B<aa-start>(1) allows to start one or more services. By default, any services
 found in directories I<needs> or I<wants> are also auto-started, though it is
 possible not to auto-start the ones from I<wants> via B<--no-wants>.
 
+You can use B<-> as service name to read actual service names from stdin, where
+there must be one name per line.
+
 Refer to B<anopa>(1) for descriptions of servicedirs and service dependencies.
 
 =head1 TIMEOUTS

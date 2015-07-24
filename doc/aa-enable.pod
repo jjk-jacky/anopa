@@ -98,6 +98,9 @@ Also note that by default B<aa-enable>(1) will auto-enable any service whose
 name was found in a directory I<need> or I<wants> of a created servicedir. This
 can be turned off via B<--no-needs> and/or B<--no-wants> if needed.
 
+You can use B<-> as service name to read actual service names from stdin, where
+there must be one name per line.
+
 =head2 Enabling a service / Creating a servicedir
 
 Instead of simply creating the repository ahead of time, and copying it all on

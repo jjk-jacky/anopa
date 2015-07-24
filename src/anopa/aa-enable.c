@@ -90,7 +90,7 @@ ae_cb (const char *name, aa_enable_flags type)
 }
 
 static int
-enable_service (const char *name, int from_next)
+enable_service (const char *name, intptr_t from_next)
 {
     int offset;
     int r;
@@ -322,7 +322,13 @@ main (int argc, char * const argv[])
     }
 
     for (i = 0; i < argc; ++i)
-        enable_service (argv[i], 0);
+        if (str_equal (argv[i], "-"))
+        {
+            if (process_names_from_stdin ((names_cb) enable_service, NULL) < 0)
+                strerr_diefu1sys (ERR_IO, "process names from stdin");
+        }
+        else
+            enable_service (argv[i], 0);
 
     while (genalloc_len (int, &ga_next) > 0)
     {

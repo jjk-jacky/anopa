@@ -814,7 +814,13 @@ main (int argc, char * const argv[])
     }
     else
         for (i = 0; i < argc; ++i)
-            load_service (argv[i], &cfg);
+            if (str_equal (argv[i], "-"))
+            {
+                if (process_names_from_stdin ((names_cb) load_service, &cfg) < 0)
+                    strerr_diefu1sys (ERR_IO, "process names from stdin");
+            }
+            else
+                load_service (argv[i], &cfg);
 
     for (i = 0; i < genalloc_len (struct serv, &ga_serv); ++i)
         status_service (&genalloc_s (struct serv, &ga_serv)[i], &cfg);

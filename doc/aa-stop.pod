@@ -79,6 +79,9 @@ That is to say if service A was to be started after service B, then it will be
 stopped before B. And if A had a dependency (I<needs>) on C, then stopping C
 will also cause for A to be stopped.
 
+You can use B<-> as service name to read actual service names from stdin, where
+there must be one name per line.
+
 Refer to B<anopa>(1) for descriptions of servicedirs and service dependencies.
 
 B<aa-stop>(1) works in a very similar manner as B<aa-start>(1), with the

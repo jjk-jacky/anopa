@@ -20,7 +20,44 @@
  * anopa. If not, see http://www.gnu.org/licenses/
  */
 
+#include <skalibs/buffer.h>
+#include <skalibs/stralloc.h>
+#include <skalibs/skamisc.h>
 #include <string.h>
+#include <errno.h>
+#include "util.h"
+
+int
+process_names_from_stdin (names_cb process_name, void *data)
+{
+    int salen = satmp.len;
+    int r;
+
+    for (;;)
+    {
+        satmp.len = salen;
+        r = skagetlnsep (buffer_0small, &satmp, "\n", 1);
+        if (r < 0)
+        {
+            if (errno != EPIPE)
+                break;
+        }
+        else if (r == 0)
+            break;
+        else
+            satmp.len--;
+
+        if (!stralloc_0 (&satmp))
+        {
+            r = -1;
+            break;
+        }
+        process_name (satmp.s + salen, data);
+    }
+
+    satmp.len = salen;
+    return r;
+}
 
 void
 unslash (char *s)

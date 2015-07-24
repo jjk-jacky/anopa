@@ -57,3 +57,6 @@ specified:
 failed" to "Started"; and "Stopping failed" and "Stop failed" to "Stopped"
 
 Note that a service either "Starting" or "Stopping" will never be reset.
+
+You can use B<-> as service name to read actual service names from stdin, where
+there must be one name per line.

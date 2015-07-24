@@ -23,6 +23,9 @@
 #ifndef AA_UTIL_H
 #define AA_UTIL_H
 
+typedef void (*names_cb) (const char *name, void *data);
+
+int process_names_from_stdin (names_cb process_name, void *data);
 void unslash (char *s);
 
 #endif /* AA_UTIL_H */
