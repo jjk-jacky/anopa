@@ -148,7 +148,6 @@ main (int argc, char * const argv[])
 {
     PROG = "aa-reset";
     const char *path_repo = "/run/services";
-    int mode_both = 0;
     intptr_t mode = MODE_NONE;
     int i;
     int r;
@@ -181,7 +180,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'D':
-                mode_both = 1;
+                aa_set_double_output (1);
                 break;
 
             case 'h':
@@ -205,8 +204,6 @@ main (int argc, char * const argv[])
     }
     argc -= optind;
     argv += optind;
-
-    aa_init_output (mode_both);
 
     if (argc < 1 || mode == MODE_NONE)
         dieusage (1);

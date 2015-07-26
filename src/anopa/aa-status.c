@@ -693,7 +693,6 @@ main (int argc, char * const argv[])
     PROG = "aa-status";
     const char *path_repo = "/run/services";
     const char *path_list = NULL;
-    int mode_both = 0;
     struct config cfg = { 0, };
     int all = 0;
     int i;
@@ -725,7 +724,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'D':
-                mode_both = 1;
+                aa_set_double_output (1);
                 break;
 
             case 'f':
@@ -763,8 +762,6 @@ main (int argc, char * const argv[])
     }
     argc -= optind;
     argv += optind;
-
-    aa_init_output (mode_both);
 
     if (!all && !path_list && argc < 1)
         dieusage (1);

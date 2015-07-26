@@ -25,25 +25,33 @@
 #include <skalibs/buffer.h>
 #include <anopa/output.h>
 
-static int istty[2] = { 0, 0 };
-static int do_both = 0;
+static int istty[2] = { -1, 0 };
+static int double_output = 0;
+
+#define is_tty(n)           (istty[0] > -1 || chk_tty ()) && istty[n]
 
 #define putb_noflush(w,s,l) buffer_putnoflush ((w) ? buffer_2 : buffer_1small, s, l)
 #define putb_flush(w,s,l)   buffer_putflush ((w) ? buffer_2 : buffer_1small, s, l)
 
-void
-aa_init_output (int mode_both)
+static int
+chk_tty (void)
 {
     istty[0] = isatty (1);
     istty[1] = isatty (2);
-    do_both = mode_both;
+    return 1;
+}
+
+void
+aa_set_double_output (int enabled)
+{
+    double_output = !!enabled;
 }
 
 void
 aa_bb_noflush (int where, const char *s, int len)
 {
     putb_noflush (where, s, len);
-    if (do_both)
+    if (double_output)
         putb_noflush (!where, s, len);
 }
 
@@ -51,25 +59,25 @@ void
 aa_bb_flush (int where, const char *s, int len)
 {
     putb_flush (where, s, len);
-    if (do_both)
+    if (double_output)
         putb_flush (!where, s, len);
 }
 
 void
 aa_ib_noflush (int where, const char *s, int len)
 {
-    if (istty[where])
+    if (is_tty (where))
         putb_noflush (where, s, len);
-    if (do_both && istty[!where])
+    if (double_output && is_tty (!where))
         putb_noflush (!where, s, len);
 }
 
 void
 aa_ib_flush (int where, const char *s, int len)
 {
-    if (istty[where])
+    if (is_tty (where))
         putb_flush (where, s, len);
-    if (do_both && istty[!where])
+    if (double_output && is_tty (!where))
         putb_flush (!where, s, len);
 }
 

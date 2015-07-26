@@ -276,7 +276,6 @@ main (int argc, char * const argv[])
     stralloc sa_mounts = STRALLOC_ZERO;
     stralloc sa_loops = STRALLOC_ZERO;
     stralloc sa_dms = STRALLOC_ZERO;
-    int mode_both = 0;
     int apis = 0;
     int lazy = 0;
     int did_smthg;
@@ -305,7 +304,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'D':
-                mode_both = 1;
+                aa_set_double_output (1);
                 break;
 
             case 'h':
@@ -335,8 +334,6 @@ main (int argc, char * const argv[])
 
     if (argc > 0)
         dieusage (1);
-
-    aa_init_output (mode_both);
 
 again:
     for (;;)

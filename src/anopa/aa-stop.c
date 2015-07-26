@@ -249,7 +249,6 @@ main (int argc, char * const argv[])
     PROG = "aa-stop";
     const char *path_repo = "/run/services";
     const char *path_list = NULL;
-    int mode_both = 0;
     int i;
 
     aa_secs_timeout = DEFAULT_TIMEOUT_SECS;
@@ -279,7 +278,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'D':
-                mode_both = 1;
+                aa_set_double_output (1);
                 break;
 
             case 'h':
@@ -318,7 +317,6 @@ main (int argc, char * const argv[])
     argc -= optind;
     argv += optind;
 
-    aa_init_output (mode_both);
     cols = get_cols (1);
     is_utf8 = is_locale_utf8 ();
 

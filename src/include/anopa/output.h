@@ -35,7 +35,7 @@
 #define AA_OUT      0
 #define AA_ERR      1
 
-extern void aa_init_output (int mode_both);
+extern void aa_set_double_output (int enabled);
 extern void aa_bb_noflush (int where, const char *s, int len);
 extern void aa_bb_flush (int where, const char *s, int len);
 #define aa_bs_noflush(w,s)  aa_bb_noflush ((w), (s), strlen (s))

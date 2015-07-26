@@ -28,7 +28,6 @@ extern char const *PROG;
 void
 aa_die_usage (int rc, const char *usage, const char *details)
 {
-    aa_init_output (0);
     aa_bs_noflush (AA_OUT, "Usage: ");
     aa_bs_noflush (AA_OUT, PROG);
     aa_bs_noflush (AA_OUT, " ");

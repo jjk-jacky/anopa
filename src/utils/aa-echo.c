@@ -70,7 +70,6 @@ int
 main (int argc, char * const argv[])
 {
     PROG = "aa-echo";
-    int mode_both = 0;
     int blank = 0;
     put_fn put = put_title;
     int where = AA_OUT;
@@ -102,7 +101,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'D':
-                mode_both = 1;
+                aa_set_double_output (1);
                 break;
 
             case 'e':
@@ -146,7 +145,6 @@ main (int argc, char * const argv[])
     if (argc < 1)
         dieusage (1);
 
-    aa_init_output (mode_both);
     if (blank)
         aa_bs_noflush (where, "\n");
     if (put)
