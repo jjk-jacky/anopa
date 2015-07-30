@@ -89,7 +89,7 @@ err:
 }
 
 static int
-aa_service (int argc, char const **argv, exlsn_t *info)
+aa_service (exlsn_t *info)
 {
     stralloc sa = STRALLOC_ZERO;
     char *s;
@@ -192,7 +192,7 @@ main (int argc, char const **argv, char const *const *envp)
     --argc;
     ++argv;
 
-    r = aa_service (argc, argv, &info);
+    r = aa_service (&info);
     if (r < 0)
         switch (-r)
         {
