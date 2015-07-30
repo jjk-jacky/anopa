@@ -12,7 +12,7 @@ B<aa-umount> [B<-f> | B<-l>] I<MOUNTPOINT>
 
 =item B<-f, --force>
 
-Force unmount even if busy (only for NFS moutns). This can cause data loss.
+Force unmount even if busy (only for NFS mounts). This can cause data loss.
 
 =item B<-h, --help>
 
