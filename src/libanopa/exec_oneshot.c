@@ -32,9 +32,9 @@
 #include <skalibs/tai.h>
 #include <skalibs/uint32.h>
 #include <skalibs/error.h>
-#include <skalibs/strerr2.h>
 #include <anopa/service.h>
 #include <anopa/err.h>
+#include <anopa/output.h>
 #include "service_internal.h"
 
 int
@@ -75,7 +75,7 @@ _exec_oneshot (int si, aa_mode mode)
         s->st.event = (is_start) ? AA_EVT_STARTED : AA_EVT_STOPPED;
         tain_copynow (&s->st.stamp);
         if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
-            strerr_warnwu2sys ("write service status file for ", aa_service_name (s));
+            aa_strerr_warnu2sys ("write service status file for ", aa_service_name (s));
 
         if (_exec_cb)
             _exec_cb (si, s->st.event, 0);
@@ -200,7 +200,7 @@ _exec_oneshot (int si, aa_mode mode)
             fd_write (p_int[1], "p", 1);
             uint32_pack (buf_e, e);
             fd_write (p_int[1], buf_e, UINT32_FMT);
-            strerr_diefu1sys (ERR_IO, "set up pipes");
+            aa_strerr_diefu1sys (ERR_IO, "set up pipes");
         }
 
         if (chdir (PROG) < 0)
@@ -209,7 +209,7 @@ _exec_oneshot (int si, aa_mode mode)
             fd_write (p_int[1], "c", 1);
             uint32_pack (buf_e, e);
             fd_write (p_int[1], buf_e, UINT32_FMT);
-            strerr_diefu1sys (ERR_IO, "get into service directory");
+            aa_strerr_diefu1sys (ERR_IO, "get into service directory");
         }
 
         buf[l_sn - 1] = '.';
@@ -219,7 +219,7 @@ _exec_oneshot (int si, aa_mode mode)
         fd_write (p_int[1], "e", 1);
         uint32_pack (buf_e, e);
         fd_write (p_int[1], buf_e, UINT32_FMT);
-        strerr_dieexec (ERR_IO, filename);
+        aa_strerr_dieexec (ERR_IO, filename);
     }
 
     fd_close (p_int[1]);
@@ -291,7 +291,7 @@ _exec_oneshot (int si, aa_mode mode)
                 tain_copynow (&s->st.stamp);
                 aa_service_status_set_msg (&s->st, msg);
                 if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
-                    strerr_warnwu2sys ("write service status file for ", aa_service_name (s));
+                    aa_strerr_warnu2sys ("write service status file for ", aa_service_name (s));
 
                 if (_exec_cb)
                     _exec_cb (si, s->st.event, 0);
@@ -332,7 +332,7 @@ err:
         aa_service_status_set_msg (&s->st, msg);
     }
     if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
-        strerr_warnwu2sys ("write service status file for ", aa_service_name (s));
+        aa_strerr_warnu2sys ("write service status file for ", aa_service_name (s));
 
     if (_exec_cb)
         _exec_cb (si, s->st.event, 0);

@@ -25,11 +25,11 @@
 #include <skalibs/bytestr.h>
 #include <skalibs/tai.h>
 #include <skalibs/error.h>
-#include <skalibs/strerr2.h>
 #include <s6/s6-supervise.h>
 #include <s6/ftrigr.h>
 #include <anopa/service.h>
 #include <anopa/err.h>
+#include <anopa/output.h>
 #include "service_internal.h"
 
 int
@@ -63,7 +63,7 @@ _exec_longrun (int si, aa_mode mode)
         tain_copynow (&s->st.stamp);
         aa_service_status_set_msg (&s->st, "Failed to subscribe to eventdir");
         if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
-            strerr_warnwu2sys ("write service status file for ", aa_service_name (s));
+            aa_strerr_warnu2sys ("write service status file for ", aa_service_name (s));
 
         if (_exec_cb)
             _exec_cb (si, s->st.event, 0);
@@ -86,7 +86,7 @@ _exec_longrun (int si, aa_mode mode)
         tain_addsec (&s->st.stamp, &st6.stamp, -1);
         aa_service_status_set_msg (&s->st, "");
         if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
-            strerr_warnwu2sys ("write service status file for ", aa_service_name (s));
+            aa_strerr_warnu2sys ("write service status file for ", aa_service_name (s));
 
         /* we still process it. Because we checked the service state (from s6)
          * before adding it to the "treansaction" (i.e. in
@@ -151,7 +151,7 @@ _exec_longrun (int si, aa_mode mode)
                     ? "Failed to send command"
                     : "Supervisor not listenning");
             if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
-                strerr_warnwu2sys ("write service status file for ", aa_service_name (s));
+                aa_strerr_warnu2sys ("write service status file for ", aa_service_name (s));
 
             if (_exec_cb)
                 _exec_cb (si, s->st.event, 0);

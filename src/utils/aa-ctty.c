@@ -25,8 +25,8 @@
 #include <sys/ioctl.h>
 #include <skalibs/uint.h>
 #include <skalibs/djbunix.h>
-#include <skalibs/strerr2.h>
 #include <anopa/common.h>
+#include <anopa/output.h>
 
 static void
 dieusage (int rc)
@@ -64,7 +64,7 @@ main (int argc, char * const argv[], char const * const *envp)
         {
             case 'f':
                 if (!uint0_scan (optarg, &fd))
-                    strerr_diefu1sys (1, "set fd");
+                    aa_strerr_diefu1sys (1, "set fd");
                 break;
 
             case 'h':
@@ -88,8 +88,8 @@ main (int argc, char * const argv[], char const * const *envp)
         dieusage (1);
 
     if (ioctl (fd, TIOCSCTTY, steal) < 0)
-        strerr_warnwu1sys ("set controlling terminal");
+        aa_strerr_warnu1sys ("set controlling terminal");
 
     pathexec_run (argv[0], (char const * const *) argv, envp);
-    strerr_dieexec (111, argv[0]);
+    aa_strerr_dieexec (111, argv[0]);
 }

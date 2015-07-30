@@ -24,11 +24,9 @@
 #include <unistd.h>
 #include <skalibs/djbunix.h>
 #include <skalibs/bytestr.h>
-#include <skalibs/strerr2.h>
 #include <anopa/common.h>
+#include <anopa/output.h>
 #include <anopa/copy_file.h>
-
-const char *PROG;
 
 static void
 dieusage (int rc)
@@ -56,9 +54,9 @@ main (int argc, char * const argv[])
         dieusage (1);
 
     if (stat (argv[1], &st) < 0)
-        strerr_diefu2sys (2, "stat ", argv[1]);
+        aa_strerr_diefu2sys (2, "stat ", argv[1]);
     else if (!S_ISREG (st.st_mode))
-        strerr_dief2x (2, argv[1], ": not a file");
+        aa_strerr_dief2x (2, argv[1], ": not a file");
 
     {
         int l = strlen (argv[2]);
@@ -68,23 +66,23 @@ main (int argc, char * const argv[])
         byte_copy (newname, l, argv[2]);
         newname[l] = '/';
         if (openreadnclose (argv[1], newname + l + 1, 25) != 25)
-            strerr_diefu2sys (2, "read new name from ", argv[1]);
+            aa_strerr_diefu2sys (2, "read new name from ", argv[1]);
         if (newname[l + 1] != '@'
                 || byte_chr (newname + l + 1, 25, '/') < 25
                 || byte_chr (newname + l + 1, 25, '\0') < 25)
-            strerr_dief2x (2, "invalid new name read from ", argv[1]);
+            aa_strerr_dief2x (2, "invalid new name read from ", argv[1]);
         newname[l + 26] = '\0';
 
         if (aa_copy_file (argv[1], newname, st.st_mode, AA_CP_CREATE) < 0)
-            strerr_diefu4sys (2, "copy ", argv[1], " as ", newname);
+            aa_strerr_diefu4sys (2, "copy ", argv[1], " as ", newname);
 
         byte_copy (target, 26, newname + l + 1);
         byte_copy (newname + l + 1, 8, "current");
         unlink (newname);
         if (symlink (target, newname) < 0)
-            strerr_warnwu2sys ("create symlink ", newname);
+            aa_strerr_warnu2sys ("create symlink ", newname);
         if (unlink (argv[1]) < 0)
-            strerr_warnwu2sys ("remove source file ", argv[1]);
+            aa_strerr_warnu2sys ("remove source file ", argv[1]);
     }
 
     return 0;

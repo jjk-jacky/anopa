@@ -23,10 +23,8 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <sys/reboot.h>
-#include <skalibs/strerr2.h>
 #include <anopa/common.h>
-
-const char *PROG;
+#include <anopa/output.h>
 
 static void
 dieusage (int rc)
@@ -101,7 +99,7 @@ main (int argc, char * const argv[])
         dieusage (1);
 
     if (reboot (cmd[i].cmd) < 0)
-        strerr_diefu2sys (2, cmd[i].desc, " the machine");
+        aa_strerr_diefu2sys (2, cmd[i].desc, " the machine");
 
     /* unlikely :p */
     return 0;

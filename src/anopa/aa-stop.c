@@ -31,7 +31,6 @@
 #include <skalibs/bytestr.h>
 #include <skalibs/direntry.h>
 #include <skalibs/genalloc.h>
-#include <skalibs/strerr2.h>
 #include <skalibs/error.h>
 #include <skalibs/uint.h>
 #include <skalibs/tai.h>
@@ -173,7 +172,7 @@ add_service (const char *name, void *data)
             if (aa_service (si)->st.code != ERR_NOT_UP)
             {
                 errno = EINVAL;
-                strerr_diefu1sys (ERR_IO, "add service");
+                aa_strerr_diefu1sys (ERR_IO, "add service");
             }
 
             if (!(mode & AA_MODE_IS_DRY))
@@ -304,7 +303,7 @@ main (int argc, char * const argv[])
 
             case 't':
                 if (!uint0_scan (optarg, &aa_secs_timeout))
-                    strerr_diefu2sys (ERR_IO, "set default timeout to ", optarg);
+                    aa_strerr_diefu2sys (ERR_IO, "set default timeout to ", optarg);
                 break;
 
             case 'V':
@@ -325,7 +324,7 @@ main (int argc, char * const argv[])
         dieusage (1);
 
     if (aa_init_repo (path_repo, AA_REPO_WRITE) < 0)
-        strerr_diefu2sys (ERR_IO, "init repository ", path_repo);
+        aa_strerr_diefu2sys (ERR_IO, "init repository ", path_repo);
 
     /* let's "preload" every services from the repo. This will have everything
      * in tmp list, either LOAD_DONE when up, or LOAD_FAIL when not
@@ -342,7 +341,7 @@ main (int argc, char * const argv[])
         r = aa_scan_dir (&sa, 0, it_preload, NULL);
         stralloc_free (&sa);
         if (r < 0)
-            strerr_diefu1sys (-r, "read repository directory");
+            aa_strerr_diefu1sys (-r, "read repository directory");
     }
 
     if (mode & AA_MODE_STOP_ALL)
@@ -376,7 +375,7 @@ main (int argc, char * const argv[])
         r = aa_scan_dir (&sa, 1, it_stop, NULL);
         stralloc_free (&sa);
         if (r < 0)
-            strerr_diefu3sys (-r, "read list directory ",
+            aa_strerr_diefu3sys (-r, "read list directory ",
                     (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
                     (*path_list != '/' && *path_list != '.') ? path_list : "");
     }
@@ -385,7 +384,7 @@ main (int argc, char * const argv[])
             if (str_equal (argv[i], "-"))
             {
                 if (process_names_from_stdin ((names_cb) add_service, NULL) < 0)
-                    strerr_diefu1sys (ERR_IO, "process names from stdin");
+                    aa_strerr_diefu1sys (ERR_IO, "process names from stdin");
             }
             else
                 add_service (argv[i], NULL);

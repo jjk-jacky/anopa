@@ -29,13 +29,13 @@
 #include <skalibs/direntry.h>
 #include <skalibs/uint.h>
 #include <skalibs/tai.h>
-#include <skalibs/strerr2.h>
 #include <s6/s6-supervise.h>
 #include <s6/ftrigr.h>
 #include <anopa/service.h>
 #include <anopa/ga_int_list.h>
 #include <anopa/scan_dir.h>
 #include <anopa/err.h>
+#include <anopa/output.h>
 #include "service_internal.h"
 
 static aa_close_fd_fn close_fd;
@@ -296,7 +296,7 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
             r = uint_scan (sa_to.s, &aa_service (si)->secs_timeout);
             if (!r || (sa_to.s[r] != '\n' && sa_to.s[r] != '\0'))
             {
-                strerr_warnwu3x ("read timeout for ", aa_service_name (aa_service (si)), "; using default");
+                aa_strerr_warnu3x ("read timeout for ", aa_service_name (aa_service (si)), "; using default");
                 aa_service (si)->secs_timeout = aa_secs_timeout;
             }
         }
@@ -533,7 +533,7 @@ aa_scan_mainlist (aa_scan_cb scan_cb, aa_mode mode)
             tain_copynow (&svst->stamp);
             aa_service_status_set_msg (svst,aa_service_name (aa_service (sni)));
             if (aa_service_status_write (svst, aa_service_name (s)) < 0)
-                strerr_warnwu2sys ("write service status file for ", aa_service_name (s));
+                aa_strerr_warnu2sys ("write service status file for ", aa_service_name (s));
 
             remove_from_list (&aa_main_list, si);
 

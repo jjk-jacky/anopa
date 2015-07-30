@@ -36,7 +36,6 @@
 #include <skalibs/sig.h>
 #include <skalibs/uint.h>
 #include <skalibs/uint16.h>
-#include <skalibs/strerr2.h>
 #include <anopa/service.h>
 #include <anopa/ga_int_list.h>
 #include <anopa/output.h>
@@ -298,7 +297,7 @@ refresh_draw ()
                 r = term_set_echo (0);
                 if (r < 0)
                 {
-                    strerr_warnwu2sys ("set terminal attributes; "
+                    aa_strerr_warnu2sys ("set terminal attributes; "
                             "can't ask for password for service ",
                             aa_service_name (aa_service (pg->si)));
                     break;
@@ -648,7 +647,7 @@ end_si_password (void)
 
     r = term_set_echo (1);
     if (r < 0)
-        strerr_warnwu1sys ("reset terminal attributes");
+        aa_strerr_warnu1sys ("reset terminal attributes");
 
     /* to get to the next one, if any */
     draw |= DRAW_NEED_PASSWORD;
@@ -675,7 +674,7 @@ handle_fdw (int fd)
     r = fd_write (fd, pg->aa_pg.sa.s + offset, len);
     if (r < 0)
     {
-        strerr_warnwu2sys ("write to fd_in of service ", aa_service_name (s));
+        aa_strerr_warnu2sys ("write to fd_in of service ", aa_service_name (s));
         return r;
     }
     else if (r < len)
@@ -700,7 +699,7 @@ handle_oneshot (int is_start)
     if (r < 0)
     {
         if (errno != ECHILD)
-            strerr_warnwu1sys ("wait_pids_nohang");
+            aa_strerr_warnu1sys ("wait_pids_nohang");
         return r;
     }
     else if (r == 0)
@@ -727,7 +726,7 @@ handle_oneshot (int is_start)
         svst->event = (is_start) ? AA_EVT_STARTED : AA_EVT_STOPPED;
         tain_copynow (&svst->stamp);
         if (aa_service_status_write (svst, aa_service_name (aa_service (si))) < 0)
-            strerr_warnwu2sys ("write service status file for ", aa_service_name (aa_service (si)));
+            aa_strerr_warnu2sys ("write service status file for ", aa_service_name (aa_service (si)));
 
         put_title (1, aa_service_name (aa_service (si)),
                 (is_start) ? "Started" : "Stopped", 1);
@@ -745,7 +744,7 @@ handle_oneshot (int is_start)
             tain_copynow (&svst->stamp);
             aa_service_status_set_msg (svst, "");
             if (aa_service_status_write (svst, aa_service_name (aa_service (si))) < 0)
-                strerr_warnwu2sys ("write service status file for ", aa_service_name (aa_service (si)));
+                aa_strerr_warnu2sys ("write service status file for ", aa_service_name (aa_service (si)));
 
             put_err_service (aa_service_name (aa_service (si)), ERR_TIMEDOUT, 1);
             genalloc_append (int, &ga_timedout, &si);
@@ -759,7 +758,7 @@ handle_oneshot (int is_start)
             tain_copynow (&svst->stamp);
             aa_service_status_set_msg (svst, "");
             if (aa_service_status_write (svst, aa_service_name (aa_service (si))) < 0)
-                strerr_warnwu2sys ("write service status file for ", aa_service_name (aa_service (si)));
+                aa_strerr_warnu2sys ("write service status file for ", aa_service_name (aa_service (si)));
 
             if (WIFEXITED (wstat))
             {
@@ -805,7 +804,7 @@ handle_longrun (aa_mode mode, uint16 id, char event)
     {
         char buf[UINT16_FMT];
         buf[uint16_fmt (buf, id)] = '\0';
-        strerr_warnwu2x ("find longrun service for id#", buf);
+        aa_strerr_warnu2x ("find longrun service for id#", buf);
         return -1;
     }
 
@@ -875,7 +874,7 @@ handle_signals (aa_mode mode)
         switch (c)
         {
             case -1:
-                strerr_diefu1sys (ERR_IO, "selfpipe_read");
+                aa_strerr_diefu1sys (ERR_IO, "selfpipe_read");
 
             case 0:
                 return r;
@@ -911,7 +910,7 @@ handle_signals (aa_mode mode)
                 break;
 
             default:
-                strerr_dief1x (ERR_IO, "internal error: invalid selfpipe_read value");
+                aa_strerr_dief1x (ERR_IO, "internal error: invalid selfpipe_read value");
         }
     }
 }
@@ -1082,7 +1081,7 @@ process_timeouts (aa_mode mode, aa_scan_cb scan_cb)
                 tain_copynow (&svst->stamp);
                 aa_service_status_set_msg (svst, "");
                 if (aa_service_status_write (svst, aa_service_name (aa_service (si))) < 0)
-                    strerr_warnwu2sys ("write service status file for ", aa_service_name (aa_service (si)));
+                    aa_strerr_warnu2sys ("write service status file for ", aa_service_name (aa_service (si)));
 
                 put_err_service (aa_service_name (aa_service (si)), ERR_TIMEDOUT, 1);
                 genalloc_append (int, &ga_timedout, &si);
@@ -1145,7 +1144,7 @@ process_timeouts (aa_mode mode, aa_scan_cb scan_cb)
                     tain_copynow (&svst->stamp);
                     aa_service_status_set_msg (svst, "");
                     if (aa_service_status_write (svst, aa_service_name (aa_service (si))) < 0)
-                        strerr_warnwu2sys ("write service status file for ", aa_service_name (aa_service (si)));
+                        aa_strerr_warnu2sys ("write service status file for ", aa_service_name (aa_service (si)));
 
                     put_err_service (aa_service_name (aa_service (si)), ERR_TIMEDOUT, 1);
                     genalloc_append (int, &ga_timedout, &si);
@@ -1181,11 +1180,11 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
     int i;
 
     if (!genalloc_ready_tuned (iopause_fd, &ga_iop, 2, 0, 0, 1))
-        strerr_diefu1sys (ERR_IO, "allocate iopause_fd");
+        aa_strerr_diefu1sys (ERR_IO, "allocate iopause_fd");
 
     iop.fd = selfpipe_init ();
     if (iop.fd == -1)
-        strerr_diefu1sys (ERR_IO, "init selfpipe");
+        aa_strerr_diefu1sys (ERR_IO, "init selfpipe");
     iop.events = IOPAUSE_READ;
     genalloc_append (iopause_fd, &ga_iop, &iop);
 
@@ -1194,7 +1193,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
     sig_ignore (SIGINT);
     iop.fd = aa_prepare_mainlist (prepare_cb, exec_cb);
     if (iop.fd < 0)
-        strerr_diefu1sys (ERR_IO, "prepare mainlist");
+        aa_strerr_diefu1sys (ERR_IO, "prepare mainlist");
     else if (iop.fd == 0)
         iop.fd = -1;
     genalloc_append (iopause_fd, &ga_iop, &iop);
@@ -1206,7 +1205,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
     sigaddset (&set, SIGINT);
     sigaddset (&set, SIGWINCH);
     if (selfpipe_trapset (&set) < 0)
-        strerr_diefu1sys (ERR_IO, "trap signals");
+        aa_strerr_diefu1sys (ERR_IO, "trap signals");
 
     /* start what we can */
     for (i = 0; i < genalloc_len (int, &aa_main_list); ++i)
@@ -1252,7 +1251,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
         nb_iop = genalloc_len (iopause_fd, &ga_iop);
         r = iopause_g (genalloc_s (iopause_fd, &ga_iop), nb_iop, &iol_deadline);
         if (r < 0)
-            strerr_diefu1sys (ERR_IO, "iopause");
+            aa_strerr_diefu1sys (ERR_IO, "iopause");
         else if (r == 0)
         {
             if (ms1 < 0 || ms2 < ms1)
@@ -1270,13 +1269,13 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
                 {
                     r = handle_fd (iofd->fd);
                     if (r < 0)
-                        strerr_warnwu1sys ("handle fd");
+                        aa_strerr_warnu1sys ("handle fd");
                 }
                 else if (iofd->revents & IOPAUSE_WRITE)
                 {
                     r = handle_fdw (iofd->fd);
                     if (r < 0)
-                        strerr_warnwu1sys ("handle fdw");
+                        aa_strerr_warnu1sys ("handle fdw");
                 }
                 else if (iofd->revents & IOPAUSE_EXCEPT)
                     close_fd_for (iofd->fd, -1);
@@ -1286,7 +1285,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
             if (iofd->revents & IOPAUSE_READ)
                 scan += handle_signals (mode);
             else if (iofd->revents & IOPAUSE_EXCEPT)
-                strerr_diefu1sys (ERR_IO, "iopause: selfpipe error");
+                aa_strerr_diefu1sys (ERR_IO, "iopause: selfpipe error");
 
             iofd = &genalloc_s (iopause_fd, &ga_iop)[1];
             if (iofd->fd <= 0)
@@ -1301,7 +1300,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
                     r = aa_get_longrun_info (&id, &event);
                     if (r < 0)
                     {
-                        strerr_warnwu1sys ("get longrun information");
+                        aa_strerr_warnu1sys ("get longrun information");
                         break;
                     }
                     else if (r == 0)
@@ -1313,7 +1312,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
                 }
             }
             else if (iofd->revents & IOPAUSE_EXCEPT)
-                strerr_diefu1sys (ERR_IO, "iopause: longrun pipe error");
+                aa_strerr_diefu1sys (ERR_IO, "iopause: longrun pipe error");
 
 scan:
             if (scan > 0)

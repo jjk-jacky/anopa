@@ -25,7 +25,6 @@
 #include <anopa/common.h>
 #include <anopa/output.h>
 
-char const *PROG;
 typedef void (*put_fn) (const char *name, const char *msg, int end);
 
 static void

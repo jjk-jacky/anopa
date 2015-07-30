@@ -21,8 +21,8 @@
  */
 
 #include <getopt.h>
-#include <skalibs/strerr2.h>
 #include <anopa/common.h>
+#include <anopa/output.h>
 
 #ifndef NULL
 #define NULL    (void *) 0
@@ -75,6 +75,6 @@ main (int argc, char * const argv[])
         dieusage (1);
 
     if (pivot_root (argv[0], argv[1]) < 0)
-        strerr_diefu2sys (2, "pivot into ", argv[0]);
+        aa_strerr_diefu2sys (2, "pivot into ", argv[0]);
     return 0;
 }

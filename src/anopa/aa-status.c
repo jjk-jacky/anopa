@@ -35,7 +35,6 @@
 #include <skalibs/djbunix.h>
 #include <skalibs/genalloc.h>
 #include <skalibs/stralloc.h>
-#include <skalibs/strerr2.h>
 #include <skalibs/uint.h>
 #include <skalibs/djbtime.h>
 #include <skalibs/sig.h>
@@ -235,7 +234,7 @@ put_list_header (struct config *cfg)
                     len -= cols[1].len;
                     if (len < len)
                     {
-                        strerr_warn1x ("Terminal too small, disabling list mode");
+                        aa_strerr_warn1x ("Terminal too small, disabling list mode");
                         cfg->mode = MODE_NORMAL;
                         return 0;
                     }
@@ -729,7 +728,7 @@ main (int argc, char * const argv[])
 
             case 'f':
                 if (!set_filter (optarg))
-                    strerr_diefu3sys (1, "set filter '", optarg, "'");
+                    aa_strerr_diefu3sys (1, "set filter '", optarg, "'");
                 break;
 
             case 'h':
@@ -768,7 +767,7 @@ main (int argc, char * const argv[])
 
     r = aa_init_repo (path_repo, AA_REPO_READ);
     if (r < 0)
-        strerr_diefu2sys (2, "init repository ", path_repo);
+        aa_strerr_diefu2sys (2, "init repository ", path_repo);
 
     if (cfg.mode == MODE_LIST)
     {
@@ -792,7 +791,7 @@ main (int argc, char * const argv[])
         stralloc_catb (&sa, ".", 2);
         r = aa_scan_dir (&sa, 0, it_all, &cfg);
         if (r < 0)
-            strerr_diefu2sys (-r, "scan repo directory ", path_repo);
+            aa_strerr_diefu2sys (-r, "scan repo directory ", path_repo);
     }
     else if (path_list)
     {
@@ -805,7 +804,7 @@ main (int argc, char * const argv[])
         r = aa_scan_dir (&sa, 1, it_listdir, &cfg);
         stralloc_free (&sa);
         if (r < 0)
-            strerr_diefu3sys (-r, "read list directory ",
+            aa_strerr_diefu3sys (-r, "read list directory ",
                     (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
                     (*path_list != '/' && *path_list != '.') ? path_list : "");
     }
@@ -814,7 +813,7 @@ main (int argc, char * const argv[])
             if (str_equal (argv[i], "-"))
             {
                 if (process_names_from_stdin ((names_cb) load_service, &cfg) < 0)
-                    strerr_diefu1sys (ERR_IO, "process names from stdin");
+                    aa_strerr_diefu1sys (ERR_IO, "process names from stdin");
             }
             else
                 load_service (argv[i], &cfg);

@@ -35,7 +35,6 @@
 #include <skalibs/stralloc.h>
 #include <skalibs/genalloc.h>
 #include <skalibs/direntry.h>
-#include <skalibs/strerr2.h>
 #include <skalibs/error.h>
 #include <skalibs/uint.h>
 #include <skalibs/skamisc.h>
@@ -205,9 +204,9 @@ main (int argc, char * const argv[])
     int r;
 
     if (!stralloc_catb (&aa_sa_sources, SOURCE_ETC, sizeof (SOURCE_ETC)))
-        strerr_diefu1sys (1, "stralloc_catb");
+        aa_strerr_diefu1sys (1, "stralloc_catb");
     if (!stralloc_catb (&aa_sa_sources, SOURCE_USR, sizeof (SOURCE_USR)))
-        strerr_diefu1sys (1, "stralloc_catb");
+        aa_strerr_diefu1sys (1, "stralloc_catb");
 
     for (;;)
     {
@@ -274,7 +273,7 @@ main (int argc, char * const argv[])
             case 's':
                 unslash (optarg);
                 if (!stralloc_catb (&aa_sa_sources, optarg, strlen (optarg) + 1))
-                    strerr_diefu1sys (1, "stralloc_catb");
+                    aa_strerr_diefu1sys (1, "stralloc_catb");
                 break;
 
             case 'u':
@@ -303,11 +302,11 @@ main (int argc, char * const argv[])
     if (r < 0)
     {
         if (r == -ERR_IO_REPODIR)
-            strerr_diefu2sys (1, "create repository ", path_repo);
+            aa_strerr_diefu2sys (1, "create repository ", path_repo);
         else if (r == -ERR_IO_SCANDIR)
-            strerr_diefu3sys (1, "create scandir ", path_repo, "/" AA_SCANDIR_DIRNAME);
+            aa_strerr_diefu3sys (1, "create scandir ", path_repo, "/" AA_SCANDIR_DIRNAME);
         else
-            strerr_diefu2sys (1, "init repository ", path_repo);
+            aa_strerr_diefu2sys (1, "init repository ", path_repo);
     }
 
     /* process listdir (path_list) first, to ensure if the service was also
@@ -320,7 +319,7 @@ main (int argc, char * const argv[])
         stralloc_catb (&sa_pl, path_list, strlen (path_list) + 1);
         r = aa_scan_dir (&sa_pl, 0, it_list, NULL);
         if (r < 0)
-            strerr_diefu3sys (-r, "read list directory ",
+            aa_strerr_diefu3sys (-r, "read list directory ",
                     (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
                     (*path_list != '/' && *path_list != '.') ? path_list : "");
     }
@@ -329,7 +328,7 @@ main (int argc, char * const argv[])
         if (str_equal (argv[i], "-"))
         {
             if (process_names_from_stdin ((names_cb) enable_service, NULL) < 0)
-                strerr_diefu1sys (ERR_IO, "process names from stdin");
+                aa_strerr_diefu1sys (ERR_IO, "process names from stdin");
         }
         else
             enable_service (argv[i], 0);

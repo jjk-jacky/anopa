@@ -23,13 +23,11 @@
 #include <getopt.h>
 #include <errno.h>
 #include <unistd.h>
-#include <skalibs/strerr2.h>
 #include <skalibs/djbunix.h>
 #include <s6/ftrigw.h>
 #include <s6/s6-supervise.h>
 #include <anopa/common.h>
-
-extern char const *PROG;
+#include <anopa/output.h>
 
 static void
 dieusage (int rc)
@@ -108,26 +106,26 @@ main (int argc, char * const argv[])
             char data[TAIN_PACK];
 
             if (!tain_now_g())
-                strerr_diefu1sys (2, "tain_now");
+                aa_strerr_diefu1sys (2, "tain_now");
             tain_pack (data, &STAMP);
 
             if (!openwritenclose_suffix (readyfile, data, TAIN_PACK, ".new"))
             {
                 r = 3;
-                strerr_warnwu2sys ("create ", readyfile);
+                aa_strerr_warnu2sys ("create ", readyfile);
             }
         }
         else
             if (unlink (readyfile) < 0 && errno != ENOENT)
             {
                 r = 4;
-                strerr_warnwu2sys ("remove ", readyfile);
+                aa_strerr_warnu2sys ("remove ", readyfile);
             }
 
         if (ftrigw_notify (fifodir, (ready) ? 'U' : 'D') < 0)
         {
             r += 10;
-            strerr_warnwu4sys ("send event ", (ready) ? "U": "D" , " via ", fifodir);
+            aa_strerr_warnu4sys ("send event ", (ready) ? "U": "D" , " via ", fifodir);
         }
     }
 

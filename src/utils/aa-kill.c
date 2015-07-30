@@ -28,9 +28,9 @@
 #include <skalibs/sig.h>
 #include <skalibs/stralloc.h>
 #include <skalibs/djbunix.h>
-#include <skalibs/strerr2.h>
 #include <skalibs/uint.h>
 #include <anopa/common.h>
+#include <anopa/output.h>
 #include <anopa/scan_dir.h>
 
 static struct {
@@ -190,9 +190,9 @@ main (int argc, char * const argv[])
         ownpid[uint_fmt (ownpid, u)] = '\0';
 
         if (!stralloc_catb (&sa, "/proc", sizeof ("/proc")))
-            strerr_diefu1sys (1, "stralloc_catb");
+            aa_strerr_diefu1sys (1, "stralloc_catb");
         if (aa_scan_dir (&sa, 0, it_kill, &sa) < 0)
-            strerr_diefu1sys (1, "scan /proc");
+            aa_strerr_diefu1sys (1, "scan /proc");
         stralloc_free (&sa);
     }
     else

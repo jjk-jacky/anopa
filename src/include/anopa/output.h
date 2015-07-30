@@ -24,6 +24,9 @@
 #define AA_OUTPUT_H
 
 #include <string.h> /* strlen() */
+#include <skalibs/error.h>
+
+extern const char *PROG;
 
 #define ANSI_HIGHLIGHT_ON           "\x1B[1;39m"
 #define ANSI_HIGHLIGHT_RED_ON       "\x1B[1;31m"
@@ -51,5 +54,108 @@ extern void aa_put_err (const char *name, const char *msg, int end);
 extern void aa_put_warn (const char *name, const char *msg, int end);
 #define aa_end_title()      aa_bs_end (AA_OUT)
 extern void aa_put_title (int main, const char *name, const char *title, int end);
+
+extern void aa_strerr_warn (const char *s1,
+                            const char *s2,
+                            const char *s3,
+                            const char *s4,
+                            const char *s5,
+                            const char *s6,
+                            const char *s7,
+                            const char *s8,
+                            const char *s9,
+                            const char *s10);
+
+#define aa_strerr_warn1x(s1) \
+    aa_strerr_warn ("warning: ", s1, 0, 0, 0, 0, 0, 0, 0, 0)
+#define aa_strerr_warn2x(s1,s2) \
+    aa_strerr_warn ("warning: ", s1, s2, 0, 0, 0, 0, 0, 0, 0)
+#define aa_strerr_warn3x(s1,s2,s3) \
+    aa_strerr_warn ("warning: ", s1, s2, s3, 0, 0, 0, 0, 0, 0)
+#define aa_strerr_warn4x(s1,s2,s3,s4) \
+    aa_strerr_warn ("warning: ", s1, s2, s3, s4, 0, 0, 0, 0, 0)
+#define aa_strerr_warn5x(s1,s2,s3,s4,s5) \
+    aa_strerr_warn ("warning: ", s1, s2, s3, s4, s5, 0, 0, 0, 0)
+#define aa_strerr_warn6x(s1,s2,s3,s4,s5,s6) \
+    aa_strerr_warn ("warning: ", s1, s2, s3, s4, s5, s6, 0, 0, 0)
+
+#define aa_strerr_warnu1x(s1) \
+    aa_strerr_warn ("warning: ", "unable to ", s1, 0, 0, 0, 0, 0, 0, 0)
+#define aa_strerr_warnu2x(s1,s2) \
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, 0, 0, 0, 0, 0, 0)
+#define aa_strerr_warnu3x(s1,s2,s3) \
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, 0, 0, 0, 0, 0)
+#define aa_strerr_warnu4x(s1,s2,s3,s4) \
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, 0, 0, 0, 0)
+#define aa_strerr_warnu5x(s1,s2,s3,s4,s5) \
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, s5, 0, 0, 0)
+#define aa_strerr_warnu6x(s1,s2,s3,s4,s5,s6) \
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, s5, s6, 0, 0)
+
+#define aa_strerr_warnu1sys(s1) \
+    aa_strerr_warn ("warning: ", "unable to ", s1, ": ", error_str (errno), 0, 0, 0, 0, 0)
+#define aa_strerr_warnu2sys(s1,s2) \
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, ": ", error_str (errno), 0, 0, 0, 0)
+#define aa_strerr_warnu3sys(s1,s2,s3) \
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, ": ", error_str (errno), 0, 0, 0)
+#define aa_strerr_warnu4sys(s1,s2,s3,s4) \
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, ": ", error_str (errno), 0, 0)
+#define aa_strerr_warnu5sys(s1,s2,s3,s4,s5) \
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, s5, ": ", error_str (errno), 0)
+#define aa_strerr_warnu6sys(s1,s2,s3,s4,s5,s6) \
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, s5, s6, ": ", error_str (errno))
+
+extern void aa_strerr_die (int rc,
+                           const char *s1,
+                           const char *s2,
+                           const char *s3,
+                           const char *s4,
+                           const char *s5,
+                           const char *s6,
+                           const char *s7,
+                           const char *s8,
+                           const char *s9);
+
+#define aa_strerr_diefu1sys(rc,s1) \
+    aa_strerr_die (rc, "unable to ", s1, ": ", error_str (errno), 0, 0, 0, 0, 0)
+#define aa_strerr_diefu2sys(rc,s1,s2) \
+    aa_strerr_die (rc, "unable to ", s1, s2, ": ", error_str (errno), 0, 0, 0, 0)
+#define aa_strerr_diefu3sys(rc,s1,s2,s3) \
+    aa_strerr_die (rc, "unable to ", s1, s2, s3, ": ", error_str (errno), 0, 0, 0)
+#define aa_strerr_diefu4sys(rc,s1,s2,s3,s4) \
+    aa_strerr_die (rc, "unable to ", s1, s2, s3, s4, ": ", error_str (errno), 0, 0)
+#define aa_strerr_diefu5sys(rc,s1,s2,s3,s4,s5) \
+    aa_strerr_die (rc, "unable to ", s1, s2, s3, s4, s5, ": ", error_str (errno), 0)
+#define aa_strerr_diefu6sys(rc,s1,s2,s3,s4,s5,s6) \
+    aa_strerr_die (rc, "unable to ", s1, s2, s3, s4, s5, s6, ": ", error_str (errno))
+
+#define aa_strerr_dief1x(rc,s1) \
+    aa_strerr_die (rc, s1, 0, 0, 0, 0, 0, 0, 0, 0)
+#define aa_strerr_dief2x(rc,s1,s2) \
+    aa_strerr_die (rc, s1, s2, 0, 0, 0, 0, 0, 0, 0)
+#define aa_strerr_dief3x(rc,s1,s2,s3) \
+    aa_strerr_die (rc, s1, s2, s3, 0, 0, 0, 0, 0, 0)
+#define aa_strerr_dief4x(rc,s1,s2,s3,s4) \
+    aa_strerr_die (rc, s1, s2, s3, s4, 0, 0, 0, 0, 0)
+#define aa_strerr_dief5x(rc,s1,s2,s3,s4,s5) \
+    aa_strerr_die (rc, s1, s2, s3, s4, s5, 0, 0, 0, 0)
+#define aa_strerr_dief6x(rc,s1,s2,s3,s4,s5,s6) \
+    aa_strerr_die (rc, s1, s2, s3, s4, s5, s6, 0, 0, 0)
+
+#define aa_strerr_diefu1x(rc,s1) \
+    aa_strerr_die (rc, "unable to ", s1, 0, 0, 0, 0, 0, 0, 0)
+#define aa_strerr_diefu2x(rc,s1,s2) \
+    aa_strerr_die (rc, "unable to ", s1, s2, 0, 0, 0, 0, 0, 0)
+#define aa_strerr_diefu3x(rc,s1,s2,s3) \
+    aa_strerr_die (rc, "unable to ", s1, s2, s3, 0, 0, 0, 0, 0)
+#define aa_strerr_diefu4x(rc,s1,s2,s3,s4) \
+    aa_strerr_die (rc, "unable to ", s1, s2, s3, s4, 0, 0, 0, 0)
+#define aa_strerr_diefu5x(rc,s1,s2,s3,s4,s5) \
+    aa_strerr_die (rc, "unable to ", s1, s2, s3, s4, s5, 0, 0, 0)
+#define aa_strerr_diefu6x(rc,s1,s2,s3,s4,s5,s6) \
+    aa_strerr_die (rc, "unable to ", s1, s2, s3, s4, s5, s6, 0, 0)
+
+#define aa_strerr_dieexec(rc,s) \
+    aa_strerr_diefu2sys (rc, "exec ", s)
 
 #endif /* AA_OUTPUT_H */

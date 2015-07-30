@@ -25,10 +25,8 @@
 #include <skalibs/stralloc.h>
 #include <skalibs/bytestr.h>
 #include <skalibs/buffer.h>
-#include <skalibs/strerr2.h>
 #include <anopa/common.h>
-
-const char *PROG;
+#include <anopa/output.h>
 
 static void
 dieusage (int rc)
@@ -112,7 +110,7 @@ main (int argc, char * const argv[])
         dieusage (1);
 
     if (!openslurpclose (&sa, file))
-            strerr_diefu2sys (2, "read ", file);
+            aa_strerr_diefu2sys (2, "read ", file);
 
     len_arg = strlen (argv[0]);
     for (start = i = 0; i < sa.len; ++i)

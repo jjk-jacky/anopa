@@ -26,7 +26,6 @@
 
 #include <errno.h>
 #include <getopt.h>
-#include <skalibs/strerr2.h>
 #include <skalibs/tai.h>
 #include <skalibs/error.h>
 #include <anopa/common.h>
@@ -210,13 +209,13 @@ main (int argc, char * const argv[])
 
     r = aa_init_repo (path_repo, AA_REPO_READ);
     if (r < 0)
-        strerr_diefu2sys (2, "init repository ", path_repo);
+        aa_strerr_diefu2sys (2, "init repository ", path_repo);
 
     for (i = 0; i < argc; ++i)
         if (str_equal (argv[i], "-"))
         {
             if (process_names_from_stdin ((names_cb) reset_service, (void *) mode) < 0)
-                strerr_diefu1sys (ERR_IO, "process names from stdin");
+                aa_strerr_diefu1sys (ERR_IO, "process names from stdin");
         }
         else
             reset_service (argv[i], mode);

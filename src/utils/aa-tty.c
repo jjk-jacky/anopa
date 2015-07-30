@@ -23,7 +23,6 @@
 #include <errno.h>
 #include <skalibs/bytestr.h>
 #include <skalibs/djbunix.h>
-#include <skalibs/strerr2.h>
 #include <anopa/output.h>
 #include <anopa/common.h>
 
@@ -65,7 +64,7 @@ main (int argc, char * const argv[])
     byte_copy (file + sizeof (PREFIX) + 6, sizeof (NAME), NAME);
     r = openreadnclose (file, name, max);
     if (r <= 0)
-        strerr_diefu2sys (2, "read ", file);
+        aa_strerr_diefu2sys (2, "read ", file);
 
     for (;;)
     {
@@ -81,7 +80,7 @@ main (int argc, char * const argv[])
                 return 0;
             }
             else
-                strerr_diefu2sys (2, "read ", file);
+                aa_strerr_diefu2sys (2, "read ", file);
         }
     }
 }

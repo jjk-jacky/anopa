@@ -21,10 +21,10 @@
  */
 
 #include <skalibs/direntry.h>
-#include <skalibs/strerr2.h>
 #include <anopa/service.h>
 #include <anopa/ga_int_list.h>
 #include <anopa/err.h>
+#include <anopa/output.h>
 #include <anopa/service_status.h>
 #include "service_internal.h"
 
@@ -111,7 +111,7 @@ _it_start_needs (direntry *d, void *data)
 
             aa_service_status_set_err (&s->st, ERR_DEPEND, buf);
             if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
-                strerr_warnwu2sys ("write service status file for ", aa_service_name (s));
+                aa_strerr_warnu2sys ("write service status file for ", aa_service_name (s));
         }
 
         if (it_data->lf_cb)

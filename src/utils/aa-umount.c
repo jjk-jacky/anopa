@@ -22,8 +22,8 @@
 
 #include <getopt.h>
 #include <sys/mount.h>
-#include <skalibs/strerr2.h>
 #include <anopa/common.h>
+#include <anopa/output.h>
 
 #ifndef NULL
 #define NULL    (void *) 0
@@ -87,7 +87,7 @@ main (int argc, char * const argv[])
         dieusage (1);
 
     if (umount2 (argv[0], flags) < 0)
-        strerr_diefu2sys (3, "unmount ", argv[0]);
+        aa_strerr_diefu2sys (3, "unmount ", argv[0]);
 
     return 0;
 }

@@ -35,13 +35,10 @@
 #include <linux/loop.h>
 #include <skalibs/djbunix.h>
 #include <skalibs/stralloc.h>
-#include <skalibs/strerr2.h>
 #include <skalibs/error.h>
 #include <anopa/common.h>
 #include <anopa/scan_dir.h>
 #include <anopa/output.h>
-
-const char *PROG;
 
 typedef int (*do_fn) (const char *path);
 static int umnt_flags = 0;
@@ -200,7 +197,7 @@ it_loops_dms (direntry *d, void *data)
     l = sas[i]->len;
     if (!stralloc_cats (sas[i], "/dev/") || !stralloc_cats (sas[i], d->d_name)
             || !stralloc_0 (sas[i]))
-        strerr_diefu1sys (2, "stralloc_catb");
+        aa_strerr_diefu1sys (2, "stralloc_catb");
 
     /* /dev/loop* always exists, let's find the actual ones */
     if (i == 0)
@@ -346,7 +343,7 @@ again:
 
         /* read swaps */
         if (!openslurpclose (&sa, "/proc/swaps"))
-            strerr_diefu1sys (2, "read /proc/swaps");
+            aa_strerr_diefu1sys (2, "read /proc/swaps");
 
         if (sa.len > 0)
         {
@@ -363,7 +360,7 @@ again:
                 {
                     if (!stralloc_catb (&sa_swaps, sa.s + l, e)
                             || !stralloc_0 (&sa_swaps))
-                        strerr_diefu1sys (2, "stralloc_catb");
+                        aa_strerr_diefu1sys (2, "stralloc_catb");
                 }
                 l += byte_chr (sa.s + l, sa.len - l, '\n') + 1;
             }
@@ -378,7 +375,7 @@ again:
 
             mounts = setmntent ("/proc/mounts", "r");
             if (!mounts)
-                strerr_diefu1sys (2, "read /proc/mounts");
+                aa_strerr_diefu1sys (2, "read /proc/mounts");
 
             while ((mnt = getmntent (mounts)))
             {
@@ -390,7 +387,7 @@ again:
                     continue;
 
                 if (!stralloc_catb (&sa_mounts, mnt->mnt_dir, strlen (mnt->mnt_dir) + 1))
-                    strerr_diefu1sys (2, "stralloc_catb");
+                    aa_strerr_diefu1sys (2, "stralloc_catb");
             }
             endmntent (mounts);
         }
@@ -404,7 +401,7 @@ again:
             stralloc_catb (&sa, "/dev", 5);
             r = aa_scan_dir (&sa, 2, it_loops_dms, &sas);
             if (r < 0)
-                strerr_diefu1sys (2, "scan /dev");
+                aa_strerr_diefu1sys (2, "scan /dev");
             sa.len = 0;
         }
 

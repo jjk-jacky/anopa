@@ -25,8 +25,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <skalibs/uint.h>
-#include <skalibs/strerr2.h>
 #include <anopa/common.h>
+#include <anopa/output.h>
 
 static int
 is_group_member (gid_t gid)
@@ -122,7 +122,7 @@ main (int argc, char * const argv[])
 
             case 'R':
                 if (optarg && !uint0_scan (optarg, &repeat))
-                    strerr_diefu2sys (1, "set repeat counter to ", optarg);
+                    aa_strerr_diefu2sys (1, "set repeat counter to ", optarg);
                 else if (!optarg)
                     repeat = 0;
                 break;
@@ -147,7 +147,7 @@ again:
     if (lstat (argv[0], &st) < 0)
     {
         if (errno != ENOENT)
-            strerr_diefu2sys (2, "stat ", argv[0]);
+            aa_strerr_diefu2sys (2, "stat ", argv[0]);
         else if (repeat >= 0)
         {
             if (repeat > 1)

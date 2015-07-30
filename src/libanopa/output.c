@@ -135,3 +135,56 @@ aa_put_title (int main, const char *name, const char *title, int end)
     if (end)
         aa_end_title ();
 }
+
+void
+aa_strerr_warn (const char *s1,
+                const char *s2,
+                const char *s3,
+                const char *s4,
+                const char *s5,
+                const char *s6,
+                const char *s7,
+                const char *s8,
+                const char *s9,
+                const char *s10)
+{
+    aa_bs_noflush (AA_ERR, PROG);
+    aa_bs_noflush (AA_ERR, ": ");
+    if (s1)
+        aa_bs_noflush (AA_ERR, s1);
+    if (s2)
+        aa_bs_noflush (AA_ERR, s2);
+    if (s3)
+        aa_bs_noflush (AA_ERR, s3);
+    if (s4)
+        aa_bs_noflush (AA_ERR, s4);
+    if (s5)
+        aa_bs_noflush (AA_ERR, s5);
+    if (s6)
+        aa_bs_noflush (AA_ERR, s6);
+    if (s7)
+        aa_bs_noflush (AA_ERR, s7);
+    if (s8)
+        aa_bs_noflush (AA_ERR, s8);
+    if (s9)
+        aa_bs_noflush (AA_ERR, s9);
+    if (s10)
+        aa_bs_noflush (AA_ERR, s10);
+    aa_bs_flush (AA_ERR, "\n");
+}
+
+void
+aa_strerr_die (int rc,
+               const char *s1,
+               const char *s2,
+               const char *s3,
+               const char *s4,
+               const char *s5,
+               const char *s6,
+               const char *s7,
+               const char *s8,
+               const char *s9)
+{
+    aa_strerr_warn ("fatal: ", s1, s2, s3, s4, s5, s6, s7, s8, s9);
+    _exit (rc);
+}

@@ -37,7 +37,6 @@
 #include <skalibs/bytestr.h>
 #include <skalibs/direntry.h>
 #include <skalibs/genalloc.h>
-#include <skalibs/strerr2.h>
 #include <skalibs/error.h>
 #include <skalibs/tai.h>
 #include <skalibs/iopause.h>
@@ -285,7 +284,7 @@ main (int argc, char * const argv[])
 
             case 't':
                 if (!uint0_scan (optarg, &aa_secs_timeout))
-                    strerr_diefu2sys (ERR_IO, "set default timeout to ", optarg);
+                    aa_strerr_diefu2sys (ERR_IO, "set default timeout to ", optarg);
                 break;
 
             case 'V':
@@ -309,7 +308,7 @@ main (int argc, char * const argv[])
         dieusage (1);
 
     if (aa_init_repo (path_repo, AA_REPO_WRITE) < 0)
-        strerr_diefu2sys (ERR_IO, "init repository ", path_repo);
+        aa_strerr_diefu2sys (ERR_IO, "init repository ", path_repo);
 
     if (path_list)
     {
@@ -322,7 +321,7 @@ main (int argc, char * const argv[])
         r = aa_scan_dir (&sa, 1, it_start, NULL);
         stralloc_free (&sa);
         if (r < 0)
-            strerr_diefu3sys (-r, "read list directory ",
+            aa_strerr_diefu3sys (-r, "read list directory ",
                     (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
                     (*path_list != '/' && *path_list != '.') ? path_list : "");
     }
@@ -333,7 +332,7 @@ main (int argc, char * const argv[])
         if (str_equal (argv[i], "-"))
         {
             if (process_names_from_stdin ((names_cb) add_service, NULL) < 0)
-                strerr_diefu1sys (ERR_IO, "process names from stdin");
+                aa_strerr_diefu1sys (ERR_IO, "process names from stdin");
         }
         else
             add_service (argv[i], NULL);
