@@ -4,25 +4,32 @@ aa-setready - Set a service (un)ready
 
 =head1 SYNOPSIS
 
-B<aa-setready> [B<-U> | B<-D>] I<SERVICEDIR>
+B<aa-setready> [B<-D>] [B<-U> | B<-N>] I<SERVICEDIR>
 
 =head1 OPTIONS
 
 =over
 
-=item B<-U, --ready>
+=item B<-D, --double-output>
 
-Mark the service ready, i.e. create the I<ready> file and emit event 'U' on
-I<event> fifodir. This is the default.
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
 
 =item B<-h, --help>
 
 Show help screen and exit.
 
-=item B<-D, --unready>
+=item B<-N, --unready>
 
 Mark the service unready, i.e. remove the I<ready> file (if exists) and emit
 event 'D' on I<event> fifodir.
+
+=item B<-U, --ready>
+
+Mark the service ready, i.e. create the I<ready> file and emit event 'U' on
+I<event> fifodir. This is the default.
 
 =item B<-V, --version>
 

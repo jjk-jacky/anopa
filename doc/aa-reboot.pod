@@ -4,11 +4,18 @@ aa-reboot - Reboots, powers off or halts the machine instantly
 
 =head1 SYNOPSIS
 
-B<aa-reboot> B<-r> | B<-p> | B<-H>
+B<aa-reboot> [B<-D>] B<-r> | B<-p> | B<-H>
 
 =head1 OPTIONS
 
 =over
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
 
 =item B<-H, --halt>
 

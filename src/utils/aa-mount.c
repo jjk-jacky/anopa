@@ -124,6 +124,7 @@ static void
 dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...] DEVICE MOUNTPOINT",
+            " -D, --double-output           Enable double-output mode\n"
             " -B, --bind                    Remount a subtree somewhere else\n"
             " -M, --move                    Move a subtree to some other place\n"
             " -t, --type FSTYPE             Use FSTYPE as type of filesystem\n"
@@ -149,6 +150,7 @@ main (int argc, char * const argv[])
     {
         struct option longopts[] = {
             { "bind",               no_argument,        NULL,   'B' },
+            { "double-output",      no_argument,        NULL,   'D' },
             { "mkdir",              no_argument,        NULL,   'd' },
             { "help",               no_argument,        NULL,   'h' },
             { "move",               no_argument,        NULL,   'M' },
@@ -161,7 +163,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "BdhMo:rt:Vw", longopts, NULL);
+        c = getopt_long (argc, argv, "BDdhMo:rt:Vw", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -169,6 +171,10 @@ main (int argc, char * const argv[])
             case 'B':
                 if (!add_option (&sa, &flags, "bind"))
                     aa_strerr_diefu1sys (2, "build user options");
+                break;
+
+            case 'D':
+                aa_set_double_output (1);
                 break;
 
             case 'd':

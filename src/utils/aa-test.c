@@ -52,6 +52,7 @@ static void
 dieusage (int rc)
 {
     aa_die_usage (rc, "OPTION FILE",
+            " -D, --double-output           Enable double-output mode\n"
             " -b, --block                   Test whether FILE is a block special\n"
             " -d, --directory               Test whether FILE is a directory\n"
             " -e, --exists                  Test whether FILE exists\n"
@@ -83,6 +84,7 @@ main (int argc, char * const argv[])
     {
         struct option longopts[] = {
             { "block",              no_argument,        NULL,   'b' },
+            { "double-output",      no_argument,        NULL,   'D' },
             { "directory",          no_argument,        NULL,   'd' },
             { "exists",             no_argument,        NULL,   'e' },
             { "file",               no_argument,        NULL,   'f' },
@@ -99,7 +101,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "bdefhLprR::SVwx", longopts, NULL);
+        c = getopt_long (argc, argv, "bDdefhLprR::SVwx", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -115,6 +117,10 @@ main (int argc, char * const argv[])
             case 'w':
             case 'x':
                 test = c;
+                break;
+
+            case 'D':
+                aa_set_double_output (1);
                 break;
 
             case 'h':

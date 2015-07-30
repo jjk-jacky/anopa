@@ -32,6 +32,7 @@ static void
 dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION] NAME",
+            " -D, --double-output           Enable double-output mode\n"
             " -f, --file FILE               Use FILE instead of /proc/cmdline\n"
             " -q, --quiet                   Don't write value (if any) to stdout\n"
             " -s, --safe[=C]                Ignore argument if value contain C (default: '/')\n"
@@ -57,6 +58,7 @@ main (int argc, char * const argv[])
     for (;;)
     {
         struct option longopts[] = {
+            { "double-output",      no_argument,        NULL,   'D' },
             { "file",               no_argument,        NULL,   'f' },
             { "help",               no_argument,        NULL,   'h' },
             { "quiet",              no_argument,        NULL,   'q' },
@@ -67,11 +69,15 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "f:hqrs::V", longopts, NULL);
+        c = getopt_long (argc, argv, "Df:hqrs::V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
         {
+            case 'D':
+                aa_set_double_output (1);
+                break;
+
             case 'f':
                 file = optarg;
                 break;
@@ -154,8 +160,8 @@ main (int argc, char * const argv[])
                     return 3;
                 else if (!quiet)
                 {
-                    buffer_putnoflush (buffer_1small, sa.s + start, len);
-                    buffer_putsflush (buffer_1small, "\n");
+                    aa_bb_noflush (AA_OUT, sa.s + start, len);
+                    aa_bs_flush (AA_OUT, "\n");
                 }
                 return 0;
             }

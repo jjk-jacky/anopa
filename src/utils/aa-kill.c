@@ -43,7 +43,6 @@ static struct {
 static char ownpid[UINT_FMT];
 
 #if 0
-#include <skalibs/buffer.h>
 static void _kill (pid_t pid, int sig)
 {
     char buf[UINT_FMT];
@@ -51,14 +50,14 @@ static void _kill (pid_t pid, int sig)
 
     u = pid;
     buf[uint_fmt (buf, u)] = 0;
-    buffer_putsnoflush (buffer_1small, "kill(");
+    aa_bs_noflush (AA_OUT, "kill(");
     if (u == (unsigned int) -1)
-        buffer_putsnoflush (buffer_1small, "-1");
+        aa_bs_noflush (AA_OUT, "-1");
     else
-        buffer_putsnoflush (buffer_1small, buf);
-    buffer_putsnoflush (buffer_1small, ",");
-    buffer_putsnoflush (buffer_1small, sig_name (sig));
-    buffer_putsflush (buffer_1small, ")\n");
+        aa_bs_noflush (AA_OUT, buf);
+    aa_bs_noflush (AA_OUT, ",");
+    aa_bs_noflush (AA_OUT, sig_name (sig));
+    aa_bs_flush (AA_OUT, ")\n");
 }
 #else
 #define _kill(pid,sig)  kill (pid, sig)
@@ -117,6 +116,7 @@ static void
 dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...]",
+            " -D, --double-output           Enable double-output mode\n"
             " -u, --hup                     Send SIGHUP\n"
             " -t, --term                    Send SIGTERM then SIGCONT\n"
             " -k, --kill                    Send SIGKILL\n"
@@ -134,6 +134,7 @@ main (int argc, char * const argv[])
     for (;;)
     {
         struct option longopts[] = {
+            { "double-output",      no_argument,        NULL,   'D' },
             { "help",               no_argument,        NULL,   'h' },
             { "kill",               no_argument,        NULL,   'k' },
             { "skip-at",            no_argument,        NULL,   's' },
@@ -144,11 +145,15 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "hkstuV", longopts, NULL);
+        c = getopt_long (argc, argv, "DhkstuV", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
         {
+            case 'D':
+                aa_set_double_output (1);
+                break;
+
             case 'h':
                 dieusage (0);
 

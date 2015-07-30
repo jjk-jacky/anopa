@@ -33,6 +33,7 @@ static void
 dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTIONS...] MOUNTPOINT",
+            " -D, --double-output           Enable double-output mode\n"
             " -f, --force                   Force unmount even if busy (NFS only)\n"
             " -l, --lazy                    Perform lazy unmounting\n"
             " -h, --help                    Show this help screen and exit\n"
@@ -49,6 +50,7 @@ main (int argc, char * const argv[])
     for (;;)
     {
         struct option longopts[] = {
+            { "double-output",      no_argument,        NULL,   'D' },
             { "force",              no_argument,        NULL,   'f' },
             { "help",               no_argument,        NULL,   'h' },
             { "lazy",               no_argument,        NULL,   'l' },
@@ -57,11 +59,15 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "fhlV", longopts, NULL);
+        c = getopt_long (argc, argv, "DfhlV", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
         {
+            case 'D':
+                aa_set_double_output (1);
+                break;
+
             case 'f':
                 flags = MNT_FORCE;
                 break;

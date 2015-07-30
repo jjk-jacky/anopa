@@ -44,7 +44,7 @@ foreground { aa-echo -DB "Stage 3: Preparing ${1}..." }
 # Stop all running services -- s6-svscan did only exec into us, leaving the
 # whole supervised tree intact. Here we stop everything (longrun & oneshot) in
 # order.
-foreground { emptyenv -c s6-setsid aa-ctty -s aa-stop -D -ak uncaught-logs }
+foreground { emptyenv -c s6-setsid aa-ctty -Ds aa-stop -D -ak uncaught-logs }
 # We left the catch-all running (in case), make sure everything will exit
 # properly when we send TERM
 foreground { s6-svc -x /run/services/uncaught-logs }
@@ -52,7 +52,7 @@ foreground { s6-svc -x /run/services/uncaught-logs }
 # Kill everything left
 foreground { aa-echo -DB "Killing remaining processes..." }
 foreground { aa-echo -Dt "Sending SIGTERM to all processes..." }
-foreground { aa-kill -st }
+foreground { aa-kill -Dst }
 wait -r { } # Reap zombies
 # logger was killed, and we won't open it back
 fdmove -c 2 1

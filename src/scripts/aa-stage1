@@ -47,7 +47,7 @@ foreground { emptyenv -c
 aa-enable -Dl /etc/anopa/enabled -k uncaught-logs -f @LIBEXECDIR@/aa-stage3 }
 
 # Make sure the FIFO needed for the switch to stage 2 is there
-ifelse -X -n { aa-test -p /run/services/.scandir/uncaught-logs/fifo }
+ifelse -X -n { aa-test -Dp /run/services/.scandir/uncaught-logs/fifo }
 {
     foreground { aa-echo -DBe "Cannot start s6-svscan: No uncaught-logs fifo found" }
     fdmove -c 2 1

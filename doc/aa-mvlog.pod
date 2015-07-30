@@ -4,11 +4,18 @@ aa-mvlog - Helper to move & rename log file
 
 =head1 SYNOPSIS
 
-B<aa-mvlog> I<LOGFILE> I<DESTDIR>
+B<aa-mvlog> [B<-D>] I<LOGFILE> I<DESTDIR>
 
 =head1 OPTIONS
 
 =over
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
 
 =item B<-h, --help>
 

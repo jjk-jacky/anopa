@@ -32,6 +32,7 @@ static void
 dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...] PROG...",
+            " -D, --double-output           Enable double-output mode\n"
             " -f, --fd=FD                   Use FD as terminal (Default: 0)\n"
             " -s, --steal                   Steal terminal from other session if needed\n"
             " -h, --help                    Show this help screen and exit\n"
@@ -49,6 +50,7 @@ main (int argc, char * const argv[], char const * const *envp)
     for (;;)
     {
         struct option longopts[] = {
+            { "double-output",      no_argument,        NULL,   'D' },
             { "fd",                 required_argument,  NULL,   'f' },
             { "help",               no_argument,        NULL,   'h' },
             { "steal",              no_argument,        NULL,   's' },
@@ -57,11 +59,15 @@ main (int argc, char * const argv[], char const * const *envp)
         };
         int c;
 
-        c = getopt_long (argc, argv, "+f:hsV", longopts, NULL);
+        c = getopt_long (argc, argv, "+Df:hsV", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
         {
+            case 'D':
+                aa_set_double_output (1);
+                break;
+
             case 'f':
                 if (!uint0_scan (optarg, &fd))
                     aa_strerr_diefu1sys (1, "set fd");

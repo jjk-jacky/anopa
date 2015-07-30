@@ -20,6 +20,7 @@
  * anopa. If not, see http://www.gnu.org/licenses/
  */
 
+#include <getopt.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <skalibs/djbunix.h>
@@ -32,6 +33,7 @@ static void
 dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION] LOGFILE DESTDIR",
+            " -D, --double-output           Enable double-output mode\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -43,46 +45,71 @@ main (int argc, char * const argv[])
     PROG = "aa-mvlog";
     struct stat st;
 
-    if (argc == 2)
+    for (;;)
     {
-        if (str_equal (argv[1], "-V") || str_equal (argv[1], "--version"))
-            aa_die_version ();
-        else if (str_equal (argv[1], "-h") || str_equal (argv[1], "--help"))
-            dieusage (0);
+        struct option longopts[] = {
+            { "double-output",      no_argument,        NULL,   'D' },
+            { "help",               no_argument,        NULL,   'h' },
+            { "version",            no_argument,        NULL,   'V' },
+            { NULL, 0, 0, 0 }
+        };
+        int c;
+
+        c = getopt_long (argc, argv, "DhV", longopts, NULL);
+        if (c == -1)
+            break;
+        switch (c)
+        {
+            case 'D':
+                aa_set_double_output (1);
+                break;
+
+            case 'h':
+                dieusage (0);
+
+            case 'V':
+                aa_die_version ();
+
+            default:
+                dieusage (1);
+        }
     }
-    if (argc != 3)
+    argc -= optind;
+    argv += optind;
+
+    if (argc != 2)
         dieusage (1);
 
-    if (stat (argv[1], &st) < 0)
-        aa_strerr_diefu2sys (2, "stat ", argv[1]);
+    if (stat (argv[0], &st) < 0)
+        aa_strerr_diefu2sys (2, "stat ", argv[0]);
     else if (!S_ISREG (st.st_mode))
-        aa_strerr_dief2x (2, argv[1], ": not a file");
+        aa_strerr_dief2x (2, argv[0], ": not a file");
 
     {
-        int l = strlen (argv[2]);
+        int l = strlen (argv[1]);
         char newname[l + 27];
         char target[26];
 
-        byte_copy (newname, l, argv[2]);
+        byte_copy (newname, l, argv[1]);
         newname[l] = '/';
-        if (openreadnclose (argv[1], newname + l + 1, 25) != 25)
-            aa_strerr_diefu2sys (2, "read new name from ", argv[1]);
+        if (openreadnclose (argv[0], newname + l + 1, 25) != 25)
+            aa_strerr_diefu2sys (2, "read new name from ", argv[0]);
         if (newname[l + 1] != '@'
                 || byte_chr (newname + l + 1, 25, '/') < 25
                 || byte_chr (newname + l + 1, 25, '\0') < 25)
-            aa_strerr_dief2x (2, "invalid new name read from ", argv[1]);
+            aa_strerr_dief2x (2, "invalid new name read from ", argv[0]);
         newname[l + 26] = '\0';
 
-        if (aa_copy_file (argv[1], newname, st.st_mode, AA_CP_CREATE) < 0)
-            aa_strerr_diefu4sys (2, "copy ", argv[1], " as ", newname);
+        if (aa_copy_file (argv[0], newname, st.st_mode, AA_CP_CREATE) < 0)
+            aa_strerr_diefu4sys (2, "copy ", argv[0], " as ", newname);
 
         byte_copy (target, 26, newname + l + 1);
         byte_copy (newname + l + 1, 8, "current");
         unlink (newname);
         if (symlink (target, newname) < 0)
             aa_strerr_warnu2sys ("create symlink ", newname);
-        if (unlink (argv[1]) < 0)
-            aa_strerr_warnu2sys ("remove source file ", argv[1]);
+        if (unlink (argv[0]) < 0)
+            aa_strerr_warnu2sys ("remove source file ", argv[0]);
     }
 
     return 0;

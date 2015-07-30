@@ -4,8 +4,8 @@ aa-test - Test file types
 
 =head1 SYNOPSIS
 
-B<aa-test> [B<-b> | B<-d> | B<-e> | B<-f> | B<-L> | B<-p> | B<-S> | B<-r> |
-B<-w> | B<-x>] [B<-R> [I<TIMES>]] I<FILE>
+B<aa-test> [B<-D>] [B<-b> | B<-d> | B<-e> | B<-f> | B<-L> | B<-p> | B<-S> |
+B<-r> | B<-w> | B<-x>] [B<-R> [I<TIMES>]] I<FILE>
 
 =head1 OPTIONS
 
@@ -14,6 +14,13 @@ B<-w> | B<-x>] [B<-R> [I<TIMES>]] I<FILE>
 =item B<-b, --block>
 
 Test whether I<FILE> exists and is a block special
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
 
 =item B<-d, --directory>
 

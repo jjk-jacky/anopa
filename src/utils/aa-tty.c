@@ -20,6 +20,7 @@
  * anopa. If not, see http://www.gnu.org/licenses/
  */
 
+#include <getopt.h>
 #include <errno.h>
 #include <skalibs/bytestr.h>
 #include <skalibs/djbunix.h>
@@ -33,6 +34,7 @@ static void
 dieusage (int rc)
 {
     aa_die_usage (rc, "",
+            " -D, --double-output           Enable double-output mode\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -47,16 +49,39 @@ main (int argc, char * const argv[])
     char name[max];
     int r;
 
-    if (argc == 2)
+    for (;;)
     {
-        if (str_equal (argv[1], "-h") || str_equal (argv[1], "--help"))
-            dieusage (0);
-        else if (str_equal (argv[1], "-V") || str_equal (argv[1], "--version"))
-            aa_die_version ();
-        else
-            dieusage (1);
+        struct option longopts[] = {
+            { "double-output",      no_argument,        NULL,   'D' },
+            { "help",               no_argument,        NULL,   'h' },
+            { "version",            no_argument,        NULL,   'V' },
+            { NULL, 0, 0, 0 }
+        };
+        int c;
+
+        c = getopt_long (argc, argv, "DhV", longopts, NULL);
+        if (c == -1)
+            break;
+        switch (c)
+        {
+            case 'D':
+                aa_set_double_output (1);
+                break;
+
+            case 'h':
+                dieusage (0);
+
+            case 'V':
+                aa_die_version ();
+
+            default:
+                dieusage (1);
+        }
     }
-    else if (argc != 1)
+    argc -= optind;
+    argv += optind;
+
+    if (argc != 0)
         dieusage (1);
 
     byte_copy (file, sizeof (PREFIX) - 1, PREFIX);

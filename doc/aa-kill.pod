@@ -4,11 +4,18 @@ aa-kill - Send signals to (almost) all processes
 
 =head1 SYNOPSIS
 
-B<aa-kill> [B<-u>] [B<-t>] [B<-k>] [B<-s>]
+B<aa-kill> [B<-D>] [B<-u>] [B<-t>] [B<-k>] [B<-s>]
 
 =head1 OPTIONS
 
 =over
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
 
 =item B<-h, --help>
 

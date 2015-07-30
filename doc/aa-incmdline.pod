@@ -4,11 +4,18 @@ aa-incmdline - Helper to parse kernel command line
 
 =head1 SYNOPSIS
 
-B<aa-incmdline> [B<-q>] [B<-f> I<FILE>] [B<-r>] [B<-s>] I<NAME>
+B<aa-incmdline> [B<-D>] [B<-q>] [B<-f> I<FILE>] [B<-r>] [B<-s>] I<NAME>
 
 =head1 OPTIONS
 
 =over
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
 
 =item B<-f, --file> I<FILE>
 

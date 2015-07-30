@@ -30,6 +30,7 @@ static void
 dieusage (int rc)
 {
     aa_die_usage (rc, "OPTION",
+            " -D, --double-output           Enable double-output mode\n"
             " -r, --reboot                  Reboot the machine NOW\n"
             " -H, --halt                    Halt the machine NOW\n"
             " -p, --poweroff                Power off the machine NOW\n"
@@ -56,6 +57,7 @@ main (int argc, char * const argv[])
     for (;;)
     {
         struct option longopts[] = {
+            { "double-output",      no_argument,        NULL,   'D' },
             { "halt",               no_argument,        NULL,   'H' },
             { "help",               no_argument,        NULL,   'h' },
             { "poweroff",           no_argument,        NULL,   'p' },
@@ -65,11 +67,15 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "HhprV", longopts, NULL);
+        c = getopt_long (argc, argv, "DHhprV", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
         {
+            case 'D':
+                aa_set_double_output (1);
+                break;
+
             case 'H':
                 i = 0;
                 break;

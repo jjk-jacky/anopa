@@ -45,10 +45,10 @@ umask 022
 # Start services
 foreground { if -n
 {
-  if { emptyenv -c s6-setsid aa-ctty -s aa-start -D -r /services -l onboot }
+  if { emptyenv -c s6-setsid aa-ctty -Ds aa-start -D -r /services -l onboot }
   foreground {
     # if "break" was specified on kernel cmdline, let's open a shell
-    if -t { aa-incmdline -qf /root-fs/proc/cmdline break }
+    if -t { aa-incmdline -Dqf /root-fs/proc/cmdline break }
     foreground { aa-echo -DB "Break requested" }
     foreground { aa-echo -Dt "Trying to open a shell; " +g exit +w " to continue" }
     emptyenv -c sh -i
@@ -66,7 +66,7 @@ emptyenv -c sh -i
 if { aa-echo -DB "Moving /root-fs to /..." }
 # First we mount bind the rootfs (initramfs) onto /run/initramfs so we can come
 # back to it for stage 4
-if { aa-mount -Bd / /root-fs/run/initramfs }
+if { aa-mount -DBd / /root-fs/run/initramfs }
 fdmove -c 2 1
 backtick -n -D /sbin/init INIT { aa-incmdline -rf /root-fs/proc/cmdline init }
 import -u INIT

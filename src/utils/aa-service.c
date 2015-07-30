@@ -20,6 +20,7 @@
  * anopa. If not, see http://www.gnu.org/licenses/
  */
 
+#include <getopt.h>
 #include <unistd.h>
 #include <skalibs/djbunix.h>
 #include <skalibs/env.h>
@@ -161,7 +162,10 @@ static void
 dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION] PROG...",
+            " -D, --double-output           Enable double-output mode\n"
             " -l, --log                     Use parent directory as servicedir\n"
+            " -h, --help                    Show this help screen and exit\n"
+            " -V, --version                 Show version information and exit\n"
             );
 }
 
@@ -174,23 +178,42 @@ main (int argc, char const **argv, char const *const *envp)
     stralloc dst = STRALLOC_ZERO;
     int r;
 
-    if (argc > 1 && *argv[1] == '-')
+    for (;;)
     {
-        if (str_equal (argv[1], "-h") || str_equal (argv[1], "--help"))
-            dieusage (0);
-        else if (str_equal (argv[1], "-l") || str_equal (argv[1], "--log"))
+        struct option longopts[] = {
+            { "double-output",      no_argument,        NULL,   'D' },
+            { "help",               no_argument,        NULL,   'h' },
+            { "log",                no_argument,        NULL,   'l' },
+            { "version",            no_argument,        NULL,   'V' },
+            { NULL, 0, 0, 0 }
+        };
+        int c;
+
+        c = getopt_long (argc, (char * const *) argv, "+DhlV", longopts, NULL);
+        if (c == -1)
+            break;
+        switch (c)
         {
-            islog = 1;
-            --argc;
-            ++argv;
+            case 'D':
+                aa_set_double_output (1);
+                break;
+
+            case 'h':
+                dieusage (0);
+
+            case 'l':
+                islog = 1;
+                break;
+
+            case 'V':
+                aa_die_version ();
+
+            default:
+                dieusage (1);
         }
-        else if (str_equal (argv[1], "-V") || str_equal (argv[1], "--version"))
-            aa_die_version ();
-        else
-            dieusage (1);
     }
-    --argc;
-    ++argv;
+    argc -= optind;
+    argv += optind;
 
     r = aa_service (&info);
     if (r < 0)

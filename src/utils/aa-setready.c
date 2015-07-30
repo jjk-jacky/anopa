@@ -33,8 +33,9 @@ static void
 dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION] SERVICEDIR",
+            " -D, --double-output           Enable double-output mode\n"
             " -U, --ready                   Mark service ready; This is the default.\n"
-            " -D, --unready                 Mark service not ready\n"
+            " -N, --unready                 Mark service not ready\n"
             "\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
@@ -51,25 +52,30 @@ main (int argc, char * const argv[])
     for (;;)
     {
         struct option longopts[] = {
-            { "unready",            no_argument,        NULL,   'D' },
+            { "double-output",      no_argument,        NULL,   'D' },
             { "help",               no_argument,        NULL,   'h' },
+            { "unready",            no_argument,        NULL,   'N' },
             { "ready",              no_argument,        NULL,   'U' },
             { "version",            no_argument,        NULL,   'V' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "DhUV", longopts, NULL);
+        c = getopt_long (argc, argv, "DhNUV", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
         {
             case 'D':
-                ready = 0;
+                aa_set_double_output (1);
                 break;
 
             case 'h':
                 dieusage (0);
+
+            case 'N':
+                ready = 0;
+                break;
 
             case 'U':
                 ready = 1;
