@@ -67,10 +67,6 @@ reading the I<status.anopa> file created by either B<aa-start>(1) or
 B<aa-stop>(1) as well as the I<status> file from B<s6> for long-run services,
 using whichever one has more recent information.
 
-For long-run services it will also check for the I<ready> file to determine
-whether the service is "Up" or "Ready" (using the timestamp from the I<ready>
-file in the later case).
-
 You can use B<-> as service name to read actual service names from stdin, where
 there must be one name per line.
 
@@ -187,24 +183,25 @@ that is starting will be matched via I<stopped>.
 
 This script I<start>/I<stop> succesfully ran (i.e. and returned 0).
 
-=item B<Up>
+=item B<Up> / B<Up & Ready>
 
 (I<long-run services only.>)
 
 The script I<run> is currently running; Its PID will be specified.
 
-=item B<Ready>
+I<Up & Ready> means that the service indicated readiness (or it was set via e.g.
+B<aa-setready>(1)). Both times for up ('u') and readiness ('U') are shown,
+though in list mode (option B<--list>) only the later in shown.
 
-(I<long-run services only.>)
-
-The script I<run> is currently running, and readiness was signaled; Its PID will
-be specified.
-
-=item B<Down>
+=item B<Down> / B<Down & Ready>
 
 (I<long-run services only.>)
 
 The script I<run> isn't running anymore. Its exitcode or which signal killed it
 will be specified.
+
+I<Down & Ready> means the the I<finish> script (if any) also ended its execution
+(or was killed by B<s6-supervise>). Both times for down ('d') and end-of-finish
+('D') are shown, though in list mode (option B<--list>) only the later in shown.
 
 =back

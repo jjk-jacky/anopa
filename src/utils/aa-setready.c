@@ -47,7 +47,6 @@ main (int argc, char * const argv[])
 {
     PROG = "aa-setready";
     int ready = 1;
-    int r = 0;
 
     for (;;)
     {
@@ -97,43 +96,32 @@ main (int argc, char * const argv[])
     {
         int l = strlen (argv[0]);
         char fifodir[l + 1 + sizeof (S6_SUPERVISE_EVENTDIR)];
-        char readyfile[l + 1 + sizeof (S6_SUPERVISE_READY_FILENAME)];
+        s6_svstatus_t st6 = S6_SVSTATUS_ZERO;
 
         byte_copy (fifodir, l, argv[0]);
         fifodir[l] = '/';
         byte_copy (fifodir + l + 1, sizeof (S6_SUPERVISE_EVENTDIR), S6_SUPERVISE_EVENTDIR);
 
-        byte_copy (readyfile, l, argv[0]);
-        readyfile[l] = '/';
-        byte_copy (readyfile + l + 1, sizeof (S6_SUPERVISE_READY_FILENAME), S6_SUPERVISE_READY_FILENAME);
+        if (!s6_svstatus_read (argv[0], &st6))
+            aa_strerr_diefu1sys (2, "read s6 status");
+        if (!(st6.pid && !st6.flagfinishing))
+            aa_strerr_dief1x (3, "service is not up");
 
         if (ready)
         {
-            char data[TAIN_PACK];
-
-            if (!tain_now_g())
-                aa_strerr_diefu1sys (2, "tain_now");
-            tain_pack (data, &STAMP);
-
-            if (!openwritenclose_suffix (readyfile, data, TAIN_PACK, ".new"))
-            {
-                r = 3;
-                aa_strerr_warnu2sys ("create ", readyfile);
-            }
+            st6.flagready = 1;
+            if (!tain_now (&st6.readystamp))
+                aa_strerr_diefu1sys (4, "tain_now");
         }
         else
-            if (unlink (readyfile) < 0 && errno != ENOENT)
-            {
-                r = 4;
-                aa_strerr_warnu2sys ("remove ", readyfile);
-            }
+            st6.flagready = 0;
 
-        if (ftrigw_notify (fifodir, (ready) ? 'U' : 'D') < 0)
-        {
-            r += 10;
-            aa_strerr_warnu4sys ("send event ", (ready) ? "U": "D" , " via ", fifodir);
-        }
+        if (!s6_svstatus_write (argv[0], &st6))
+            aa_strerr_diefu1sys (5, "write s6 status");
+
+        if (ftrigw_notify (fifodir, (ready) ? 'U' : 'N') < 0)
+            aa_strerr_diefu4sys (6, "send event ", (ready) ? "U": "N" , " via ", fifodir);
     }
 
-    return r;
+    return 0;
 }

@@ -23,13 +23,12 @@ Show help screen and exit.
 
 =item B<-N, --unready>
 
-Mark the service unready, i.e. remove the I<ready> file (if exists) and emit
-event 'D' on I<event> fifodir.
+Mark the service unready and emit event 'N' on I<event> fifodir.
 
 =item B<-U, --ready>
 
-Mark the service ready, i.e. create the I<ready> file and emit event 'U' on
-I<event> fifodir. This is the default.
+Mark the service ready and emit event 'U' on I<event> fifodir. This is the
+default.
 
 =item B<-V, --version>
 
@@ -42,21 +41,17 @@ Show version information and exit.
 B<aa-setready>(1) is a simple tool to mark a long-running service ready or
 "unready".
 
-Marking a service ready means create the I<ready> file (used by B<s6>) and emit
-event U on the service's fifodir I<event>. This is similar to what
-B<s6-notifywhenup> does.
-
-Marking a service unready means remove the I<ready> file if it exists, and emit
-event D on the service's fifodir I<event>. This is meant for service that can
-stay up (running) but lose their ready state (e.g. connection dropped).
+Marking a service ready or unready means updating its s6 status file, and
+emitting the corresponding event on the service's fifodir I<event>.
+Unreadiness is meant for service that can stay up (running) but lose their ready
+state (e.g. connection dropped).
 
 Obviously you need to have the appropriate permissions to perform all the needed
 tasks.
 
-=head2 RETURN VALUE
+=head1 RETURN VALUE
 
-B<aa-setready>(1) will return 0 on success. If an error occurs one or more
-warning messages will be shown on stderr, and it will return:
+B<aa-setready>(1) will return 0 on success, or one of the following on error:
 
 =over
 
@@ -66,27 +61,22 @@ Syntax error (e.g. unknown option)
 
 =item B<2>
 
-Failed to init timestamp (needed to write the I<ready> file)
+Failed to read s6 status file
 
 =item B<3>
 
-Failed to create I<ready> file
+Service is not up
 
 =item B<4>
 
-Failed to remove the I<ready> file
+Failed to init timestamp (needed for readiness timestamp, when marking ready)
 
-=item B<10>
+=item B<5>
+
+Failed to write s6 status file
+
+=item B<6>
 
 Failed to sent the event on I<event> fifodir
 
 =back
-
-It can also return a value higher than 10 if more than one error occurs, e.g. 13
-if it couldn't create the I<ready> file nor emit the event, or 14 if it couldn't
-remove the I<ready> file nor emit the event (Note that this doesn't occur when
-the file doesn't exist, which is not treated as an error.).
-
-Note that 1 and 2 will always causes immediate termination, i.e.
-B<aa-setready>(1) stops its execution right away (and therefore cannot return 11
-or 12).

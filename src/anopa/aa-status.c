@@ -350,6 +350,12 @@ status_service (struct serv *serv, struct config *cfg)
         else
             put_time (&serv->stamp, 0);
 
+        if (serv->is_s6 && serv->st6.flagready)
+        {
+            aa_bs_noflush (AA_OUT, "Ready:   ");
+            put_time (&serv->st6.readystamp, 0);
+        }
+
         aa_bs_noflush (AA_OUT, "Status:  ");
     }
 
@@ -362,7 +368,11 @@ status_service (struct serv *serv, struct config *cfg)
             char buf[UINT_FMT];
 
             aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_GREEN_ON);
-            put_s ((serv->is_s6 == 2) ? "Ready" : "Up");
+            put_s ("Up");
+            if (serv->st6.flagready)
+            {
+                put_s (" & Ready");
+            }
             aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
             put_s (" (PID ");
             buf[uint_fmt (buf, serv->st6.pid)] = '\0';
@@ -373,6 +383,10 @@ status_service (struct serv *serv, struct config *cfg)
         {
             aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
             put_s ("Down");
+            if (serv->st6.flagready)
+            {
+                put_s (" & Ready");
+            }
             aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
             put_s (" (");
             put_wstat (serv->st6.wstat, max, 0);
@@ -561,56 +575,14 @@ load_service (const char *name, struct config *cfg)
         else if (tain_less (&s->st.stamp, &serv.st6.stamp))
         {
             serv.is_s6 = 1;
-            serv.stamp = serv.st6.stamp;
+            if (cfg->mode == MODE_LIST && serv.st6.flagready)
+                serv.stamp = serv.st6.readystamp;
+            else
+                serv.stamp = serv.st6.stamp;
         }
     }
     if (!serv.is_s6)
         serv.stamp = s->st.stamp;
-    else if (serv.st6.pid && !serv.st6.flagfinishing)
-    {
-        int l = strlen (name);
-        char buf[l + 1 + sizeof (S6_SUPERVISE_READY_FILENAME)];
-        struct stat st;
-
-        byte_copy (buf, l, name);
-        buf[l] = '/';
-        byte_copy (buf + l + 1, sizeof (S6_SUPERVISE_READY_FILENAME), S6_SUPERVISE_READY_FILENAME);
-
-        if (stat (buf, &st) < 0)
-        {
-            if (errno != ENOENT)
-            {
-                int e = errno;
-
-                aa_put_err (name, "Unable to read s6 ready file: ", 0);
-                aa_bs_noflush (AA_ERR, error_str (e));
-                aa_end_err ();
-                return;
-            }
-        }
-        else
-        {
-            char pack[TAIN_PACK];
-
-            if (openreadnclose (buf, pack, TAIN_PACK) < TAIN_PACK)
-            {
-                if (errno != ENOENT)
-                {
-                    int e = errno;
-
-                    aa_put_err (name, "Unable to read s6 ready file: ", 0);
-                    aa_bs_noflush (AA_ERR, error_str (e));
-                    aa_end_err ();
-                    return;
-                }
-            }
-            else
-            {
-                tain_unpack (pack, &serv.stamp);
-                serv.is_s6 = 2;
-            }
-        }
-    }
 
     if (filter_status != FILTER_NONE && !match_status (&serv, filter_status))
         return;

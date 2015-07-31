@@ -133,15 +133,17 @@ not. If so, it disconnects and the service is announced as already up and
 process continues as expected.
 
 If not, B<aa-start>(1) then checks whether there's a file I<gets-ready> in the
-servicedir. It then sends the command to bring it up and removes the I<down>
-file (if present).
+servicedir, and if not whether there is a file I<notification-fd> containing a
+number. It then sends the command to bring it up and removes the I<down> file
+(if present).
 
-If there was no I<gets-ready> file, it waits for event 'u' to be triggered, then
-(disconnects from the fifodir and) announce the service as started. If there was
-one, it will then wait for event 'U' to be triggered instead, announcing the
-service as ready instead. (A message will be shown on event 'u' as information
-only. Note that should event 'd' occur, a message will also be shown, but
-B<aa-start>(1) will still keep waiting for event 'U'.)
+If there was no I<gets-ready>/valid I<notification-fd> file, it waits for event
+'u' to be triggered, then (disconnects from the fifodir and) announce the
+service as started. If there was one, it will then wait for event 'U' to be
+triggered instead, announcing the service as ready instead. (A message will be
+shown on event 'u' as information only. Note that should event 'd' occur, a
+message will also be shown, but B<aa-start>(1) will still keep waiting for event
+'U'.)
 
 =head1 STARTING A ONE-SHOT SERVICE
 

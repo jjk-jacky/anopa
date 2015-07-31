@@ -38,6 +38,8 @@
 #include <anopa/output.h>
 #include "service_internal.h"
 
+#define NOTIFICATION_FILENAME       "notification-fd"
+
 static aa_close_fd_fn close_fd;
 
 static void
@@ -146,12 +148,36 @@ aa_get_service (const char *name, int *si, int new_in_main)
     }
 }
 
+static int
+contains_fd (const char *filename)
+{
+    char buf[UINT_FMT + 1];
+    int r;
+
+    r = openreadnclose_nb (filename, buf, UINT_FMT);
+    if (r < 0)
+    {
+        if (errno != ENOENT)
+            aa_strerr_warnu2sys ("open ", filename);
+        return 0;
+    }
+
+    buf[byte_chr (buf, r, '\n')] = '\0';
+    if (!uint0_scan (buf, &r))
+    {
+        aa_strerr_warn2x ("invalid ", filename);
+        return 0;
+    }
+
+    return 1;
+}
+
 int
 aa_preload_service (int si)
 {
     aa_service_status *svst = &aa_service (si)->st;
     int l_sn = strlen (aa_service_name (aa_service (si)));
-    char buf[l_sn + 1 + sizeof (AA_GETS_READY_FILENAME)];
+    char buf[l_sn + 1 + sizeof (NOTIFICATION_FILENAME)];
 
     byte_copy (buf, l_sn, aa_service_name (aa_service (si)));
     byte_copy (buf + l_sn, 5, "/run");
@@ -166,9 +192,17 @@ aa_preload_service (int si)
     else
     {
         svst->type = AA_TYPE_LONGRUN;
+        aa_service (si)->gets_ready = 0;
 
         byte_copy (buf + l_sn, 1 + sizeof (AA_GETS_READY_FILENAME), "/" AA_GETS_READY_FILENAME);
-        aa_service (si)->gets_ready = (access (buf, F_OK) == 0) ? 1 : 0;
+        if (access (buf, F_OK) == 0)
+            aa_service (si)->gets_ready = 1;
+        else
+        {
+            byte_copy (buf + l_sn, 1 + sizeof (NOTIFICATION_FILENAME), "/" NOTIFICATION_FILENAME);
+            if (access (buf, F_OK) == 0 && contains_fd (buf))
+                aa_service (si)->gets_ready = 1;
+        }
     }
 
     return 0;

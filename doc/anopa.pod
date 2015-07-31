@@ -110,11 +110,25 @@ be logged; the I<log> service is called the service's logger.
 See B<aa-enable>(1) for how you can use a file instead, to automatically use the
 same logger for all services.
 
+=item An optional regular file named I<notification-fd>
+
+If such a file exists, it means that the service supports readiness
+notification. The file must only contain an unsigned integer, which is the
+number of the file descriptor that the service writes its readiness notification
+to, as per B<s6-supervise> requirements.
+
+This is used by B<aa-start>(1) to determine whether to wait for event 'U'
+instead of 'u' when starting the service.
+
 =item An optional, empty, regular file named I<gets-ready>
 
 This is B<anopa>-specific, and if present indicates to B<aa-start>(1) that the
 service supports readiness, so it will wait for event 'U' (instead of 'u') when
 starting it.
+
+This can be used for services that support readiness outside of the
+I<notification-fd> file interface (e.g. via B<aa-setready>(1) triggered on a log
+event).
 
 =item An optional regular file named I<timeout>
 
