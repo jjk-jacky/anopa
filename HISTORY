@@ -1,4 +1,54 @@
 
+# 2015-08-10, v0.2.0
+
+ +  Add aa-tty, small tool to print the device name of the active tty
+
+ +  Add aa-ctty, small execline helper to set controlling terminal
+
+ +  stage{0,2,3}: Set controlling terminal (to use ^C)
+    That way one can use Ctrl+C on aa-st{art,op} to manually timeout a pending
+    service.
+
+!!! Use /etc/anopa/listdirs/onboot instead of /etc/anopa/onboot
+
+ !  status: Rename -l to -L for --list
+    (Because we'll want to use -l for --listdir, for consistency.)
+
+ +  stop/status/enable: Add --listdir
+
+ +  --listdir supports auto-prefix; That is, unless it starts with a slash or
+    dot, it gets auto-prefixed with "/etc/anopa/listdirs/"
+
++++ status: Add --filter
+
+ !  start/enable: Rename -n/-w to -N/-W
+
++++ start/stop/status/enable: Add --dry-list (-n)
+
++++ stop: Process "needs" in reverse order. We used to only stop whatever was
+    specified, processing dependencies ("needs") only as ordering directives
+    (i.e.  as "after"), which obviously isn't right.
+
+    Now they're correctly processed "in reverse," i.e. if A needs B then we'll
+    set it as B needs A, i.e. to stop B we also need to stop A (and the
+    matching "after" will be there to order stopping A before B).
+
++++ start/stop/enable/status/reset: Support reading from stdin
+    Use "-" as service name on the command line to read them (one per line)
+    from stdin.
+    Useful to read them from a file, or pipe a --dry-list output.
+
+ +  enable: Add --upgrade to upgrade servicedirs
+
+ +  Support --double-output about everywhere
+
++++ Make compatible/require s6 v2.2.0.0
+    Event for "unready" in aa-setready is now 'N' (was 'D'), as is the short
+    option for --unready
+
+ !  Plus a few fixes; see git log for details
+
+
 # 2015-04-10, v0.1.0
 
  *  first alpha release

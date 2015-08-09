@@ -1,0 +1,29 @@
+Build Instructions
+------------------
+
+* Requirements
+  ------------
+
+  - A POSIX-compliant C development environment
+  - GNU make version 4.0 or later
+  - skalibs version 2.3.6.0 or later: http://skarnet.org/software/skalibs/
+  - execline version 2.1.3.0 or later: http://skarnet.org/software/execline/
+  - s6 version 2.2.0.0 or later: http://skarnet.org/software/s6/
+
+Noting that both execline and s6 are also runtime dependencies, the former only
+if using the aa-stage{0..4} scripts.
+
+
+* Standard usage
+  --------------
+
+  ./configure && make && sudo make install
+
+ will work for most users.
+
+
+* Customization
+  -------------
+
+ You can customize paths via flags given to configure.
+ See ./configure --help for a list of all available configure options.
