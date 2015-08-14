@@ -37,6 +37,8 @@ struct it_data
     aa_load_fail_cb lf_cb;
 };
 
+extern int _is_valid_service_name (const char *name, int len);
+
 extern int _it_start_needs  (direntry *d, void *data);
 extern int _it_start_wants  (direntry *d, void *data);
 extern int _it_start_after  (direntry *d, void *data);

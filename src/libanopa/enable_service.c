@@ -38,6 +38,7 @@
 #include <anopa/copy_file.h>
 #include <anopa/scan_dir.h>
 #include <anopa/err.h>
+#include "service_internal.h"
 
 static int
 copy_from_source (const char        *name,
@@ -55,18 +56,6 @@ copy_dir (const char        *src,
           aa_auto_enable_cb  ae_cb,
           const char        *instance);
 
-
-static int
-is_valid_service_name (const char *name, int len)
-{
-    if (len <= 0)
-        return 0;
-    if (name[0] == '@' || name[len - 1] == '@')
-        return 0;
-    if (byte_chr (name, len, '/') < len)
-        return 0;
-    return 1;
-}
 
 static int
 copy_log (const char *name, const char *cfg, mode_t mode, aa_warn_fn warn_fn)
@@ -580,7 +569,7 @@ aa_enable_service (const char       *_name,
         l_name -= r;
     }
 
-    if (!is_valid_service_name (name, l_name))
+    if (!_is_valid_service_name (name, l_name))
         return -ERR_INVALID_NAME;
 
     if (*_name == '/')

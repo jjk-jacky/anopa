@@ -93,6 +93,9 @@ get_new_service (const char *name)
     };
     struct stat st;
 
+    if (!_is_valid_service_name (name, strlen (name)))
+        return -ERR_INVALID_NAME;
+
     if (stat (name, &st) < 0)
     {
         if (errno == ENOENT)

@@ -12,6 +12,7 @@ output.o
 progress.o
 sa_sources.o
 service.o
+service_name.o
 service_start.o
 service_stop.o
 services.o
