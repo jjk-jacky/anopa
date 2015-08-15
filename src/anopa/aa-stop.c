@@ -323,7 +323,7 @@ main (int argc, char * const argv[])
             || (!(mode & AA_MODE_STOP_ALL) && !path_list && argc < 1))
         dieusage (1);
 
-    if (aa_init_repo (path_repo, AA_REPO_WRITE) < 0)
+    if (aa_init_repo (path_repo, (mode & AA_MODE_IS_DRY) ? AA_REPO_READ : AA_REPO_WRITE) < 0)
         aa_strerr_diefu2sys (ERR_IO, "init repository ", path_repo);
 
     /* let's "preload" every services from the repo. This will have everything
