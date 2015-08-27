@@ -93,6 +93,8 @@ main (int argc, char * const argv[])
 
     for (;;)
     {
+        int l = r;
+
         byte_copy (file + sizeof (PREFIX) - 1, r, name);
         byte_copy (file + sizeof (PREFIX) - 2 + r, sizeof (NAME), NAME);
         r = openreadnclose (file, name, max);
@@ -101,7 +103,7 @@ main (int argc, char * const argv[])
             if (errno == ENOENT)
             {
                 aa_bs_noflush (AA_OUT, "/dev/");
-                aa_bs_flush (AA_OUT, name);
+                aa_bb_flush (AA_OUT, name, l);
                 return 0;
             }
             else
