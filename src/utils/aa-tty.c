@@ -107,5 +107,6 @@ main (int argc, char * const argv[])
             else
                 aa_strerr_diefu2sys (2, "read ", file);
         }
+        name[r] = '\0';
     }
 }
