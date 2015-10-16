@@ -187,6 +187,7 @@ dieusage (int rc)
             " -c, --set-crash TARGET        Create s6-svscan symlink crash to TARGET\n"
             " -N, --no-needs                Don't auto-enable services from 'needs'\n"
             " -W, --no-wants                Don't auto-enable services from 'wants'\n"
+            "     --no-supervise            Don't create supervise folders for longruns\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -210,6 +211,7 @@ main (int argc, char * const argv[])
 
     for (;;)
     {
+        int extra = 0;
         struct option longopts[] = {
             { "set-crash",          required_argument,  NULL,   'c' },
             { "double-output",      no_argument,        NULL,   'D' },
@@ -224,6 +226,7 @@ main (int argc, char * const argv[])
             { "upgrade",            no_argument,        NULL,   'u' },
             { "version",            no_argument,        NULL,   'V' },
             { "no-wants",           no_argument,        NULL,   'W' },
+            { "no-supervise",       no_argument,        &extra,  1  },
             { NULL, 0, 0, 0 }
         };
         int c;
@@ -285,6 +288,14 @@ main (int argc, char * const argv[])
 
             case 'W':
                 flags &= ~AA_FLAG_AUTO_ENABLE_WANTS;
+                break;
+
+            case 0:
+                if (extra == 1)
+                    flags |= AA_FLAG_NO_SUPERVISE;
+                else
+                    aa_strerr_dief1x (1, "internal error processing options");
+                extra = 0;
                 break;
 
             default:

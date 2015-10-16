@@ -146,6 +146,8 @@ For completeness, the following "internals" are also supported.
 
 It is automatically created by B<s6-supervise> if it does not exist. This is
 where B<s6-supervise> stores its information. The directory must be writable.
+It is automatically created by B<aa-enable>(1) with permissions 0711, to allow
+reading the status file as a user.
 
 =item A fifodir named I<event>
 
@@ -156,6 +158,8 @@ used to send notifications when the service goes up/down.
 
 If such a file exists, the default state of the service is considered down, not
 up, and it isn't automatically started by B<s6-supervise>.
+It is automatically created by B<aa-enable>(1), except for the service specified
+with B<--skip-down>.
 
 =back
 

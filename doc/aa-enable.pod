@@ -6,7 +6,7 @@ aa-enable - Enable services, i.e. copy servicedirs to repodir
 
 B<aa-enable> [B<-D>] [B<-r> I<REPODIR>] [B<-c> I<CRASH>] [B<-f> I<FINISH>]
 [B<-k> I<SERVICE>] [B<-S> I<SOURCEDIR>] [B<-s> I<SOURCEDIR>] [B<-l> I<LISTDIR>]
-[B<-N>] [B<-W>] [B<-u>] [I<SERVICE...>]
+[B<-N>] [B<-W>] [B<-u>] [B<--no-supervise>] [I<SERVICE...>]
 
 =head1 OPTIONS
 
@@ -77,6 +77,20 @@ directories will be processed in the order they were added.
 
 Upgrade servicedirs instead of creating them. See below for implications.
 
+=item B<--no-supervise>
+
+Disable creation of I<supervise> folders for longrun services. By default,
+B<aa-enable>(1) will create a folder I<supervise> with permissions 0711 for
+every longrun service (including loggers).
+
+This is meant to ensure one can read the s6 status file (which is
+world-readable by default) without the need to be root. This allows for example
+to use B<aa-status>(1) as a user properly.
+
+If you were to disable this, the I<supervise> folders would likely be created by
+B<s6-supervise> with 0700 permissions, and when trying to read s6 status as a
+user a "Permission denied" error would occur.
+
 =item B<-V, --version>
 
 Show version information and exit.
@@ -128,6 +142,8 @@ it already existed, or the service was specified to B<--skip-down>) to ensure
 the service won't be auto-started by B<s6-svscan>, and a symlink is added to the
 servicedir into the I<.scandir> sub-directory of I<REPODIR> (even if the service
 was specified to B<--skip-down>).
+And, unless option B<--no-supervise> was specified, a folder I<supervise> is
+created with 0711 permissions.
 
 - As last step, B<aa-enable>(1) will check if a regular file I<log/run-args>
 exists in the newly created servicedir, and if so its content will be appended
@@ -219,7 +235,7 @@ When used, B<aa-enable>(1) will behave as usual with the following changes:
   content);
 
 - For longruns, no I<down> file will be created, nor will a symlink be added
-  into the scandir;
+  into the scandir or I<supervise> folder be created;
 
 - If used, options B<--set-finish> and B<--set-crash> are ignored.
 

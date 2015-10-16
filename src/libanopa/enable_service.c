@@ -447,6 +447,18 @@ next:
                     goto err;
                 }
             }
+
+            if (!(flags & AA_FLAG_NO_SUPERVISE))
+            {
+                char buf[l_dst + 1 + strlen ("supervise") + 1];
+
+                byte_copy (buf, l_dst, dst);
+                buf[l_dst] = '/';
+                byte_copy (buf + l_dst + 1, strlen ("supervise") + 1, "supervise");
+
+                if (mkdir (buf, 0711) < 0)
+                    warn_fn (buf, errno);
+            }
         }
     }
 
