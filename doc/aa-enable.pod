@@ -194,6 +194,12 @@ Note that you can also still provide files from the configuration directory in
 listdir, since it is copied last (and that this always includes providing a new
 I<run> file).
 
+The servicedir of the logger is treated as such, meaning dependencies ("needs"
+and "wants") will be auto-enabled as needed, you can remove/append to files
+from the configuration directory as described below, and a file I<down> will be
+created, as well as a folder I<supervise> (unless B<--no-supervise> was
+specified).
+
 Lastly, B<aa-enable>(1)'s last step when creating a servicedir is to check for a
 regular file I<log/run-args> in the newly created servicedir, and if found to
 append its content to I<log/run>

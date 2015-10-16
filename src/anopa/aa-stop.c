@@ -31,6 +31,7 @@
 #include <skalibs/bytestr.h>
 #include <skalibs/direntry.h>
 #include <skalibs/genalloc.h>
+#include <skalibs/skamisc.h>
 #include <skalibs/error.h>
 #include <skalibs/uint.h>
 #include <skalibs/tai.h>
@@ -80,8 +81,8 @@ preload_service (const char *name)
         r = aa_ensure_service_loaded (si, AA_MODE_STOP, 0, NULL);
     if (r < 0)
     {
-        /* there should be much errors possible here... basically only ERR_IO or
-         * ERR_NOT_UP should be possible, and the later should be silently
+        /* there shouldn't be much errors possible here... basically only ERR_IO
+         * or ERR_NOT_UP should be possible, and the later should be silently
          * ignored... so: */
         if (r == -ERR_IO)
         {
@@ -100,6 +101,32 @@ preload_service (const char *name)
                 end_err ();
             }
         }
+    }
+
+    /* r < 0 can mean different things (e.g. ERR_NOT_UP), including that we
+     * don't have a type set. Hence we only rely on it when possible, but we
+     * need to always check for a logger */
+    if (r < 0 || aa_service (si)->st.type == AA_TYPE_LONGRUN)
+    {
+        int l = satmp.len;
+
+        /* for longruns, even though the dependency of the logger is auto-added,
+         * we still need to ensure the service is loaded */
+        stralloc_cats (&satmp, name);
+        /* is this not a logger already? */
+        if (satmp.len - l < 5 || satmp.s[satmp.len - 4] != '/')
+        {
+            stralloc_catb (&satmp, "/log/run", strlen ("/log/run") + 1);
+            r = access (satmp.s + l, F_OK);
+            if (r < 0 && (errno != ENOTDIR && errno != ENOENT))
+                aa_strerr_diefu3sys (ERR_IO, "preload services: access(", satmp.s + l, ")");
+            else if (r == 0)
+            {
+                satmp.s[satmp.len - 5] = '\0';
+                preload_service (satmp.s + l);
+            }
+        }
+        satmp.len = l;
     }
 
     return 0;

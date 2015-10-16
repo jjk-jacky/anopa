@@ -26,20 +26,25 @@
 #include "service_internal.h"
 
 int
-_it_stop_needs (direntry *d, void *data)
+_name_stop_needs (const char *name, struct it_data *it_data)
 {
-    struct it_data *it_data = data;
     int sni;
     int r;
 
     tain_now_g ();
-    r = aa_get_service (d->d_name, &sni, 0);
+    r = aa_get_service (name, &sni, 0);
     if (r < 0)
         return 0;
 
     add_to_list (&aa_service (sni)->needs, it_data->si, 0);
     add_to_list (&aa_service (sni)->after, it_data->si, 1);
     return 0;
+}
+
+int
+_it_stop_needs (direntry *d, void *data)
+{
+    return _name_stop_needs (d->d_name, (struct it_data *) data);
 }
 
 int

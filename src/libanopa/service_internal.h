@@ -39,11 +39,13 @@ struct it_data
 
 extern int _is_valid_service_name (const char *name, int len);
 
+extern int _name_start_needs (const char *name, struct it_data *it_data);
 extern int _it_start_needs  (direntry *d, void *data);
 extern int _it_start_wants  (direntry *d, void *data);
 extern int _it_start_after  (direntry *d, void *data);
 extern int _it_start_before (direntry *d, void *data);
 
+extern int _name_stop_needs (const char *name, struct it_data *it_data);
 extern int _it_stop_needs   (direntry *d, void *data);
 extern int _it_stop_after   (direntry *d, void *data);
 extern int _it_stop_before  (direntry *d, void *data);

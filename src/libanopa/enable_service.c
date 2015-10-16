@@ -56,9 +56,17 @@ copy_dir (const char        *src,
           aa_auto_enable_cb  ae_cb,
           const char        *instance);
 
+static int
+do_auto_needs_wants (const char *name, aa_enable_flags flags, aa_auto_enable_cb ae_cb);
+
 
 static int
-copy_log (const char *name, const char *cfg, mode_t mode, aa_warn_fn warn_fn)
+copy_log (const char        *name,
+          const char        *cfg,
+          mode_t             mode,
+          aa_warn_fn         warn_fn,
+          aa_enable_flags    flags,
+          aa_auto_enable_cb  ae_cb)
 {
     int fd;
     int r;
@@ -79,13 +87,18 @@ copy_log (const char *name, const char *cfg, mode_t mode, aa_warn_fn warn_fn)
         return r;
     }
 
+    flags |= _AA_FLAG_IS_LOGGER;
+
     /* this is a logger, so there's no autoenable of any kind; hence we can use
      * 0 for flags (don't process it as a servicedir either, since it doesn't
      * apply) and not bother with a callback */
-    r = copy_from_source ("log", 3, warn_fn, 0, NULL);
+    r = copy_from_source ("log", 3, warn_fn, flags | _AA_FLAG_IS_SERVICEDIR, NULL);
 
     if (r >= 0 && cfg)
-        r = copy_dir (cfg, "log", mode, 0, warn_fn, 0, NULL, NULL);
+        r = copy_dir (cfg, "log", mode, 0, warn_fn, flags | _AA_FLAG_IS_CONFIGDIR, NULL, NULL);
+
+    if (r >= 0 && ae_cb && flags & (AA_FLAG_AUTO_ENABLE_NEEDS | AA_FLAG_AUTO_ENABLE_WANTS))
+        r = do_auto_needs_wants ("log", flags, ae_cb);
 
     e = errno;
     fd_chdir (fd);
@@ -251,13 +264,23 @@ copy_dir (const char        *src,
             == (_AA_FLAG_IS_SERVICEDIR | AA_FLAG_UPGRADE_SERVICEDIR))
     {
         if (stat (dst, &st) < 0)
-            goto err;
+        {
+            /* logger might be new */
+            if ((flags & _AA_FLAG_IS_LOGGER) && errno == ENOENT)
+            {
+                if (mkdir (dst, S_IRWXU) < 0)
+                    goto err;
+            }
+            else
+                goto err;
+        }
         else if (!S_ISDIR (st.st_mode))
         {
             errno = ENOTDIR;
             goto err;
         }
-        else if (clear_dir (dst, 1, warn_fn) < 0)
+        /* logger: was already cleared when processing main servicedir */
+        else if (!(flags & _AA_FLAG_IS_LOGGER) && clear_dir (dst, 1, warn_fn) < 0)
             goto err;
     }
     else
@@ -315,9 +338,10 @@ copy_dir (const char        *src,
 
             if (S_ISREG (st.st_mode))
             {
-                if (has.began && depth == 0 && str_equal (satmp.s + i, "log"))
+                if (has.began && depth == 0 && !(flags & _AA_FLAG_IS_LOGGER)
+                        && str_equal (satmp.s + i, "log"))
                 {
-                    r = copy_log (dst, NULL, 0, warn_fn);
+                    r = copy_log (dst, NULL, 0, warn_fn, flags, ae_cb);
                     st.st_mode = 0755;
                 }
                 else if ((flags & _AA_FLAG_IS_CONFIGDIR) && len > 1
@@ -356,8 +380,9 @@ copy_dir (const char        *src,
             }
             else if (S_ISDIR (st.st_mode))
             {
-                if (has.began && depth == 0 && str_equal (satmp.s + i, "log"))
-                    r = copy_log (dst, buf_src, st.st_mode, warn_fn);
+                if (has.began && depth == 0 && !(flags & _AA_FLAG_IS_LOGGER)
+                        && str_equal (satmp.s + i, "log"))
+                    r = copy_log (dst, buf_src, st.st_mode, warn_fn, flags, ae_cb);
                 else
                 {
                     /* use depth because this is also enabled for the config part */
@@ -433,6 +458,7 @@ next:
                     fd_close (fd);
             }
 
+            if (!(flags & _AA_FLAG_IS_LOGGER))
             {
                 char buf_lnk[3 + l_dst + 1];
                 char buf_dst[sizeof (AA_SCANDIR_DIRNAME) + l_dst + 1];
@@ -558,6 +584,60 @@ it_cb (direntry *d, void *_data)
     return 0;
 }
 
+static int
+do_auto_needs_wants (const char *name, aa_enable_flags flags, aa_auto_enable_cb ae_cb)
+{
+    stralloc sa = STRALLOC_ZERO;
+    struct {
+        aa_auto_enable_cb cb;
+        unsigned int flag;
+    } data = { .cb = ae_cb };
+    int l_name = strlen (name);
+    int r = 0;
+
+    if (!stralloc_catb (&sa, name, l_name))
+    {
+        errno = ENOMEM;
+        return -1;
+    }
+
+    if (flags & AA_FLAG_AUTO_ENABLE_NEEDS)
+    {
+        if (!stralloc_cats (&sa, "/needs") || !stralloc_0 (&sa))
+        {
+            stralloc_free (&sa);
+            errno = ENOMEM;
+            return -1;
+        }
+        data.flag = AA_FLAG_AUTO_ENABLE_NEEDS;
+        r = aa_scan_dir (&sa, 1, it_cb, &data);
+        if (r == -ERR_IO && errno == ENOENT)
+            r = 0;
+        sa.len = l_name;
+    }
+
+    if (r == 0 && flags & AA_FLAG_AUTO_ENABLE_WANTS)
+    {
+        if (!stralloc_cats (&sa, "/wants") || !stralloc_0 (&sa))
+        {
+            stralloc_free (&sa);
+            errno = ENOMEM;
+            return -1;
+        }
+        data.flag = AA_FLAG_AUTO_ENABLE_WANTS;
+        r = aa_scan_dir (&sa, 1, it_cb, &data);
+        if (r == -ERR_IO && errno == ENOENT)
+            r = 0;
+    }
+
+    {
+        int e = errno;
+        stralloc_free (&sa);
+        errno = e;
+    }
+    return r;
+}
+
 int
 aa_enable_service (const char       *_name,
                    aa_warn_fn        warn_fn,
@@ -645,50 +725,7 @@ aa_enable_service (const char       *_name,
     }
 
     if (ae_cb && flags & (AA_FLAG_AUTO_ENABLE_NEEDS | AA_FLAG_AUTO_ENABLE_WANTS))
-    {
-        stralloc sa = STRALLOC_ZERO;
-        struct {
-            aa_auto_enable_cb cb;
-            unsigned int flag;
-        } data = { .cb = ae_cb };
-
-        if (!stralloc_catb (&sa, name, l_name))
-        {
-            errno = ENOMEM;
-            return -1;
-        }
-
-        if (flags & AA_FLAG_AUTO_ENABLE_NEEDS)
-        {
-            if (!stralloc_cats (&sa, "/needs") || !stralloc_0 (&sa))
-            {
-                stralloc_free (&sa);
-                errno = ENOMEM;
-                return -1;
-            }
-            data.flag = AA_FLAG_AUTO_ENABLE_NEEDS;
-            r = aa_scan_dir (&sa, 1, it_cb, &data);
-            if (r == -ERR_IO && errno == ENOENT)
-                r = 0;
-            sa.len = l_name;
-        }
-
-        if (r == 0 && flags & AA_FLAG_AUTO_ENABLE_WANTS)
-        {
-            if (!stralloc_cats (&sa, "/wants") || !stralloc_0 (&sa))
-            {
-                stralloc_free (&sa);
-                errno = ENOMEM;
-                return -1;
-            }
-            data.flag = AA_FLAG_AUTO_ENABLE_WANTS;
-            r = aa_scan_dir (&sa, 1, it_cb, &data);
-            if (r == -ERR_IO && errno == ENOENT)
-                r = 0;
-        }
-
-        stralloc_free (&sa);
-    }
+        r = do_auto_needs_wants (name, flags, ae_cb);
 
     return r;
 }

@@ -92,19 +92,15 @@ following differences :
 B<aa-stop>(1) will check if the service is running, and if not simply announce
 it as not up.
 
-When B<--all> is used, if the service has a logger then command 'x' will be sent
-to said logger's B<s6-supervise> first, so that when the logger exits it isn't
-restarted and B<s6-supervise> exits as well instead.
-
-Similarly, instead of 'd' the commands 'dx' are sent to the service's
-B<s6-supervise>, so that after bringing the service down it exits as well. This
-is obviously all intended to bring the supervised tree all down, as is expected
-when using B<--all> (usually from stage 3).
+When B<--all> is used, instead of 'd' the commands 'dx' are sent to the
+service's B<s6-supervise>, so that after bringing the service down it exits as
+well. This is obviously all intended to bring the supervised tree all down, as
+is expected when using B<--all> (usually from stage 3).
 
 Note that if a service was not running, no 'x' command is sent so the
-B<s6-supervise> process of the service - and of its logger, if any - are kept
-running. This isn't a problem, since they'll simply exit when sending SIGTERM to
-all process further down in stage 3.
+B<s6-supervise> process of the service are kept running. This isn't a problem,
+since they'll simply exit when sending SIGTERM to all process further down in
+stage 3.
 
 =head2 Service not up
 

@@ -110,6 +110,9 @@ be logged; the I<log> service is called the service's logger.
 See B<aa-enable>(1) for how you can use a file instead, to automatically use the
 same logger for all services.
 
+Note that by default, B<aa-status>(1) only list oneshots & longruns, excluding
+such loggers. Refer to its option B<--filter> to include/list them.
+
 =item An optional regular file named I<notification-fd>
 
 If such a file exists, it means that the service supports readiness
@@ -279,6 +282,20 @@ current service fails to start, it will still be started regardless.
 It should also be noted that a long-run service will be considered started once
 the event 'u' is received; Should the service actually fail right after will
 have no consequences on the rest of the B<aa-start>(1) process.
+
+=head3 Dependencies and Loggers
+
+Loggers (I<*/log> services) are special in that they're not in the
+repodir/scandir directly, and also not listed by B<aa-status>(1) by default (See
+its B<--filter> for more).
+
+However, they're not ignored by anopa, and every longrun service with a logger
+will automatically have a dependency ("needs") on its logger. This means that
+e.g. to start I<foobar>, I<foobar/log> will first be started, as expected.
+
+They can also contain user-defined dependencies, exactly as with any other
+services. It is not, however, possible to add a dependency onto such a logger
+(due to the slash in its name).
 
 =head1 SERVICE REPOSITORY (AND SCANDIR)
 

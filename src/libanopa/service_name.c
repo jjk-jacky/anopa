@@ -25,13 +25,16 @@
 int
 _is_valid_service_name (const char *name, int len)
 {
+    int r;
+
     if (len <= 0)
         return 0;
     if (name[0] == '.')
         return 0;
     if (name[0] == '@' || name[len - 1] == '@')
         return 0;
-    if (byte_chr (name, len, '/') < len)
+    r = byte_chr (name, len, '/');
+    if (r < len && !str_equal (name + r, "/log"))
         return 0;
     return 1;
 }

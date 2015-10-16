@@ -292,6 +292,32 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
 
     stralloc_cats (&sa, aa_service_name (aa_service (si)));
 
+    /* special case: for a longrun that's not a logger, we check if it has one,
+     * and if so auto-add needs & after on said logger */
+    if (aa_service (si)->st.type == AA_TYPE_LONGRUN
+            /* because sa.s is the service name, and the only slashes allowed
+             * are for loggers, i.e. xxxx/log */
+            && (sa.len < 5 || sa.s[sa.len - 4] != '/'))
+    {
+        stralloc_catb (&sa, "/log/run", strlen ("/log/run") + 1);
+        r = access (sa.s, F_OK);
+        if (r < 0 && (errno != ENOTDIR && errno != ENOENT))
+            goto err;
+
+        if (r == 0)
+        {
+            sa.s[sa.len - 5] = '\0';
+            if (mode & AA_MODE_START)
+                r = _name_start_needs (sa.s, &it_data);
+            else
+                r = _name_stop_needs (sa.s, &it_data);
+            if (r < 0)
+                goto err;
+        }
+
+        sa.len -= strlen ("/log/run") + 1;
+    }
+
     stralloc_catb (&sa, "/needs", strlen ("/needs") + 1);
     r = aa_scan_dir (&sa, 1,
             (mode & AA_MODE_START) ? _it_start_needs : _it_stop_needs,

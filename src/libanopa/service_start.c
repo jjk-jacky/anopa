@@ -73,15 +73,14 @@ aa_mark_service (aa_mode mode, int si, int in_main, int no_wants, aa_load_fail_c
 }
 
 int
-_it_start_needs (direntry *d, void *data)
+_name_start_needs (const char *name, struct it_data *it_data)
 {
-    struct it_data *it_data = data;
     int type;
     int sni;
     int r;
 
     tain_now_g ();
-    type = aa_get_service (d->d_name, &sni, 1);
+    type = aa_get_service (name, &sni, 1);
     if (type < 0)
         r = type;
     else
@@ -100,7 +99,6 @@ _it_start_needs (direntry *d, void *data)
 
         if (!(it_data->mode & AA_MODE_IS_DRY))
         {
-            const char *name = d->d_name;
             int l_n = strlen (name);
             int l_em = strlen (errmsg[-r]);
             char buf[l_n + 2 + l_em + 1];
@@ -115,7 +113,7 @@ _it_start_needs (direntry *d, void *data)
         }
 
         if (it_data->lf_cb)
-            it_data->lf_cb (it_data->si, AA_LOADFAIL_NEEDS, d->d_name, -r);
+            it_data->lf_cb (it_data->si, AA_LOADFAIL_NEEDS, name, -r);
 
         return -ERR_DEPEND;
     }
@@ -123,6 +121,12 @@ _it_start_needs (direntry *d, void *data)
     add_to_list (&aa_service (it_data->si)->needs, sni, 0);
     add_to_list (&aa_service (it_data->si)->after, sni, 1);
     return 0;
+}
+
+int
+_it_start_needs (direntry *d, void *data)
+{
+    return _name_start_needs (d->d_name, (struct it_data *) data);
 }
 
 int

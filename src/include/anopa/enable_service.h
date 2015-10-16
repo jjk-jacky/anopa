@@ -36,7 +36,8 @@ typedef enum
     /* private */
     _AA_FLAG_IS_SERVICEDIR      = (1 << 5),
     _AA_FLAG_IS_CONFIGDIR       = (1 << 6),
-    _AA_FLAG_IS_1OF4            = (1 << 7)
+    _AA_FLAG_IS_1OF4            = (1 << 7),
+    _AA_FLAG_IS_LOGGER          = (1 << 8)
 } aa_enable_flags;
 
 extern stralloc aa_sa_sources;

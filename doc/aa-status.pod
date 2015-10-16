@@ -111,6 +111,20 @@ To only process oneshot services.
 
 To only process longrun services.
 
+=item I<all>; I<os+lr+log>
+
+To process all services: oneshots, longruns, and loggers. By default, only
+oneshots and longruns are shown.
+
+=item I<log>
+
+To only process loggers (i.e. I<*/log> services)
+
+=item I<logged>; I<lr+log>
+
+To only process longruns and loggers. Note that this also include longruns
+without loggers.
+
 =back
 
 =head2 Filter by status
@@ -150,7 +164,7 @@ The same could be done using e.g:
 
     aa-status -Laf fail -f os
 
-To show statues of all longrun process currently up:
+To show statues of all longrun services currently up:
 
     aa-status -a -f longrun -f started
 
@@ -158,6 +172,10 @@ This will list all oneshot services (only the last filter is used since they're
 both of the same kind) :
 
     aa-status -Laf longrun --filter os
+
+To list all services, including loggers, that are up:
+
+    aa-status -Laf all -f up
 
 
 =head1 POSSIBLE STATUSES

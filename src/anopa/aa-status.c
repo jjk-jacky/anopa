@@ -36,6 +36,7 @@
 #include <skalibs/djbunix.h>
 #include <skalibs/genalloc.h>
 #include <skalibs/stralloc.h>
+#include <skalibs/skamisc.h>
 #include <skalibs/uint.h>
 #include <skalibs/djbtime.h>
 #include <skalibs/tai.h>
@@ -77,9 +78,16 @@ struct serv
 enum
 {
     FILTER_NONE = 0,
+    /* status */
     FILTER_UP,
     FILTER_DOWN,
-    FILTER_ERROR
+    FILTER_ERROR,
+    /* type */
+    FILTER_ONESHOT,
+    FILTER_LONGRUN,
+    FILTER_LOGGED,
+    FILTER_LOG,
+    FILTER_ALL
 };
 
 enum
@@ -90,7 +98,7 @@ enum
 
 static genalloc ga_serv = GENALLOC_ZERO;
 
-static unsigned int filter_type = AA_TYPE_UNKNOWN;
+static unsigned int filter_type = FILTER_NONE;
 static unsigned int filter_status = FILTER_NONE;
 static unsigned int sort_order = SORT_ASC;
 
@@ -525,14 +533,35 @@ match_status (struct serv *serv, unsigned int filter)
             case AA_EVT_STOP_FAILED:
                 return filter == FILTER_ERROR || filter == FILTER_UP;
 
-            case _AA_NB_EVT: /* silence warning */
+            /* silence warnings */
+            case _AA_NB_EVT:
+            default:
+                current = FILTER_NONE;
                 break;
         }
 
     return current == filter;
 }
 
-static void
+static inline unsigned int
+filter_to_type (unsigned int filter)
+{
+    switch (filter)
+    {
+        case FILTER_ONESHOT:
+            return AA_TYPE_ONESHOT;
+
+        case FILTER_LONGRUN:
+        case FILTER_LOGGED:
+        case FILTER_LOG:
+            return AA_TYPE_LONGRUN;
+
+        default:
+            return AA_TYPE_UNKNOWN;
+    }
+}
+
+static int
 load_service (const char *name, struct config *cfg)
 {
     aa_service *s;
@@ -543,14 +572,14 @@ load_service (const char *name, struct config *cfg)
     if (r < 0)
     {
         aa_put_err (name, errmsg[-r], 1);
-        return;
+        return -1;
     }
 
     r = aa_preload_service (serv.si);
     if (r < 0)
     {
         aa_put_err (name, errmsg[-r], 1);
-        return;
+        return -1;
     }
 
     s = aa_service (serv.si);
@@ -561,11 +590,14 @@ load_service (const char *name, struct config *cfg)
         aa_put_err (name, "Failed to read service status file: ", 0);
         aa_bs_noflush (AA_ERR, error_str (e));
         aa_end_err ();
-        return;
+        return -1;
     }
 
-    if (filter_type != AA_TYPE_UNKNOWN && s->st.type != filter_type)
-        return;
+    if (filter_type != FILTER_NONE && filter_type != FILTER_ALL
+            && s->st.type != filter_to_type (filter_type))
+        return -1;
+    if (filter_type == FILTER_LOG && aa_service_name (s)[strlen (aa_service_name (s)) - 4] != '/')
+        return -1;
 
     if (s->st.type == AA_TYPE_LONGRUN)
     {
@@ -578,7 +610,7 @@ load_service (const char *name, struct config *cfg)
                 aa_put_err (name, "Unable to read s6 status: ", 0);
                 aa_bs_noflush (AA_ERR, error_str (e));
                 aa_end_err ();
-                return;
+                return -1;
             }
         }
         else if (tain_less (&s->st.stamp, &serv.st6.stamp))
@@ -594,7 +626,7 @@ load_service (const char *name, struct config *cfg)
         serv.stamp = s->st.stamp;
 
     if (filter_status != FILTER_NONE && !match_status (&serv, filter_status))
-        return;
+        return -1;
 
     if (cfg->mode == MODE_LIST)
     {
@@ -605,14 +637,44 @@ load_service (const char *name, struct config *cfg)
     }
 
     genalloc_append (struct serv, &ga_serv, &serv);
+    return serv.si;
 }
 
 static int
 it_all (direntry *d, void *data)
 {
+    int si;
+
     if (*d->d_name == '.' || d->d_type != DT_DIR)
         return 0;
-    load_service (d->d_name, data);
+
+    si = load_service (d->d_name, data);
+    if ((filter_type == FILTER_ALL || filter_type == FILTER_LOG
+                || filter_type == FILTER_LOGGED)
+            /* si < 0 could be a error, or just that it was filtered out */
+            && (si < 0 || aa_service (si)->st.type == AA_TYPE_LONGRUN))
+    {
+        int l = satmp.len;
+        int ln = strlen (d->d_name);
+        int r;
+
+        /* is this not a logger already? */
+        if (ln < 5 || d->d_name[ln - 4] != '/')
+        {
+            stralloc_cats (&satmp, d->d_name);
+            stralloc_catb (&satmp, "/log/run", strlen ("/log/run") + 1);
+            r = access (satmp.s + l, F_OK);
+            if (r < 0 && (errno != ENOTDIR && errno != ENOENT))
+                aa_strerr_diefu3sys (ERR_IO, "load service: access(", satmp.s + l, ")");
+            else if (r == 0)
+            {
+                satmp.s[satmp.len - 5] = '\0';
+                load_service (satmp.s + l, data);
+            }
+        }
+        satmp.len = l;
+    }
+
     return 0;
 }
 
@@ -628,10 +690,18 @@ it_listdir (direntry *d, void *data)
 static int
 set_filter (const char *filter)
 {
+    /* type */
     if (str_equal (filter, "os") || str_equal (filter, "oneshot"))
-        filter_type = AA_TYPE_ONESHOT;
+        filter_type = FILTER_ONESHOT;
     else if (str_equal (filter, "lr") || str_equal (filter, "longrun"))
-        filter_type = AA_TYPE_LONGRUN;
+        filter_type = FILTER_LONGRUN;
+    else if (str_equal (filter, "all") || str_equal (filter, "os+lr+log"))
+        filter_type = FILTER_ALL;
+    else if (str_equal (filter, "log"))
+        filter_type = FILTER_LOG;
+    else if (str_equal (filter, "logged") || str_equal (filter, "lr+log"))
+        filter_type = FILTER_LOGGED;
+    /* status */
     else if (str_equal (filter, "up") || str_equal (filter, "start")
             || str_equal (filter, "started"))
         filter_status = FILTER_UP;
@@ -688,7 +758,7 @@ dieusage (int rc)
             " -l, --listdir DIR             Use DIR to list services to get status of\n"
             " -a, --all                     Show status of all services\n"
             " -f, --filter FILTER           Only process services matching FILTER, one of:\n"
-            "   oneshot, longrun, up, down, error   (see aa-status(1) for more)\n"
+            "   oneshot, longrun, log, logged, all, up, down, error   (see aa-status(1) for more)\n"
             " -s, --sort SORT               Sort by SORT, one of: none, name, time (default)\n"
             " -R, --reverse                 Reverse sort order\n"
             " -N, --name                    Sort by name\n"
