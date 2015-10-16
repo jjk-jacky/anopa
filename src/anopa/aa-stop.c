@@ -172,7 +172,7 @@ add_service (const char *name, void *data)
             if (aa_service (si)->st.code != ERR_NOT_UP)
             {
                 errno = EINVAL;
-                aa_strerr_diefu1sys (ERR_IO, "add service");
+                aa_strerr_diefu2sys (ERR_IO, "add service ", name);
             }
 
             if (!(mode & AA_MODE_IS_DRY))
