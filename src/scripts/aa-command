@@ -1,0 +1,49 @@
+#!@BINDIR@/execlineb
+#
+# anopa - Copyright (C) 2015 Olivier Brunel
+#
+# aa-command
+# Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+#
+# This file is part of anopa.
+#
+# anopa is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# anopa is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# anopa. If not, see http://www.gnu.org/licenses/
+#
+
+importas CMD 1
+shift
+elgetpositionals
+
+emptyenv s6-envdir /etc/anopa/env exec
+
+# Set up a pipe to log messages
+piperw 3 4
+background
+{
+    fdclose 4 fdmove 0 3
+    redirfd -a 1 /var/log/boot/current
+    fdmove -c 2 1
+    s6-tai64n
+}
+fdclose 3
+fdmove 2 4
+
+# log what we do
+foreground
+{
+    fdmove -c 1 2
+    aa-echo -B -- "Running: aa-${CMD}" " ${@}"
+}
+
+aa-${CMD} -D ${@}

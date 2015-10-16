@@ -1,0 +1,26 @@
+=head1 NAME
+
+aa-command - Helper to trigger one of anopa's commands
+
+=head1 SYNOPSIS
+
+B<aa-command> I<COMMAND> [I<ARG..>]
+
+=head1 DESCRIPTION
+
+B<aa-command>(1) is a simple B<execline> script that can be used to run one of
+anopa's command, ensuring proper environment and logging the output.
+
+That is, instead of running e.g. `aa-start -W foo bar` to start those two
+services (but not auto-start any "wants"), one could do:
+
+    aa-command start -W foo bar
+
+This would simply reset the environment to load it from I</etc/anopa/env> (much
+like what happens on boot, i.e. in the B<aa-stage*> scripts), set up a pipe on
+stderr to log things (timestamped via B<s6-tai64n>) by appending into
+I</var/log/boot/current>; then execute `B<aa-I<COMMAND>> -D I<ARG..>`
+
+As a result, the command runs with a clean/predictable environment, and in
+addition to the output showing on the terminal, it gets added to the log of the
+current boot (again, as per the B<aa-stage*> scripts).
