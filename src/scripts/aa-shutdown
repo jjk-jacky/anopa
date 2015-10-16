@@ -44,11 +44,24 @@ EOF
     exit 0
 }
 
-if [ $# -ne 1 ]; then
+cmd=
+case "${0##*/}" in
+    halt)
+        cmd=s
+        ;;
+    reboot)
+        cmd=r
+        ;;
+    poweroff)
+        cmd=p
+        ;;
+esac
+
+if [ $# -ne 1 ] && [ -z $cmd ]; then
     dieusage 1
 fi
 
-case $1 in
+case "$1" in
     -H|--halt)
         cmd=s
         ;;
@@ -65,7 +78,7 @@ case $1 in
         dieversion
         ;;
     *)
-        dieusage 1
+        [ -z cmd ] && dieusage 1
 esac
 
 exec s6-svscanctl -${cmd}b /run/services/.scandir

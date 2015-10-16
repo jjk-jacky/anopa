@@ -39,3 +39,13 @@ B<s6-svscan> (using B<s6-svscanctl>).
 
 It obviously expects it to be running (as PID 1) using I</run/services/.scandir>
 as its scandir.
+
+Additionally, if called as B<halt>, B<reboot> or B<poweroff> then it
+automatically defaults to the corresponding action. This allows to use symlinks
+by those names pointing to B<aa-shutdown>(1). Note that in this case:
+
+- An option isn't required; i.e. calling it as `reboot` will trigger the
+  reboot, as would `aa-shutdown --reboot` have done;
+
+- If an option is specified, it takes precedence. So calling it `reboot -p` will
+  power off the machine.
