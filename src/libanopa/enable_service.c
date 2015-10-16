@@ -154,8 +154,10 @@ clear_dir (const char *path, int excludes, aa_warn_fn warn_fn)
 
         if (d->d_type == DT_DIR)
         {
-            r = clear_dir (satmp.s + salen, 0, warn_fn);
-            if (r == 0)
+            int is_log = (str_equal (d->d_name, "log")) ? 1 : 0;
+
+            r = clear_dir (satmp.s + salen, is_log, warn_fn);
+            if (r == 0 && !is_log)
                 r = rmdir (satmp.s + salen);
         }
         else
