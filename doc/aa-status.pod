@@ -5,7 +5,7 @@ aa-status - Show status of services
 =head1 SYNOPSIS
 
 B<aa-status> [B<-D>] [B<-r> I<repodir>] [B<-a>] [B<-f> I<filter>] [B<-L>]
-[B<-n>] [B<-l> I<listdir>] [I<service...>]
+[B<-n>] [B<-l> I<listdir>] [B<-s> I<sort>] [B<-R>] [B<-N>] [I<service...>]
 
 =head1 OPTIONS
 
@@ -45,14 +45,35 @@ I</etc/anopa/listdirs/>
 Show statuses as a list, with one service per line, elipsizing service name
 and/or status if needed.
 
+=item B<-N, --name>
+
+Sort services by name. Default is by time, see B<--sort> for more.
+
 =item B<-n, --dry-list>
 
 Only show service names, one per line.
+
+=item B<-R, --reverse>
+
+Reverse sort order.
 
 =item B<-r, --repodir> I<dir>
 
 Use I<dir> as repository directory. This is where servicedirs will be looked
 for.
+
+=item B<-s, --sort> I<sort>
+
+Sort services according to I<sort>, which can be one of:
+
+- I<name> : to sort by names. Can use B<--name> as an alias.
+
+- I<time> : to sort by times, i.e. the timestamp of the last event for the
+  service; This can be e.g. when it was started, failed to, or got ready. This
+  is the default sort order.
+
+- I<none> : do not sort services. Order will be the one in which they were
+  processed.
 
 =item B<-V, --version>
 

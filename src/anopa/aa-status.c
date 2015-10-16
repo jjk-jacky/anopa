@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <skalibs/bytestr.h>
@@ -37,6 +38,7 @@
 #include <skalibs/stralloc.h>
 #include <skalibs/uint.h>
 #include <skalibs/djbtime.h>
+#include <skalibs/tai.h>
 #include <skalibs/sig.h>
 #include <skalibs/error.h>
 #include <s6/s6-supervise.h>
@@ -80,10 +82,17 @@ enum
     FILTER_ERROR
 };
 
+enum
+{
+    SORT_ASC,
+    SORT_DESC
+};
+
 static genalloc ga_serv = GENALLOC_ZERO;
 
 static unsigned int filter_type = AA_TYPE_UNKNOWN;
 static unsigned int filter_status = FILTER_NONE;
+static unsigned int sort_order = SORT_ASC;
 
 static int put_s_max (const char *s, int max, int pad);
 
@@ -641,6 +650,35 @@ set_filter (const char *filter)
     return 1;
 }
 
+static int
+cmp_serv_name (const void *_serv1, const void *_serv2)
+{
+    const struct serv *serv1 = _serv1;
+    const struct serv *serv2 = _serv2;
+    int r;
+
+    r = strcmp (aa_service_name (aa_service (serv1->si)),
+            aa_service_name (aa_service (serv2->si)));
+    return (sort_order == SORT_ASC) ? r : -r;
+}
+
+static int
+cmp_serv_stamp (const void *_serv1, const void *_serv2)
+{
+    const struct serv *serv1 = _serv1;
+    const struct serv *serv2 = _serv2;
+    int r;
+
+    if (!serv1->is_s6 && aa_service (serv1->si)->st.event == AA_EVT_NONE)
+        r = (!serv2->is_s6 && aa_service (serv2->si)->st.event == AA_EVT_NONE) ? 0 : -1;
+    else if (!serv2->is_s6 && aa_service (serv2->si)->st.event == AA_EVT_NONE)
+        r = 1;
+    else
+        r = (tain_less (&serv1->stamp, &serv2->stamp) != 0) ? -1 : 1;
+
+    return (sort_order == SORT_ASC) ? r : -r;
+}
+
 static void
 dieusage (int rc)
 {
@@ -651,6 +689,9 @@ dieusage (int rc)
             " -a, --all                     Show status of all services\n"
             " -f, --filter FILTER           Only process services matching FILTER, one of:\n"
             "   oneshot, longrun, up, down, error   (see aa-status(1) for more)\n"
+            " -s, --sort SORT               Sort by SORT, one of: none, name, time (default)\n"
+            " -R, --reverse                 Reverse sort order\n"
+            " -N, --name                    Sort by name\n"
             " -L, --list                    Show statuses as one-liners list\n"
             " -n, --dry-list                Only show service names\n"
             " -h, --help                    Show this help screen and exit\n"
@@ -665,6 +706,7 @@ main (int argc, char * const argv[])
     const char *path_repo = "/run/services";
     const char *path_list = NULL;
     struct config cfg = { 0, };
+    int (*sort_fn) (const void *, const void *) = cmp_serv_stamp;
     int all = 0;
     int i;
     int r;
@@ -678,14 +720,17 @@ main (int argc, char * const argv[])
             { "help",               no_argument,        NULL,   'h' },
             { "listdir",            required_argument,  NULL,   'l' },
             { "list",               no_argument,        NULL,   'L' },
+            { "name",               no_argument,        NULL,   'N' },
             { "dry-list",           no_argument,        NULL,   'n' },
+            { "reverse",            no_argument,        NULL,   'R' },
             { "repodir",            required_argument,  NULL,   'r' },
+            { "sort",               required_argument,  NULL,   's' },
             { "version",            no_argument,        NULL,   'V' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "aDf:hl:Lnr:V", longopts, NULL);
+        c = getopt_long (argc, argv, "aDf:hl:LNnRr:s:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -715,13 +760,35 @@ main (int argc, char * const argv[])
                 cfg.mode = MODE_LIST;
                 break;
 
+            case 'N':
+                sort_fn = cmp_serv_name;
+                break;
+
             case 'n':
                 cfg.mode = MODE_DRY_LIST;
+                break;
+
+            case 'R':
+                sort_order = SORT_DESC;
                 break;
 
             case 'r':
                 unslash (optarg);
                 path_repo = optarg;
+                break;
+
+            case 's':
+                if (str_equal (optarg, "none"))
+                    sort_fn = NULL;
+                else if (str_equal (optarg, "name"))
+                    sort_fn = cmp_serv_name;
+                else if (str_equal (optarg, "time"))
+                    sort_fn = cmp_serv_stamp;
+                else
+                {
+                    errno = EINVAL;
+                    aa_strerr_diefu3sys (1, "set sort order '", optarg, "'");
+                }
                 break;
 
             case 'V':
@@ -789,6 +856,10 @@ main (int argc, char * const argv[])
             }
             else
                 load_service (argv[i], &cfg);
+
+    if (sort_fn)
+        qsort (genalloc_s(struct serv, &ga_serv), genalloc_len (struct serv, &ga_serv),
+                sizeof (struct serv), sort_fn);
 
     for (i = 0; i < genalloc_len (struct serv, &ga_serv); ++i)
         status_service (&genalloc_s (struct serv, &ga_serv)[i], &cfg);
