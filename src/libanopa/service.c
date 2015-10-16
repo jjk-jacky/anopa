@@ -249,6 +249,12 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf
                 chk_st = 0;
                 is_up = st6.pid && !st6.flagfinishing;
             }
+            else if (errno != ENOENT)
+            {
+                /* most likely a permission error on supervise folder */
+                r = -ERR_IO;
+                goto err;
+            }
             tain_now_g ();
         }
 
