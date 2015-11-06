@@ -65,6 +65,7 @@ static int nb_enabled = 0;
 static genalloc ga_failed = GENALLOC_ZERO;
 static genalloc ga_next = GENALLOC_ZERO;
 static const char *skip = NULL;
+static int quiet = 0;
 
 static void
 warn_cb (const char *name, int err)
@@ -146,6 +147,24 @@ process:
         return -1;
     }
 
+    if (!quiet)
+    {
+        aa_bs_noflush (AA_OUT, "Enabled: ");
+        aa_bs_noflush (AA_OUT, cur_name);
+        aa_bs_flush (AA_OUT, "\n");
+    }
+
+    if (r > 0)
+    {
+        if (!quiet)
+        {
+            aa_bs_noflush (AA_OUT, "Enabled: ");
+            aa_bs_noflush (AA_OUT, cur_name);
+            aa_bs_flush (AA_OUT, "/log\n");
+        }
+        ++nb_enabled;
+    }
+
     ++nb_enabled;
     cur_name = NULL;
     return 0;
@@ -188,6 +207,7 @@ dieusage (int rc)
             " -N, --no-needs                Don't auto-enable services from 'needs'\n"
             " -W, --no-wants                Don't auto-enable services from 'wants'\n"
             "     --no-supervise            Don't create supervise folders for longruns\n"
+            " -q, --quiet                   Don't print enabled services\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -220,6 +240,7 @@ main (int argc, char * const argv[])
             { "skip-down",          required_argument,  NULL,   'k' },
             { "listdir",            required_argument,  NULL,   'l' },
             { "no-needs",           no_argument,        NULL,   'N' },
+            { "quiet",              no_argument,        NULL,   'q' },
             { "repodir",            required_argument,  NULL,   'r' },
             { "reset-source",       required_argument,  NULL,   'S' },
             { "source",             required_argument,  NULL,   's' },
@@ -231,7 +252,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "c:Df:hk:l:Nr:S:s:uVW", longopts, NULL);
+        c = getopt_long (argc, argv, "c:Df:hk:l:Nqr:S:s:uVW", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -262,6 +283,10 @@ main (int argc, char * const argv[])
 
             case 'N':
                 flags &= ~AA_FLAG_AUTO_ENABLE_NEEDS;
+                break;
+
+            case 'q':
+                quiet = 1;
                 break;
 
             case 'r':

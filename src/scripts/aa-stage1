@@ -44,7 +44,7 @@ umask 022
 
 # Create the repository
 foreground { emptyenv -c
-aa-enable -Dl /etc/anopa/enabled -k uncaught-logs -f @LIBEXECDIR@/aa-stage3 }
+aa-enable -Dql /etc/anopa/enabled -k uncaught-logs -f @LIBEXECDIR@/aa-stage3 }
 
 # Make sure the FIFO needed for the switch to stage 2 is there
 ifelse -X -n { aa-test -Dp /run/services/.scandir/uncaught-logs/fifo }
