@@ -654,8 +654,6 @@ aa_enable_service (const char       *_name,
     /* if name is a /path/to/file we get the actual/service name */
     if (*name == '/')
     {
-        int r;
-
         if (l_name == 1)
             return -ERR_INVALID_NAME;
         r = byte_rchr (name, l_name, '/') + 1;
