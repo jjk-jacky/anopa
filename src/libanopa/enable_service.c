@@ -213,7 +213,8 @@ copy_dir (const char        *src,
         unsigned int run   : 1;
         unsigned int down  : 1;
         unsigned int began : 1;
-    } has = { .run = 0, .down = 0, .began = 0 };
+        unsigned int log   : 1;
+    } has = { .run = 0, .down = 0, .began = 0, .log = 0 };
 
     dir = opendir (src);
     if (!dir)
@@ -342,6 +343,8 @@ copy_dir (const char        *src,
                         && str_equal (satmp.s + i, "log"))
                 {
                     r = copy_log (dst, NULL, 0, warn_fn, flags, ae_cb);
+                    if (r == 0)
+                        has.log = 1;
                     st.st_mode = 0755;
                 }
                 else if ((flags & _AA_FLAG_IS_CONFIGDIR) && len > 1
@@ -382,7 +385,11 @@ copy_dir (const char        *src,
             {
                 if (has.began && depth == 0 && !(flags & _AA_FLAG_IS_LOGGER)
                         && str_equal (satmp.s + i, "log"))
+                {
                     r = copy_log (dst, buf_src, st.st_mode, warn_fn, flags, ae_cb);
+                    if (r == 0)
+                        has.log = 1;
+                }
                 else
                 {
                     /* use depth because this is also enabled for the config part */
@@ -498,7 +505,7 @@ next:
     }
 
     satmp.len = l_satmp;
-    return 0;
+    return (int) has.log;
 
 err:
     satmp.len = l_satmp;
@@ -554,22 +561,13 @@ copy_from_source (const char        *name,
         else if (!S_ISDIR (st.st_mode))
             warn_fn (buf, ENOTDIR);
         else
-        {
-            int r;
-
-            r = copy_dir (buf, name, st.st_mode, 0, warn_fn, flags, ae_cb,
+            return copy_dir (buf, name, st.st_mode, 0, warn_fn, flags, ae_cb,
                     (name[len - 1] == '@') ? name + len : NULL);
-            if (r < 0)
-                return r;
-            break;
-        }
 
         i += l_sce + 1;
         if (i > aa_sa_sources.len)
             return -ERR_UNKNOWN;
     }
-
-    return 0;
 }
 
 static int
@@ -649,6 +647,7 @@ aa_enable_service (const char       *_name,
     mode_t _mode = 0; /* silence warning */
     int l_name = strlen (name);
     int len;
+    int has_log = 0;
     int r;
 
     /* if name is a /path/to/file we get the actual/service name */
@@ -690,14 +689,19 @@ aa_enable_service (const char       *_name,
     r = copy_from_source (name, len, warn_fn, flags | _AA_FLAG_IS_SERVICEDIR, ae_cb);
     if (r < 0)
         return r;
+    else if (r > 0)
+        has_log = 1;
 
     if (name != _name)
     {
         r = copy_dir (_name, name, _mode, 0, warn_fn, flags | _AA_FLAG_IS_CONFIGDIR, ae_cb, instance);
         if (r < 0)
             return r;
+        else if (r > 0)
+            has_log = 1;
     }
 
+    if (has_log)
     {
         int l = sizeof ("/log/run-args");
         char buf[l_name + l];
@@ -725,5 +729,5 @@ aa_enable_service (const char       *_name,
     if (ae_cb && flags & (AA_FLAG_AUTO_ENABLE_NEEDS | AA_FLAG_AUTO_ENABLE_WANTS))
         r = do_auto_needs_wants (name, flags, ae_cb);
 
-    return r;
+    return (r >= 0) ? has_log : r;
 }
