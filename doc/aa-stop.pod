@@ -5,7 +5,7 @@ aa-stop - Stop services
 =head1 SYNOPSIS
 
 B<aa-stop> [B<-D>] [B<-r> I<repodir>] [B<-l> I<listdir>] [B<-a>]
-[B<-k> I<service>] [B<-t> I<timeout>] [B<-n>] [I<service...>]
+[B<-k> I<service>] [B<-t> I<timeout>] [B<-n>] [B<-v>] [I<service...>]
 
 =head1 OPTIONS
 
@@ -66,6 +66,18 @@ Timeout can also be set in service in a file I<timeout> in its servicedir.
 =item B<-V, --version>
 
 Show version information and exit.
+
+=item B<-v, --verbose>
+
+Print auto-added dependencies (from "needs").  Note that dependencies are
+"reversed" here, i.e. if foo needs bar, B<aa-stop>(1) will print "bar needs foo"
+as to indicate that stopping bar needs to (first) stop foo.
+
+Also note that this will always print dependencies for all started services,
+whether or not they'll apply to the requested operation.
+
+This will be printed on stdout unless B<--dry-list> was used, then it goes to
+stderr.
 
 =back
 

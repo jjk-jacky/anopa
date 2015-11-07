@@ -55,6 +55,7 @@ static genalloc ga_unknown = GENALLOC_ZERO;
 static genalloc ga_depend = GENALLOC_ZERO;
 static genalloc ga_io = GENALLOC_ZERO;
 static aa_mode mode = AA_MODE_STOP;
+static int verbose = 0;
 static int rc = 0;
 static const char *skip = NULL;
 
@@ -62,6 +63,18 @@ void
 check_essential (int si)
 {
     /* required by start-stop.c; only used by aa-start.c */
+}
+
+static void
+autoload_cb (int si, aa_al al, const char *name, int err)
+{
+    int aa = (mode & AA_MODE_IS_DRY) ? AA_ERR : AA_OUT;
+
+    aa_bs_noflush (aa, "auto-add: ");
+    aa_bs_noflush (aa, aa_service_name (aa_service (si)));
+    aa_bs_noflush (aa, " needs ");
+    aa_bs_noflush (aa, name);
+    aa_bs_flush (aa, "\n");
 }
 
 static int
@@ -78,7 +91,7 @@ preload_service (const char *name)
     if (type < 0)
         r = type;
     else
-        r = aa_ensure_service_loaded (si, AA_MODE_STOP, 0, NULL);
+        r = aa_ensure_service_loaded (si, AA_MODE_STOP, 0, (verbose) ? autoload_cb : NULL);
     if (r < 0)
     {
         /* there shouldn't be much errors possible here... basically only ERR_IO
@@ -258,6 +271,7 @@ dieusage (int rc)
             " -t, --timeout SECS            Use SECS seconds as default timeout\n"
             " -a, --all                     Stop all running services\n"
             " -n, --dry-list                Only show service names (don't stop anything)\n"
+            " -v, --verbose                 Print auto-added dependencies\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -290,11 +304,12 @@ main (int argc, char * const argv[])
             { "repodir",            required_argument,  NULL,   'r' },
             { "timeout",            required_argument,  NULL,   't' },
             { "version",            no_argument,        NULL,   'V' },
+            { "verbose",            no_argument,        NULL,   'v' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "aDhk:l:nr:t:V", longopts, NULL);
+        c = getopt_long (argc, argv, "aDhk:l:nr:t:Vv", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -335,6 +350,10 @@ main (int argc, char * const argv[])
 
             case 'V':
                 aa_die_version ();
+
+            case 'v':
+                verbose = 1;
+                break;
 
             default:
                 dieusage (1);

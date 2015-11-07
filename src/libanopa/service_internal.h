@@ -34,7 +34,7 @@ struct it_data
     aa_mode mode;
     int si;
     int no_wants;
-    aa_load_fail_cb lf_cb;
+    aa_autoload_cb al_cb;
 };
 
 extern int _is_valid_service_name (const char *name, int len);

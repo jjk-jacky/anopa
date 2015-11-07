@@ -5,7 +5,7 @@ aa-start - Start services
 =head1 SYNOPSIS
 
 B<aa-start> [B<-D>] [B<-r> I<repodir>] [B<-l> I<listdir>] [B<-W>]
-[B<-t> I<timeout>] [B<-n>] [I<service...>]
+[B<-t> I<timeout>] [B<-n>] [B<-v>] [I<service...>]
 
 =head1 OPTIONS
 
@@ -50,6 +50,15 @@ Timeout can also be set in service in a file I<timeout> in its servicedir.
 =item B<-V, --version>
 
 Show version information and exit.
+
+=item B<-v, --verbose>
+
+Print auto-added dependencies (from "needs" and "wants"). Note that due to
+recursion they'll be printed in reverse order, e.g. "B needs C" then "A needs B"
+when starting A.
+
+This will be printed on stdout unless B<--dry-list> was used, then it goes to
+stderr.
 
 =item B<-W, --no-wants>
 

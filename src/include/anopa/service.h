@@ -62,9 +62,9 @@ typedef enum
 
 typedef enum
 {
-    AA_LOADFAIL_NEEDS = 0,
-    AA_LOADFAIL_WANTS,
-} aa_lf;
+    AA_AUTOLOAD_NEEDS = 0,
+    AA_AUTOLOAD_WANTS,
+} aa_al;
 
 typedef enum
 {
@@ -99,7 +99,7 @@ typedef struct
 } aa_service;
 
 typedef void (*aa_close_fd_fn) (int fd);
-typedef void (*aa_load_fail_cb) (int si, aa_lf lf, const char *name, int err);
+typedef void (*aa_autoload_cb) (int si, aa_al al, const char *name, int err);
 typedef void (*aa_prepare_cb) (int si, int si_next, int is_needs, int first);
 typedef void (*aa_scan_cb) (int si, int sni);
 typedef void (*aa_exec_cb) (int si, aa_evt evt, pid_t pid);
@@ -108,9 +108,9 @@ extern void aa_free_services (aa_close_fd_fn close_fd_fn);
 extern int  aa_add_name (const char *name);
 extern int  aa_get_service (const char *name, int *si, int new_in_main);
 extern void aa_unmark_service (int si);
-extern int  aa_mark_service (aa_mode mode, int si, int in_main, int no_wants, aa_load_fail_cb lf_cb);
+extern int  aa_mark_service (aa_mode mode, int si, int in_main, int no_wants, aa_autoload_cb al_cb);
 extern int  aa_preload_service (int si);
-extern int  aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf_cb);
+extern int  aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_autoload_cb al_cb);
 extern int  aa_prepare_mainlist (aa_prepare_cb prepare_cb, aa_exec_cb exec_cb);
 extern void aa_scan_mainlist (aa_scan_cb scan_cb, aa_mode mode);
 extern int  aa_exec_service (int si, aa_mode mode);

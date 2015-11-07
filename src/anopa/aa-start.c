@@ -66,6 +66,7 @@ static genalloc ga_unknown = GENALLOC_ZERO;
 static genalloc ga_io = GENALLOC_ZERO;
 static aa_mode mode = AA_MODE_START;
 static int no_wants = 0;
+static int verbose = 0;
 static int rc = 0;
 
 void
@@ -97,9 +98,20 @@ check_essential (int si)
 }
 
 static void
-load_fail_cb (int si, aa_lf lf, const char *name, int err)
+autoload_cb (int si, aa_al al, const char *name, int err)
 {
-    if (lf == AA_LOADFAIL_WANTS)
+    if (verbose)
+    {
+        int aa = (mode & AA_MODE_IS_DRY) ? AA_ERR : AA_OUT;
+
+        aa_bs_noflush (aa, "auto-add: ");
+        aa_bs_noflush (aa, aa_service_name (aa_service (si)));
+        aa_bs_noflush (aa, (al == AA_AUTOLOAD_NEEDS) ? " needs " : " wants ");
+        aa_bs_noflush (aa, name);
+        aa_bs_flush (aa, "\n");
+    }
+
+    if (al == AA_AUTOLOAD_WANTS && err > 0)
     {
         put_warn (aa_service_name (aa_service (si)), "Skipping wanted service ", 0);
         add_warn (name);
@@ -121,7 +133,7 @@ add_service (const char *name, void *data)
     if (type < 0)
         r = type;
     else
-        r = aa_mark_service (mode, si, type == AA_SERVICE_FROM_MAIN, no_wants, load_fail_cb);
+        r = aa_mark_service (mode, si, type == AA_SERVICE_FROM_MAIN, no_wants, autoload_cb);
     if (r < 0)
     {
         if (r == -ERR_UNKNOWN)
@@ -218,6 +230,7 @@ dieusage (int rc)
             " -W, --no-wants                Don't auto-start services from 'wants'\n"
             " -t, --timeout SECS            Use SECS seconds as default timeout\n"
             " -n, --dry-list                Only show service names (don't start anything)\n"
+            " -v, --verbose                 Print auto-added dependencies\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -248,12 +261,13 @@ main (int argc, char * const argv[])
             { "repodir",            required_argument,  NULL,   'r' },
             { "timeout",            required_argument,  NULL,   't' },
             { "version",            no_argument,        NULL,   'V' },
+            { "verbose",            no_argument,        NULL,   'v' },
             { "no-wants",           no_argument,        NULL,   'W' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "Dhl:nr:t:VW", longopts, NULL);
+        c = getopt_long (argc, argv, "Dhl:nr:t:VvW", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -289,6 +303,10 @@ main (int argc, char * const argv[])
 
             case 'V':
                 aa_die_version ();
+
+            case 'v':
+                verbose = 1;
+                break;
 
             case 'W':
                 no_wants = 1;

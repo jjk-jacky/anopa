@@ -36,6 +36,9 @@ _name_stop_needs (const char *name, struct it_data *it_data)
     if (r < 0)
         return 0;
 
+    if (it_data->al_cb)
+        it_data->al_cb (sni, AA_AUTOLOAD_NEEDS, aa_service_name (aa_service (it_data->si)), 0);
+
     add_to_list (&aa_service (sni)->needs, it_data->si, 0);
     add_to_list (&aa_service (sni)->after, it_data->si, 1);
     return 0;

@@ -212,14 +212,14 @@ aa_preload_service (int si)
 }
 
 int
-aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_load_fail_cb lf_cb)
+aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_autoload_cb al_cb)
 {
     stralloc sa = STRALLOC_ZERO;
     struct it_data it_data = {
         .mode = mode,
         .si = si,
         .no_wants = no_wants,
-        .lf_cb = lf_cb
+        .al_cb = al_cb
     };
     int r;
 

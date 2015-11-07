@@ -47,11 +47,11 @@ aa_unmark_service (int si)
 }
 
 int
-aa_mark_service (aa_mode mode, int si, int in_main, int no_wants, aa_load_fail_cb lf_cb)
+aa_mark_service (aa_mode mode, int si, int in_main, int no_wants, aa_autoload_cb al_cb)
 {
     int r;
 
-    r = aa_ensure_service_loaded (si, mode, no_wants, lf_cb);
+    r = aa_ensure_service_loaded (si, mode, no_wants, al_cb);
     if (r < 0)
     {
         if (in_main)
@@ -85,7 +85,7 @@ _name_start_needs (const char *name, struct it_data *it_data)
         r = type;
     else
         r = aa_mark_service (it_data->mode, sni, type == AA_SERVICE_FROM_MAIN,
-                it_data->no_wants, it_data->lf_cb);
+                it_data->no_wants, it_data->al_cb);
     if (r == -ERR_ALREADY_UP)
         return 0;
     else if (r < 0)
@@ -112,15 +112,19 @@ _name_start_needs (const char *name, struct it_data *it_data)
                 aa_strerr_warnu2sys ("write service status file for ", aa_service_name (s));
         }
 
-        if (it_data->lf_cb)
-            it_data->lf_cb (it_data->si, AA_LOADFAIL_NEEDS, name, -r);
-
-        return -ERR_DEPEND;
+        r = -ERR_DEPEND;
     }
 
-    add_to_list (&aa_service (it_data->si)->needs, sni, 0);
-    add_to_list (&aa_service (it_data->si)->after, sni, 1);
-    return 0;
+    if (r == 0)
+    {
+        add_to_list (&aa_service (it_data->si)->needs, sni, 0);
+        add_to_list (&aa_service (it_data->si)->after, sni, 1);
+    }
+
+    if (it_data->al_cb)
+        it_data->al_cb (it_data->si, AA_AUTOLOAD_NEEDS, name, -r);
+
+    return r;
 }
 
 int
@@ -143,18 +147,17 @@ _it_start_wants (direntry *d, void *data)
         r = type;
     else
         r = aa_mark_service (it_data->mode, swi, type == AA_SERVICE_FROM_MAIN,
-                it_data->no_wants, it_data->lf_cb);
+                it_data->no_wants, it_data->al_cb);
     if (r == -ERR_ALREADY_UP)
         return 0;
-    if (r < 0)
-    {
-        if (it_data->lf_cb)
-            it_data->lf_cb (it_data->si, AA_LOADFAIL_WANTS, d->d_name, -r);
-        return r;
-    }
 
-    add_to_list (&aa_service (it_data->si)->wants, swi, 0);
-    return 0;
+    if (r == 0)
+        add_to_list (&aa_service (it_data->si)->wants, swi, 0);
+
+    if (it_data->al_cb)
+        it_data->al_cb (it_data->si, AA_AUTOLOAD_WANTS, d->d_name, -r);
+
+    return r;
 }
 
 int
