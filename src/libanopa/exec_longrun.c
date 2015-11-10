@@ -160,7 +160,7 @@ _exec_longrun (int si, aa_mode mode)
     if (already)
     {
         if (_exec_cb)
-            _exec_cb (si, (is_start) ? -ERR_ALREADY_UP: -ERR_NOT_UP, 0);
+            _exec_cb (si, (is_start) ? -ERR_ALREADY_UP : -ERR_NOT_UP, 0);
 
         /* this was not a failure, but we return -1 to trigger a
          * aa_scan_mainlist() anyways, since the service changed state */
