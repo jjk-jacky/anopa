@@ -76,10 +76,13 @@ _exec_longrun (int si, aa_mode mode)
     {
         tain_now_g ();
 
-        already = 1;
-        /* already there; unsubcribe */
-        ftrigr_unsubscribe_g (&_aa_ft, s->ft_id, &deadline);
-        s->ft_id = 0;
+        if (!is_start || !s->gets_ready || st6.flagready)
+        {
+            already = 1;
+            /* already there; unsubcribe */
+            ftrigr_unsubscribe_g (&_aa_ft, s->ft_id, &deadline);
+            s->ft_id = 0;
+        }
 
         /* make sure our status is correct, and timestamped before s6 */
         s->st.event = (is_start) ? AA_EVT_STARTING : AA_EVT_STOPPING;
@@ -97,6 +100,18 @@ _exec_longrun (int si, aa_mode mode)
          * happening right now. Also in STOP_ALL this sends the 'x' event to
          * s6-supervise as needed as well.
          */
+
+        if (is_start && s->gets_ready)
+            /* However, on START sending the command is possibly problematic
+             * regarding (externally set) readiness.
+             * E.g. if the service is ready, and readiness was set externally
+             * (e.g. via aa-setready) it would result in said readiness being
+             * "lost" when s6-supervise rewrites the status file.
+             * Similarly, if readiness was originally set via s6-supervise
+             * (notification-fd) and then unset externally, it could come back
+             * if s6-supervise was to rewrite the status file.
+             */
+            event = NULL;
     }
     else
     {
@@ -117,6 +132,7 @@ _exec_longrun (int si, aa_mode mode)
         }
     }
 
+    if (event)
     {
         char dir[l_sn + 1 + sizeof (S6_SUPERVISE_CTLDIR) + 8];
         int r;

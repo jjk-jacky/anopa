@@ -963,11 +963,23 @@ exec_cb (int si, aa_evt evt, pid_t pid)
         /* ugly hack thing; see aa_exec_service() */
         case 0:
             clear_draw ();
-            if (!(pid & AA_MODE_IS_DRY))
-                aa_bs_noflush (AA_OUT,
-                        (pid & AA_MODE_START) ? "Starting " : "Stopping ");
-            aa_bs_noflush (AA_OUT, aa_service_name (aa_service (si)));
-            aa_bs_flush (AA_OUT, (pid & AA_MODE_IS_DRY) ? "\n" : "...\n");
+            if ((pid & AA_MODE_START) && !(pid & AA_MODE_IS_DRY)
+                    /* see aa_ensure_service_loaded() for more */
+                    && s->st.type == AA_TYPE_LONGRUN
+                    && s->gets_ready
+                    && s->st.code == ERR_ALREADY_UP)
+            {
+                aa_bs_noflush (AA_OUT, aa_service_name (s));
+                aa_bs_flush (AA_OUT, ": Getting ready...\n");
+            }
+            else
+            {
+                if (!(pid & AA_MODE_IS_DRY))
+                    aa_bs_noflush (AA_OUT,
+                            (pid & AA_MODE_START) ? "Starting " : "Stopping ");
+                aa_bs_noflush (AA_OUT, aa_service_name (aa_service (si)));
+                aa_bs_flush (AA_OUT, (pid & AA_MODE_IS_DRY) ? "\n" : "...\n");
+            }
             break;
 
         case AA_EVT_STARTING:

@@ -248,6 +248,8 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_autoload_cb al_
             {
                 chk_st = 0;
                 is_up = st6.pid && !st6.flagfinishing;
+                if (is_up && aa_service (si)->gets_ready && st6.flagready)
+                    is_up = 2;
             }
             else if (errno != ENOENT)
             {
@@ -267,15 +269,27 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_autoload_cb al_
          * the right state, so skip that bit then */
         if (!(mode & AA_MODE_IS_DRY_FULL))
         {
-            if ((mode & AA_MODE_START) && is_up)
+            if (mode & AA_MODE_START)
             {
-                /* if already good, we "fail" because there's no need to load the
-                 * service, it's already good. This error will be silently ignored
-                 * */
-                aa_service (si)->ls = AA_LOAD_FAIL;
-                /* this isn't actually true, but we won't save it to file */
-                svst->code = ERR_ALREADY_UP;
-                return -ERR_ALREADY_UP;
+                /* if it is a longrun w/ readiness support that isn't yet ready,
+                 * we load the service to add it to the "transaction" since
+                 * we'll need to wait for its readyness.
+                 * We set the code to 0 or ERR_ALREADY_UP to indicate whether it
+                 * was alreayd up or not, so when starting it (in exec_cb) it
+                 * can actually be said "Starting" or "Getting ready" as needed.
+                 */
+                if (svst->type == AA_TYPE_LONGRUN && aa_service (si)->gets_ready && is_up < 2)
+                    svst->code = (is_up == 1) ? ERR_ALREADY_UP : 0;
+                else if (is_up)
+                {
+                    /* if already good, we "fail" because there's no need to
+                     * load the service, it's already good. This error will be
+                     * silently ignored */
+                    aa_service (si)->ls = AA_LOAD_FAIL;
+                    /* this isn't actually true, but we won't save it to file */
+                    svst->code = ERR_ALREADY_UP;
+                    return -ERR_ALREADY_UP;
+                }
             }
             else if ((mode & (AA_MODE_STOP | AA_MODE_STOP_ALL)) && !is_up)
             {
