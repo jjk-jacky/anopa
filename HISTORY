@@ -1,4 +1,60 @@
 
+# 2015-11-14, v0.3.0
+
+ +  start/stop: Don't need root rights for --dry-list
+
+ !  tty: Fix possibly printing garbage; Thanks to John O'Meara
+
++++ Add helper command, to easily get clean environment & logged output
+
++++ enable: Create "supervise" folders w/ perms 0711 - This allows to read the
+    s6 status file even as a user, the file itself being world-readble. Allows
+    e.g. proper/full use of aa-status as a user.
+    One can use --no-supervise to disable it.
+
+ +  shutdown: Check argv[0] for use via symlinks, so one can use symlinks
+    "halt", "reboot" and "poweroff" to use this.
+    Can help make things easier, and more "compatible" with sysvinit.
+
+ !  Fix not always reporting an error when loading a service
+    This could manifest e.g. when aa-status couldn't read the s6 status file
+    (permission denied), and would just silently ignore the error/service.
+
++++ status: Add --sort (also --name & --reverse); Services are now sorted by
+    time by default.
+
+!!! enable: Fix deleting "log" with --upgrade; When clearing the servicedir
+    during an upgrade, the folder "log" (i.e. the logger) was removed; It is now
+    properly treated.
+
++++ Add (better) support of loggers. Now */log servicedirs are processed as
+    regular servicedirs, supporting dependencies and such. Additionally, any
+    longrun with a logger will have a dependency ("needs") on said logger
+    auto-added.
+
+    Before, they were autostarted by s6-svscan (no down file was set) and
+    expected to always be up. They're now processed as usual, so starting foobar
+    will first need to start foobar/log as expected.
+
+    aa-status has more filters to deal with loggers properly.
+
+ *  enable: Count loggers as well
+
+*** enable: Print enabled services; Add --quiet not to
+
+ +  start/stop: Add --verbose
+
+ !  start: Fix handling already up but not ready services
+    If a service that supports readiness was already up but not yet ready, it
+    would be "ignored" (as "Already up"). We now properly include it in the
+    "transaction" and wait for it to become ready; "Already up" only applying
+    when ready.
+
++++ Bump build requirement to skalibs 2.3.8.0
+
+ !  Plus a few (other) fixes; see git log for details
+
+
 # 2015-08-10, v0.2.0
 
  +  Add aa-tty, small tool to print the device name of the active tty
