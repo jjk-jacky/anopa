@@ -11,9 +11,13 @@ B<aa-stage1>
 B<aa-stage1>(1) is an B<execline> script meant to be used as I<init> for the
 system.
 
-It loads the environment from I</etc/anopa/env> (via B<s6-envdir>), and will log
-messages into file I</run/initramfs/boot.log>, prefixing them with a TAI
-timestamp via B<s6-tai64n>.
+It loads the environment from I</etc/anopa/env> (via B<s6-envdir>), and first
+checks if a file I</run/initramfs/boot.log> exists, and if so imports its
+content into I</var/log/boot/current> (This is aimed to import log messages from
+the initramfs, as e.g. B<aa-stage0>(1) generates them.)
+
+It will log its own messages into file I</var/log/boot/current>, prefixing them
+with a TAI timestamp via B<s6-tai64n>.
 
 It doesn't do much in itself, the bulk of the work being done via services. It
 will create the runtime repository I</run/services> using B<aa-enable>(1) and

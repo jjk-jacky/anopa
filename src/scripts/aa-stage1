@@ -23,12 +23,18 @@
 
 @BINDIR@/emptyenv @BINDIR@/s6-envdir /etc/anopa/env @BINDIR@/exec
 
+# Import log messages from initramfs, if possible
+foreground {
+    if -X { aa-test -f /run/initramfs/boot.log }
+    redirfd -a 1 /var/log/boot/current cat /run/initramfs/boot.log
+}
+
 # Set up a pipe to log messages
 piperw 3 4
 background
 {
     fdclose 4 fdmove 0 3
-    redirfd -a 1 /run/initramfs/boot.log
+    redirfd -a 1 /var/log/boot/current
     fdmove -c 2 1
     s6-tai64n
 }

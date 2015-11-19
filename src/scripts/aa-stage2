@@ -26,7 +26,7 @@ piperw 3 4
 background
 {
   fdclose 4 fdmove 0 3
-  redirfd -a 1 /run/initramfs/boot.log
+  redirfd -a 1 /var/log/boot/current
   fdmove -c 2 1
   s6-tai64n
 }
@@ -49,17 +49,7 @@ if -n -t
   # This is so Ctrl+C will trigger a SIGINT to aa-start, so one can manually
   # timeout a service.
   if { emptyenv -c s6-setsid aa-ctty -D aa-start -D -l /etc/anopa/listdirs/${LISTDIR} }
-  foreground { aa-echo -DB "System ready." }
-  # close logger
-  fdmove -c 2 1
-  # no more input
-  redirfd -r 0 /dev/null
-  # move log to file system
-  if -n -t { aa-mvlog /run/initramfs/boot.log /var/log/boot }
-  # show (& log) a warning
-  pipeline { aa-echo -DBw "Failed to save /run/initramfs/boot.log to /var/log/boot" }
-  redirfd -a 1 /run/initramfs/boot.log
-  s6-tai64n
+  aa-echo -DB "System ready."
 }
 
 # Something went wrong, likely aa-start failed (i.e. an essential service failed

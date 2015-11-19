@@ -12,7 +12,7 @@ B<aa-stage2>(1) is an B<execline> script called by B<aa-stage1> once the runtime
 repository has been created and B<s6-svscan> is running as PID 1, to actually
 perform all initialization tasks.
 
-It will log messages into file I</run/initramfs/boot.log>, prefixing them with a
+It will log messages into file I</var/log/boot/current>, prefixing them with a
 TAI timestamp via B<s6-tai64n>.
 
 It starts all services via B<aa-start>(1) using I</etc/anopa/listdirs/onboot> as
@@ -20,9 +20,5 @@ listdir, unless argument B<aa> was specified on kernel command line, in which
 case I</etc/anopa/listdirs/ARGVALUE> is used as listdir intead.
 
 If B<aa-start>(1) exits non-zero, it assumes there might not even be a getty
-running, and will try to open a shell (I<sh -i>).
-
-If B<aa-start>(1) exit zero, the system is assumed to be ready, and the log file
-I</run/initramfs/boot.log> will be moved to persistent storage, into
-I</var/log/boot>, via B<aa-mvlog>(1). If that fails, a warning will be shown
-(and added to the log file).
+running, and will try to open a shell (I<sh -i>). Else, the system is assumed to
+be ready.
