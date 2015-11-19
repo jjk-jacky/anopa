@@ -22,6 +22,7 @@
 
 #include <unistd.h>
 #include <errno.h>
+#include <skalibs/djbunix.h>
 #include <skalibs/bytestr.h>
 #include <skalibs/tai.h>
 #include <skalibs/error.h>
@@ -163,14 +164,24 @@ _exec_longrun (int si, aa_mode mode)
         }
     }
 
-    if (is_start)
     {
         char buf[l_sn + 6];
 
         byte_copy (buf, l_sn, aa_service_name (s));
         byte_copy (buf + l_sn, 6, "/down");
 
-        unlink (buf);
+        if (is_start)
+            unlink (buf);
+        else
+        {
+            int fd;
+
+            fd = open_create (buf);
+            if (fd < 0)
+                aa_strerr_warnu2sys ("create down file for ", aa_service_name (s));
+            else
+                fd_close (fd);
+        }
     }
 
     if (already)
