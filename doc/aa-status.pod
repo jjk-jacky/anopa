@@ -246,8 +246,14 @@ though in list mode only the later in shown.
 The script I<run> isn't running anymore. Its exitcode or which signal killed it
 will be specified.
 
-I<Down & Ready> means the the I<finish> script (if any) also ended its execution
-(or was killed by B<s6-supervise>). Both times for down ('d') and end-of-finish
-('D') are shown, though in list mode (option B<--list>) only the later in shown.
+It can be followed by "To be restarted" when the service is expected to be
+restarted soon by its supervisor, e.g. the service just went down or its finish
+script is running, but within a few seconds its B<s6-supervise> shall be
+starting the run script again.
+
+I<Down & Ready> means that the I<finish> script (if any) also ended its
+execution (or was killed by B<s6-supervise>). Both times for down ('d') and
+end-of-finish ('D') are shown, though in list mode (option B<--list>) only the
+later in shown.
 
 =back

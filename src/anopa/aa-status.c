@@ -424,7 +424,26 @@ status_service (struct serv *serv, struct config *cfg)
             aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
             put_s (" (");
             put_wstat (serv->st6.wstat, max, 0);
+            if (serv->st6.flagwant && serv->st6.flagwantup)
+            {
+                put_s ("; ");
+                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_BLUE_ON);
+                put_s ("To be restarted");
+                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
+            }
             put_s (")");
+
+            /* if not in list mode, and it'll be restarted, let's show the mode
+             * as well then, for consistency/to be clearer.
+             * (We don't usually show it since it has no meaning when down,
+             * given that one cannot start a service w/out specifying the mode
+             * to be set (-u for up, -o for once))
+             */
+            if (cfg->mode != MODE_LIST && serv->st6.flagwant && serv->st6.flagwantup)
+            {
+                aa_bs_noflush (AA_OUT, "\nMode:    ");
+                put_s ("Automatic restart (want up)");
+            }
         }
     }
     else
