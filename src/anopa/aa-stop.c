@@ -267,7 +267,7 @@ dieusage (int rc)
     aa_die_usage (rc, "[OPTION...] [service...]",
             " -D, --double-output           Enable double-output mode\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
-            " -l, --listdir DIR             Use DIR to list services to start\n"
+            " -l, --listdir DIR             Use DIR to list services to stop\n"
             " -k, --skip SERVICE            Skip (do not stop) SERVICE\n"
             " -t, --timeout SECS            Use SECS seconds as default timeout\n"
             " -a, --all                     Stop all running services\n"
