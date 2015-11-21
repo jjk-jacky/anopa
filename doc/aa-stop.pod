@@ -36,8 +36,9 @@ Show help screen and exit.
 =item B<-k, --skip> I<service>
 
 If I<service> was asked to be stopped, silently ignore it. This is intended for
-use alongside B<--all> to keep the catch-all logger service running as long as
-possible (It will be stopped when sending SIGTERM to all running processes.).
+use alongside B<--all --all> to keep the catch-all logger service running as
+long as possible. Its B<s6-supervise> will only be sent an 'x' command, so
+stopping the service next will automatically have its supervisor exit as well.
 
 =item B<-l, --listdir> I<dir>
 

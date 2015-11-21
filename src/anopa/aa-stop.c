@@ -85,9 +85,6 @@ preload_service (const char *name)
     int type;
     int r;
 
-    if (skip && str_equal (name, skip))
-        return 0;
-
     type = aa_get_service (name, &si, 0);
     if (type < 0)
         r = type;
@@ -430,8 +427,20 @@ main (int argc, char * const argv[])
 
             if (aa_service (si)->ls == AA_LOAD_DONE)
             {
-                add_to_list (&aa_main_list, si, 0);
-                remove_from_list (&aa_tmp_list, si);
+                if (!skip || !str_equal (aa_service_name (aa_service (si)), skip))
+                {
+                    add_to_list (&aa_main_list, si, 0);
+                    remove_from_list (&aa_tmp_list, si);
+                }
+                else
+                {
+                    ++i;
+                    if (skip)
+                        skip = NULL;
+
+                    if (mode & AA_MODE_STOP_ALL)
+                        stop_supervise_for (si);
+                }
             }
             else
             {

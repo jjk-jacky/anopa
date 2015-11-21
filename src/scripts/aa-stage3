@@ -43,11 +43,10 @@ redirfd -w 1 /dev/console
 foreground { aa-echo -DB "Stage 3: Preparing ${1}..." }
 # Stop all running services -- s6-svscan did only exec into us, leaving the
 # whole supervised tree intact. Here we stop everything (longrun & oneshot) in
-# order.
+# order, save for the catch-all (it will get an 'x' though).
 foreground { emptyenv -c s6-setsid aa-ctty -Ds aa-stop -D -aak uncaught-logs }
-# We left the catch-all running (in case), make sure everything will exit
-# properly when we send TERM
-foreground { s6-svc -x /run/services/uncaught-logs }
+# Now stop the catch-all logger (its supervisor will then exit)
+foreground { emptyenv -c s6-setsid aa-stop -D uncaught-logs }
 
 # Kill everything left
 foreground { aa-echo -DB "Killing remaining processes..." }
