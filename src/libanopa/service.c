@@ -250,6 +250,14 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_autoload_cb al_
                 is_up = st6.pid && !st6.flagfinishing;
                 if (is_up && aa_service (si)->gets_ready && st6.flagready)
                     is_up = 2;
+                else if ((mode & (AA_MODE_STOP | AA_MODE_STOP_ALL))
+                            && !is_up && st6.flagwant && st6.flagwantup)
+                    /* it is down, but to be restarted soon by s6-supervise; so
+                     * for our intent & purposes, it shall be considered up, so
+                     * that we stop the restart and place the down file.
+                     * (When starting, it's ok to send the up command, so we
+                     * should still consider it down then.) */
+                    is_up = 1;
             }
             else if (errno != ENOENT)
             {
