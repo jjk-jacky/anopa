@@ -394,7 +394,24 @@ status_service (struct serv *serv, struct config *cfg)
             put_s (" (PID ");
             buf[uint_fmt (buf, serv->st6.pid)] = '\0';
             put_s (buf);
+            if (cfg->mode == MODE_LIST && !serv->st6.flagwant)
+            {
+                put_s ("; Once");
+            }
             put_s (")");
+
+            if (cfg->mode != MODE_LIST)
+            {
+                aa_bs_noflush (AA_OUT, "\nMode:    ");
+                if (serv->st6.flagwant)
+                {
+                    put_s ("Automatic restart (want up)");
+                }
+                else
+                {
+                    put_s ("Once (want down)");
+                }
+            }
         }
         else
         {

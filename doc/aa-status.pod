@@ -228,9 +228,16 @@ This script I<start>/I<stop> succesfully ran (i.e. and returned 0).
 
 The script I<run> is currently running; Its PID will be specified.
 
+In list mode (option B<--list>), the word "Once" might appear next to the PID.
+This is done when the service is running in mode once, i.e. will not be
+automatically restarted when it goes down.
+
+In standard output (i.e. without option B<--list>), this information is shown
+under "Mode".
+
 I<Up & Ready> means that the service indicated readiness (or it was set via e.g.
 B<aa-setready>(1)). Both times for up ('u') and readiness ('U') are shown,
-though in list mode (option B<--list>) only the later in shown.
+though in list mode only the later in shown.
 
 =item B<Down> / B<Down & Ready>
 
