@@ -36,6 +36,7 @@
 #include <skalibs/uint.h>
 #include <skalibs/tai.h>
 #include <skalibs/djbunix.h>
+#include <s6/s6-supervise.h>
 #include <anopa/common.h>
 #include <anopa/err.h>
 #include <anopa/init_repo.h>
@@ -283,12 +284,36 @@ close_fd (int fd)
     close_fd_for (fd, -1);
 }
 
+static void
+stop_supervise_for (int si)
+{
+    aa_service *s = aa_service (si);
+    int l_sn = strlen (aa_service_name (s));
+    char dir[l_sn + 1 + sizeof (S6_SUPERVISE_CTLDIR) + 8];
+    int r;
+
+    if (s->st.type != AA_TYPE_LONGRUN)
+        return;
+
+    aa_bs_noflush (AA_OUT, "Stopping s6-supervise for ");
+    aa_bs_noflush (AA_OUT, aa_service_name (s));
+    aa_bs_flush (AA_OUT, "...\n");
+
+    byte_copy (dir, l_sn, aa_service_name (s));
+    byte_copy (dir + l_sn, 9 + sizeof (S6_SUPERVISE_CTLDIR), "/" S6_SUPERVISE_CTLDIR "/control");
+
+    r = s6_svc_write (dir, "x", 1);
+    if (r < 0)
+        aa_strerr_warnu2sys ("stop s6-supervise for ", aa_service_name (s));
+}
+
 int
 main (int argc, char * const argv[])
 {
     PROG = "aa-stop";
     const char *path_repo = "/run/services";
     const char *path_list = NULL;
+    int all = 0;
     int i;
 
     aa_secs_timeout = DEFAULT_TIMEOUT_SECS;
@@ -315,7 +340,10 @@ main (int argc, char * const argv[])
         switch (c)
         {
             case 'a':
-                mode = AA_MODE_STOP_ALL | (mode & AA_MODE_IS_DRY);
+                if (all)
+                    mode = AA_MODE_STOP_ALL | (mode & AA_MODE_IS_DRY);
+                else
+                    all = 1;
                 break;
 
             case 'D':
@@ -365,8 +393,7 @@ main (int argc, char * const argv[])
     cols = get_cols (1);
     is_utf8 = is_locale_utf8 ();
 
-    if ((mode & AA_MODE_STOP_ALL && (path_list || argc > 0))
-            || (!(mode & AA_MODE_STOP_ALL) && !path_list && argc < 1))
+    if ((all && (path_list || argc > 0)) || (!all && !path_list && argc < 1))
         dieusage (1);
 
     if (aa_init_repo (path_repo, (mode & AA_MODE_IS_DRY) ? AA_REPO_READ : AA_REPO_WRITE) < 0)
@@ -390,7 +417,7 @@ main (int argc, char * const argv[])
             aa_strerr_diefu1sys (-r, "read repository directory");
     }
 
-    if (mode & AA_MODE_STOP_ALL)
+    if (all)
     {
         /* to stop all (up) services, since we've preloaded everything, simply
          * means moving all services from tmp to main list. We just need to make
@@ -407,7 +434,12 @@ main (int argc, char * const argv[])
                 remove_from_list (&aa_tmp_list, si);
             }
             else
+            {
                 ++i;
+
+                if ((mode & AA_MODE_STOP_ALL) && aa_service (si)->st.code == ERR_NOT_UP)
+                    stop_supervise_for (si);
+            }
         }
     }
     else if (path_list)

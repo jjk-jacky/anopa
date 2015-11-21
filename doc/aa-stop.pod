@@ -13,14 +13,12 @@ B<aa-stop> [B<-D>] [B<-r> I<repodir>] [B<-l> I<listdir>] [B<-a>]
 
 =item B<-a, --all>
 
-Stops all running/started services. This option is intended to be used during
-stage 3; When used, you shouldn't specify any service on the command line.
+Stops all running/started services.
 
-Note that when used, failing dependencies will not cause not to stop services.
-That is, is A needs B, stopping B would depend on stopping A first, and if that
-failed B wouldn't be stopped (Stopping failed: Failed dependency: A).
-However with this option B would be stopped, as if A had been successfully
-stopped.
+Specify this option twice to enable "stop-all" mode, intended to bring down the
+entire supervised tree (i.e. be used during stage 3, after B<s6-svscan> has been
+brought down).
+When used, you shouldn't specify any service on the command line.
 
 Also see below for more implications.
 
@@ -104,15 +102,18 @@ following differences :
 B<aa-stop>(1) will check if the service is running, and if not simply announce
 it as not up.
 
-When B<--all> is used, instead of 'd' the commands 'dx' are sent to the
-service's B<s6-supervise>, so that after bringing the service down it exits as
-well. This is obviously all intended to bring the supervised tree all down, as
-is expected when using B<--all> (usually from stage 3).
+If the "stop-all" mode is enabled (i.e. option B<--all> used twice), failing
+dependencies will not cause not to stop services.  That is, is A needs B,
+stopping B would depend on stopping A first, and if that failed B wouldn't be
+stopped (Stopping failed: Failed dependency: A).  However with this mode B
+would be stopped, as if A had been successfully stopped.
 
-Note that if a service was not running, no 'x' command is sent so the
-B<s6-supervise> process of the service are kept running. This isn't a problem,
-since they'll simply exit when sending SIGTERM to all process further down in
-stage 3.
+Additionally, B<aa-stop>(1) will send command 'x' to B<s6-supervise> of all down
+services, while it will send commands 'dx' (instead of 'd') to the up services'
+B<s6-supervise>, so that after bringing their services down they exit as well.
+This is obviously all intended to bring the supervised tree all down, as is
+expected, and shouldn't be used if B<s6-svscan> is still running (as it would
+bring the B<s6-supervise> back up).
 
 =head2 Service not up
 
@@ -125,12 +126,11 @@ was up then, but will be down by the time B<aa-stop>(1) wants to stop it. E.g.
 because other services stopped first caused it to stop/crash.
 
 In such a case, the message "Stopping service..." will be shown, and
-B<aa-stop>(1) will send the command(s) as usual; But it won't check for errors
+B<aa-stop>(1) will send the command as usual; But it won't check for errors
 (nor wait for the 'd' event) and simply report the service as "Not up" instead.
 
 This should ensure that e.g. s6 doesn't restart the service, or stops it if that
-was already (being) done, and in case B<--all> was used that the B<s6-supervise>
-process(es) will exit as expected.
+was already (being) done.
 
 =head1 STOPPING A ONE-SHOT SERVICE
 
