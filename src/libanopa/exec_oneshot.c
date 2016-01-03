@@ -105,7 +105,7 @@ _exec_oneshot (int si, aa_mode mode)
         _err = "set up pipes";
         goto err;
     }
-    if (pipenb (p_in) < 0)
+    if (pipe (p_in) < 0)
     {
         _errno = errno;
         _err = "set up pipes";
@@ -115,23 +115,7 @@ _exec_oneshot (int si, aa_mode mode)
 
         goto err;
     }
-    else
-    {
-        int flags = fcntl (p_in[0], F_GETFL, 0);
-        if (flags < 0 || fcntl (p_in[0], F_SETFL, flags & ~O_NONBLOCK) < 0)
-        {
-            _errno = errno;
-            _err = "set up pipes";
-
-            fd_close (p_int[0]);
-            fd_close (p_int[1]);
-            fd_close (p_in[0]);
-            fd_close (p_in[1]);
-
-            goto err;
-        }
-    }
-    if (pipenb (p_out) < 0)
+    else if (ndelay_on (p_in[1]) < 0 || coe (p_in[1]) < 0)
     {
         _errno = errno;
         _err = "set up pipes";
@@ -143,7 +127,19 @@ _exec_oneshot (int si, aa_mode mode)
 
         goto err;
     }
-    if (pipenb (p_prg) < 0)
+    if (pipe (p_out) < 0)
+    {
+        _errno = errno;
+        _err = "set up pipes";
+
+        fd_close (p_int[0]);
+        fd_close (p_int[1]);
+        fd_close (p_in[0]);
+        fd_close (p_in[1]);
+
+        goto err;
+    }
+    else if (ndelay_on (p_out[0]) < 0 || coe (p_out[0]) < 0)
     {
         _errno = errno;
         _err = "set up pipes";
@@ -154,6 +150,36 @@ _exec_oneshot (int si, aa_mode mode)
         fd_close (p_in[1]);
         fd_close (p_out[0]);
         fd_close (p_out[1]);
+
+        goto err;
+    }
+    if (pipe (p_prg) < 0)
+    {
+        _errno = errno;
+        _err = "set up pipes";
+
+        fd_close (p_int[0]);
+        fd_close (p_int[1]);
+        fd_close (p_in[0]);
+        fd_close (p_in[1]);
+        fd_close (p_out[0]);
+        fd_close (p_out[1]);
+
+        goto err;
+    }
+    else if (ndelay_on (p_prg[0]) < 0 || coe (p_prg[0]) < 0)
+    {
+        _errno = errno;
+        _err = "set up pipes";
+
+        fd_close (p_int[0]);
+        fd_close (p_int[1]);
+        fd_close (p_in[0]);
+        fd_close (p_in[1]);
+        fd_close (p_out[0]);
+        fd_close (p_out[1]);
+        fd_close (p_prg[0]);
+        fd_close (p_prg[1]);
 
         goto err;
     }
