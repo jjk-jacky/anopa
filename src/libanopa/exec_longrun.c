@@ -199,38 +199,64 @@ _exec_longrun (int si, aa_mode mode)
     return 0;
 }
 
+static int idx = -1;
+
 int
 aa_get_longrun_info (uint16 *id, char *event)
 {
-    static int i = -1;
     int r;
 
-    if (i == -1)
+    if (idx == -1)
     {
         r = ftrigr_update (&_aa_ft);
         if (r <= 0)
             return -1;
-        i = 0;
+        idx = 0;
     }
 
-    for ( ; i < genalloc_len (uint16, &_aa_ft.list); )
+    for ( ; idx < genalloc_len (uint16, &_aa_ft.list); )
     {
-        *id = genalloc_s (uint16, &_aa_ft.list)[i];
+        *id = genalloc_s (uint16, &_aa_ft.list)[idx];
         r = ftrigr_check (&_aa_ft, *id, event);
-        ++i;
+        ++idx;
         if (r != 0)
             return (r < 0) ? -2 : r;
     }
 
-    i = -1;
+    idx = -1;
     return 0;
 }
 
 int
 aa_unsubscribe_for (uint16 id)
 {
+    int r = 0;
     tain_t deadline;
 
     tain_addsec_g (&deadline, 1);
-    return ftrigr_unsubscribe_g (&_aa_ft, id, &deadline);
+    if (!ftrigr_unsubscribe_g (&_aa_ft, id, &deadline))
+        r = -1;
+    /* if it works, we need to remove any future iteration of that id in the
+     * _aa_ft.list, to avoid EINVAL from ftrigr_check() in aa_get_longrun_info()
+     * above, as more of this id could have been listed */
+    if (r == 0 && idx >= 0)
+    {
+        int i = genalloc_len (uint16, &_aa_ft.list);
+
+        for (--i; i >= idx; --i)
+        {
+            if (genalloc_s (uint16, &_aa_ft.list)[i] == id)
+            {
+                int len = genalloc_len (uint16, &_aa_ft.list);
+                int c = len - i - 1;
+
+                if (c > 0)
+                    byte_copy (genalloc_s (uint16, &_aa_ft.list) + i,
+                            c * sizeof (uint16),
+                            genalloc_s (uint16, &_aa_ft.list) + i + 1);
+                genalloc_setlen (uint16, &_aa_ft.list, len - 1);
+            }
+        }
+    }
+    return r;
 }
