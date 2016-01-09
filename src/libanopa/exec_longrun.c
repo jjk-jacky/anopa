@@ -209,7 +209,7 @@ aa_get_longrun_info (uint16 *id, char *event)
     {
         r = ftrigr_update (&_aa_ft);
         if (r <= 0)
-            return r;
+            return -1;
         i = 0;
     }
 
@@ -219,7 +219,7 @@ aa_get_longrun_info (uint16 *id, char *event)
         r = ftrigr_check (&_aa_ft, *id, event);
         ++i;
         if (r != 0)
-            return r;
+            return (r < 0) ? -2 : r;
     }
 
     i = -1;
