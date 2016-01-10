@@ -1,8 +1,8 @@
 /*
- * anopa - Copyright (C) 2015 Olivier Brunel
+ * anopa - Copyright (C) 2015-2016 Olivier Brunel
  *
  * exec_longrun.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2016 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
