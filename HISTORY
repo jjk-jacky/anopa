@@ -1,4 +1,68 @@
 
+# 2016-01-10, v0.4.0
+
+ !  stop: Fix not creating down file
+
+*** stage1/2: Change how the logging works: instead of logging into
+    /run/initramfs/boot.log in stage 1 & 2, and using aa-mvlog to move said file
+    to /var/log/boot at the end of stage 2, now stage 1 & 2 (much like stage 3)
+    log directly into /var/log/boot/current
+
+    As a special treat however, stage 1 will first check for a file
+    /run/initramfs/boot.log and import its content into /var/log/boot/current if
+    found.
+
+    That way everything from stage 1 is logged into persistent storage, and the
+    whole process is simpler.
+
+    (One can still e.g. have a service at the end of stage 0, after mounting
+    /root-fs, that will create an empty file named after the first tainstamp of
+    /boot.log and update the /root-fs/var/log/boot/current symlink to point to
+    it, to keep one log file per boot.)
+
+ *  Deprecate aa-mvlog
+
+ +  status: Longrun services now have a "Mode" w/ "Automatic restart (want up)"
+    or "Once (want down)" when they're up (doesn't make sense when they're not).
+    In list mode, only show "Once" next to the PID when needed.
+
+ +  status: Add mention "To be restarted" for down services that s6-supervise
+    shall be restarting soon, after finish is done and/or the 1sec delay.
+    Useful to see when e.g. a service keeps failing to start/be restarted.
+
+!!! stop: Fix unable to stop service that keeps crashing. That is, when a
+    service keeps crashing/stopping, and being restarted by its supervise, it
+    would be seen as down and therefore not (be allowed to be) stopped.
+
+    Now consider "to be restarted" to be up when stopping, to solve the issue.
+    The command will be sent to supervise (and the down file created), but we
+    won't wait for a 'd' event and announce it as "Not up".
+
+*** stop: Change how --all works: Now it only means stopping all up services,
+    nothing else. When specified a second time, then mode "stop-all" is enabled,
+    which means:
+
+    - for all down services, send 'x' to their s6-supervise
+    - send 'dx' instead of 'd' to the s6-supervise of up services
+    - ignore dependency error (i.e. always stop everything)
+
+    So same as before, only with stopping s6-supervise of down services, to
+    properly bring the entire supervised tree down (assuming s6-svscan is down
+    already, ofc).
+
+ *  stop: Tweak --skip with --all: Instead of just ignoring the service
+    altogether, in stop-all mode we only send 'x' to s6-supervise, so stopping
+    the service next will have its supervisor exit as well.
+
+ !  start/stop: Better pipe handling
+
+ !  start: Fix possible warning "unable to get longrun info"
+
++++ Bump dependency to s6 2.2.4.3 for ftrigrd fix
+
+ !  Plus a few (other) fixes; see git log for details
+
+
 # 2015-11-14, v0.3.0
 
  +  start/stop: Don't need root rights for --dry-list
