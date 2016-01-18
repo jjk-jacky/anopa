@@ -47,6 +47,7 @@ main (int argc, char * const argv[])
     char file[256];
     int max = sizeof (file) - sizeof (PREFIX) - sizeof (NAME) + 1;
     char name[max];
+    int skip;
     int r;
 
     for (;;)
@@ -90,24 +91,30 @@ main (int argc, char * const argv[])
     r = openreadnclose (file, name, max);
     if (r <= 0)
         aa_strerr_diefu2sys (2, "read ", file);
+    /* last entry is the active one */
+    skip = byte_rchr (name, r, ' ') + 1;
+    if (skip > r)
+        skip = 0;
 
     for (;;)
     {
-        int l = r;
+        const char *s = name + skip;
+        int l = r - skip;
 
-        byte_copy (file + sizeof (PREFIX) - 1, r, name);
-        byte_copy (file + sizeof (PREFIX) - 2 + r, sizeof (NAME), NAME);
+        byte_copy (file + sizeof (PREFIX) - 1, l, s);
+        byte_copy (file + sizeof (PREFIX) - 2 + l, sizeof (NAME), NAME);
         r = openreadnclose (file, name, max);
         if (r <= 0)
         {
             if (errno == ENOENT)
             {
                 aa_bs_noflush (AA_OUT, "/dev/");
-                aa_bb_flush (AA_OUT, name, l);
+                aa_bb_flush (AA_OUT, s, l);
                 return 0;
             }
             else
                 aa_strerr_diefu2sys (2, "read ", file);
         }
+        skip = 0;
     }
 }
