@@ -21,7 +21,6 @@ include package/deps.mak
 
 version_m := $(basename $(version))
 version_M := $(basename $(version_m))
-version_l := $(basename $(version_M))
 CPPFLAGS_ALL := -iquote src/include-local -Isrc/include $(CPPFLAGS)
 CFLAGS_ALL := $(CFLAGS) -pipe -Wall
 CFLAGS_SHARED := -fPIC
@@ -95,8 +94,7 @@ $(DESTDIR)$(dynlibdir)/lib%.so: lib%.so
 	$(INSTALL) -D -m 755 $< $@.$(version) && \
 	$(INSTALL) -l $<.$(version) $@.$(version_m) && \
 	$(INSTALL) -l $<.$(version_m) $@.$(version_M) && \
-	$(INSTALL) -l $<.$(version_M) $@.$(version_l) && \
-	exec $(INSTALL) -l $<.$(version_l) $@
+	exec $(INSTALL) -l $<.$(version_M) $@
 
 $(DESTDIR)$(libexecdir)/% $(DESTDIR)$(bindir)/% $(DESTDIR)$(sbindir)/%: % package/modes
 	exec $(INSTALL) -D -m 600 $< $@
@@ -127,7 +125,7 @@ lib%.a:
 	exec $(RANLIB) $@
 
 lib%.so:
-	exec $(REALCC) -o $@ $(CFLAGS_ALL) $(CFLAGS_SHARED) $(LDFLAGS_ALL) $(LDFLAGS_SHARED) -Wl,-soname,$@.$(version_l) $^
+	exec $(REALCC) -o $@ $(CFLAGS_ALL) $(CFLAGS_SHARED) $(LDFLAGS_ALL) $(LDFLAGS_SHARED) -Wl,-soname,$@.$(version_M) $^
 
 $(ALL_SCRIPTS):
 	exec sed -e "s/@VERSION@/$(version)/g" -e "s/@BINDIR@/$(subst /,\/,$(bindir))/g" \
