@@ -44,10 +44,15 @@ aa_service_status_read (aa_service_status *svst, const char *dir)
     char file[len + 1 + sizeof (AA_SVST_FILENAME)];
     uint32 u;
 
+    /* most cases should be w/out a message, so we'll only need FIXED_SIZE and
+     * one extra byte to NUL-terminate the (empty) message */
+    if (!stralloc_ready_tuned (&svst->sa, AA_SVST_FIXED_SIZE + 1, 0, 0, 1))
+        return -1;
+
     byte_copy (file, len, dir);
     byte_copy (file + len, 1 + sizeof (AA_SVST_FILENAME), "/" AA_SVST_FILENAME);
 
-    if (!openreadfileclose (file, &svst->sa, AA_SVST_FIXED_SIZE + AA_SVST_MAX_MSG_SIZE + 1)
+    if (!openreadfileclose (file, &svst->sa, AA_SVST_FIXED_SIZE + AA_SVST_MAX_MSG_SIZE)
             || svst->sa.len < AA_SVST_FIXED_SIZE)
     {
         int e = errno;
@@ -57,9 +62,11 @@ aa_service_status_read (aa_service_status *svst, const char *dir)
     }
     tain_now_g ();
 
+    if (svst->sa.len >= svst->sa.a
+            && !stralloc_ready_tuned (&svst->sa, svst->sa.len + 1, 0, 0, 1))
+        return -1;
     svst->sa.s[svst->sa.len] = '\0';
-    if (svst->sa.len < AA_SVST_FIXED_SIZE + AA_SVST_MAX_MSG_SIZE + 1)
-        svst->sa.len++;
+    svst->sa.len++;
 
     tain_unpack (svst->sa.s, &svst->stamp);
     uint32_unpack (svst->sa.s + 12, &u);
