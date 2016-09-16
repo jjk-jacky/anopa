@@ -9,7 +9,7 @@ They're probably crawling somewhere in there... if you happen to catch one,
 You can find the latest source code of B<anopa> as well as report bugs and/or
 suggest features on its GitHub repository, available at
 L<https://github.com/jjk-jacky/anopa>; or visit its official website at
-L<http://jjacky.com/anopa>
+L<https://jjacky.com/anopa>
 
 =head1 AUTHOR
 

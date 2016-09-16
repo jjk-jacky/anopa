@@ -30,11 +30,11 @@ anopa (COPYING). If not, see http://www.gnu.org/licenses/
 
 Some useful links if you're looking for more info:
 
-- [official site](http://jjacky.com/anopa "anopa @ jjacky.com")
+- [official site](https://jjacky.com/anopa "anopa @ jjacky.com")
 
 - [source code & issue tracker](https://github.com/jjk-jacky/anopa "anopa @ GitHub.com")
 
-- [origin story](http://jjacky.com/2015-04-10-has-arch-lost-its-way "Has Arch lost its Way? @ jjacky.com")
+- [origin story](https://jjacky.com/2015-04-10-has-arch-lost-its-way "Has Arch lost its Way? @ jjacky.com")
 
 - [PKGBUILD in AUR](https://aur.archlinux.org/packages/anopa "AUR: anopa")
 

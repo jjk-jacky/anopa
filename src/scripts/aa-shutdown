@@ -36,7 +36,7 @@ EOF
 dieversion() {
     cat << EOF
 aa-shutdown v@VERSION@
-Copyright (C) 2015 Olivier Brunel - http://jjacky.com/anopa
+Copyright (C) 2015 Olivier Brunel - https://jjacky.com/anopa
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
