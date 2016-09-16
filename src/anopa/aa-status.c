@@ -390,6 +390,10 @@ status_service (struct serv *serv, struct config *cfg)
             {
                 put_s (" & Ready");
             }
+            else if (s->gets_ready)
+            {
+                put_s ("; Getting ready...");
+            }
             aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
             put_s (" (PID ");
             buf[uint_fmt (buf, serv->st6.pid)] = '\0';
