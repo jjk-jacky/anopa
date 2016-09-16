@@ -567,6 +567,11 @@ service_is_ok (aa_mode mode, aa_service *s)
 
     /* TYPE_LONGRUN -- we make assumptions here:
      * - we have a local status, since we started the service
+     * - if it's flagged timedout, that's a fail (flag is used to avoid possible
+     *   race condition: it was processed as timedout (might be for readiness)
+     *   and by the time we're checking here, s6 state has changed (e.g. it now
+     *   is ready, or down...) This should obviously remain a fail, not assume
+     *   it was good (e.g. ready) & process it as success.)
      * - if there's no s6 status, that's a fail (probably fail to even exec run)
      * - we compare stamp, if s6 is more recent, it's good (since we got the
      *   event we were waiting for); else it's a fail (must be our
@@ -575,7 +580,7 @@ service_is_ok (aa_mode mode, aa_service *s)
      *   EVT_STARTING because there's a possible race condition there.
      */
     event = (mode & AA_MODE_START) ? AA_EVT_STARTING : AA_EVT_STOPPING;
-    if (s6_svstatus_read (aa_service_name (s), &st6)
+    if (!s->timedout && s6_svstatus_read (aa_service_name (s), &st6)
             && (tain_less (&svst->stamp, &st6.stamp) || svst->event == event))
         r = 1;
     else

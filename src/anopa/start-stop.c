@@ -1145,18 +1145,14 @@ process_timeouts (aa_mode mode, aa_scan_cb scan_cb)
                 /* timeout expired? */
                 if (tain_less (&ts, &STAMP))
                 {
-                    aa_service_status *svst = &aa_service (si)->st;
-
+                    /* flag it to avoid race: by the time it'll be processed for
+                     * dependencies, s6 state could have changed, especially if
+                     * this is a readiness timeout, and change doesn't imply
+                     * success (service could have gone down), hence the flag */
+                    aa_service (si)->timedout = 1;
                     aa_unsubscribe_for (aa_service (si)->ft_id);
                     aa_service (si)->ft_id = 0;
                     --nb_wait_longrun;
-
-                    svst->event = (mode & AA_MODE_START) ? AA_EVT_STARTING_FAILED: AA_EVT_STOPPING_FAILED;
-                    svst->code = ERR_TIMEDOUT;
-                    tain_copynow (&svst->stamp);
-                    aa_service_status_set_msg (svst, "");
-                    if (aa_service_status_write (svst, aa_service_name (aa_service (si))) < 0)
-                        aa_strerr_warnu2sys ("write service status file for ", aa_service_name (aa_service (si)));
 
                     put_err_service (aa_service_name (aa_service (si)), ERR_TIMEDOUT, 1);
                     genalloc_append (int, &ga_timedout, &si);
