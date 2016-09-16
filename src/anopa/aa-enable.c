@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2016 Olivier Brunel
  *
  * aa-enable.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2016 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -38,6 +38,7 @@
 #include <skalibs/error.h>
 #include <skalibs/uint.h>
 #include <skalibs/skamisc.h>
+#include <s6/s6-supervise.h>
 #include <anopa/common.h>
 #include <anopa/output.h>
 #include <anopa/init_repo.h>
@@ -66,6 +67,7 @@ static genalloc ga_failed = GENALLOC_ZERO;
 static genalloc ga_next = GENALLOC_ZERO;
 static const char *skip = NULL;
 static int quiet = 0;
+static int alarm_s6 = 0;
 
 static void
 warn_cb (const char *name, int err)
@@ -204,6 +206,7 @@ dieusage (int rc)
             " -l, --listdir DIR             Use DIR to list services to enable\n"
             " -f, --set-finish TARGET       Create s6-svscan symlink finish to TARGET\n"
             " -c, --set-crash TARGET        Create s6-svscan symlink crash to TARGET\n"
+            " -a, --alarm-s6                Alarm s6-svscan when done\n"
             " -N, --no-needs                Don't auto-enable services from 'needs'\n"
             " -W, --no-wants                Don't auto-enable services from 'wants'\n"
             "     --no-supervise            Don't create supervise folders for longruns\n"
@@ -233,6 +236,7 @@ main (int argc, char * const argv[])
     {
         int extra = 0;
         struct option longopts[] = {
+            { "alarm-s6",           no_argument,        NULL,   'a' },
             { "set-crash",          required_argument,  NULL,   'c' },
             { "double-output",      no_argument,        NULL,   'D' },
             { "set-finish",         required_argument,  NULL,   'f' },
@@ -252,11 +256,15 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "c:Df:hk:l:Nqr:S:s:uVW", longopts, NULL);
+        c = getopt_long (argc, argv, "ac:Df:hk:l:Nqr:S:s:uVW", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
         {
+            case 'a':
+                alarm_s6 = 1;
+                break;
+
             case 'c':
                 set_crash = optarg;
                 break;
@@ -417,6 +425,15 @@ main (int argc, char * const argv[])
             aa_put_err ("Failed to create symlink " SCANDIR_CRASH, error_str (errno), 1);
         if (set_finish && symlink (set_finish, SCANDIR_FINISH) < 0)
             aa_put_err ("Failed to create symlink " SCANDIR_FINISH, error_str (errno), 1);
+    }
+
+    if (alarm_s6)
+    {
+        r = s6_svc_writectl (AA_SCANDIR_DIRNAME, S6_SVSCAN_CTLDIR, "a", 1);
+        if (r < 0)
+            aa_strerr_diefu1sys (2, "alarm s6-svscan");
+        else if (r == 0)
+            aa_strerr_diefu1x (2, "alarm s6-svscan: supervisor not listening");
     }
 
     genalloc_free (int, &ga_failed);

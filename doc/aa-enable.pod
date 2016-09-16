@@ -6,11 +6,21 @@ aa-enable - Enable services, i.e. copy servicedirs to repodir
 
 B<aa-enable> [B<-D>] [B<-r> I<REPODIR>] [B<-c> I<CRASH>] [B<-f> I<FINISH>]
 [B<-k> I<SERVICE>] [B<-S> I<SOURCEDIR>] [B<-s> I<SOURCEDIR>] [B<-l> I<LISTDIR>]
-[B<-N>] [B<-W>] [B<-u>] [B<--no-supervise>] [B<-q>] [I<SERVICE...>]
+[B<-N>] [B<-W>] [B<-u>] [B<-a>] [B<--no-supervise>] [B<-q>] [I<SERVICE...>]
 
 =head1 OPTIONS
 
 =over
+
+=item B<-a, --alarm-s6>
+
+Alarms I<s6-svscan> as last step; This obviously assumes there is a running
+instance of I<s6-svscan> running on I<REPODIR/.scandir>; Also note that it will
+do it regardless of whether longruns where added or not.
+
+"Alarm" means I<s6-svscan> will immediately perform a scan of its scandir to
+check for (new) services. This is equivalent to manually running
+C<s6-svscan -a REPODIR/.scandir> afterwards.
 
 =item B<-c, --set-crash> I<CRASH>
 

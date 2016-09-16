@@ -1,4 +1,5 @@
 util.o
 ${LIBANOPA}
+-ls6
 -lskarnet
 ${TAINNOW_LIB}
