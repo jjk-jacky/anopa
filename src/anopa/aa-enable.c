@@ -50,7 +50,7 @@
 #include "common.h"
 
 
-#define SVSCANDIR       ".scandir/.s6-svscan"
+#define SVSCANDIR       AA_SCANDIR_DIRNAME "/.s6-svscan"
 #define SCANDIR_CRASH   SVSCANDIR "/crash"
 #define SCANDIR_FINISH  SVSCANDIR "/finish"
 
