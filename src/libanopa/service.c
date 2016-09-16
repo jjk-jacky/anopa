@@ -622,7 +622,7 @@ aa_scan_mainlist (aa_scan_cb scan_cb, aa_mode mode)
             svst->event = (mode & AA_MODE_START) ? AA_EVT_STARTING_FAILED: AA_EVT_STOPPING_FAILED;
             svst->code = ERR_DEPEND;
             tain_copynow (&svst->stamp);
-            aa_service_status_set_msg (svst,aa_service_name (aa_service (sni)));
+            aa_service_status_set_msg (svst, aa_service_name (aa_service (sni)));
             if (aa_service_status_write (svst, aa_service_name (s)) < 0)
                 aa_strerr_warnu2sys ("write service status file for ", aa_service_name (s));
 
