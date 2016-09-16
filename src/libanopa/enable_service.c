@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2016 Olivier Brunel
  *
  * enable_service.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2016 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -565,7 +565,7 @@ copy_from_source (const char        *name,
                     (name[len - 1] == '@') ? name + len : NULL);
 
         i += l_sce + 1;
-        if (i > aa_sa_sources.len)
+        if (i >= aa_sa_sources.len)
             return -ERR_UNKNOWN;
     }
 }
