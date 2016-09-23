@@ -43,7 +43,7 @@ _exec_oneshot (int si, aa_mode mode)
     aa_service *s = aa_service (si);
     int is_start = (mode & AA_MODE_START) ? 1 : 0;
     char * const filename = (is_start) ? AA_START_FILENAME : AA_STOP_FILENAME;
-    int l_fn = sizeof ((is_start) ? AA_START_FILENAME : AA_STOP_FILENAME);
+    int l_fn = (is_start) ? sizeof(AA_START_FILENAME) : sizeof(AA_STOP_FILENAME);
     int l_sn = strlen (aa_service_name (s));
     char buf[l_sn + 1 +l_fn];
     struct stat st;
