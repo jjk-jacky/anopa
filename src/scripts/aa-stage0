@@ -51,6 +51,7 @@ foreground { if -n
     if -t { aa-incmdline -Dqf /root-fs/proc/cmdline break }
     foreground { aa-echo -DB "Break requested" }
     foreground { aa-echo -Dt "Trying to open a shell; " +g exit +w " to continue" }
+    fdmove -c 2 1
     emptyenv -c sh -i
   }
 }
