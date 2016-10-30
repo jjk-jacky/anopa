@@ -34,5 +34,12 @@ foreground { emptyenv -c aa-stop -r /services -a }
 foreground { aa-echo -B "Mounting /dev & /proc and terminating..." }
 foreground { aa-mount -t devtmpfs dev /dev }
 foreground { aa-mount -t proc proc /proc }
-foreground { aa-terminate -la }
+foreground { if -n { aa-terminate -la }
+    foreground { aa-echo -Be "Failed to terminate (umount/close all)" }
+    foreground { aa-echo -t "Mounting /dev & /proc and trying to open a shell; " +g exit +w " to ${1}" }
+    foreground { aa-mount -t devtmpfs dev /dev }
+    foreground { aa-mount -t proc proc /proc }
+    redirfd -r 0 /dev/console redirfd -w 1 /dev/console fdmove -c 2 1
+    emptyenv -c sh -i
+}
 aa-reboot --${1}
