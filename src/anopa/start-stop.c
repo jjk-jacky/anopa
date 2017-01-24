@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * start-stop.c
- * Copyright (C) 2015-2016 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -190,12 +190,15 @@ draw_waiting (int already_drawn)
         int j;
 
         j = n - genalloc_len (pid_t, &ga_pid);
-        for (i = 0; i < l && j < n; ++i)
+        for (i = 0; i < l && j > 0; ++i)
             if (aa_service (list_get (&aa_main_list, i))->ft_id > 0)
-                ++j;
-        if (j < n)
+                --j;
+        if (j > 0)
+        {
+            aa_strerr_warnu1x ("find longrun service -- THIS IS A BUG!");
             return;
-        si = list_get (&aa_main_list, i);
+        }
+        si = list_get (&aa_main_list, i - 1);
     }
 
     if (!tain_sub (&ts, &STAMP, &aa_service (si)->ts_exec))
