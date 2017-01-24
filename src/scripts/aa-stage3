@@ -3,7 +3,7 @@
 # anopa - Copyright (C) 2015-2017 Olivier Brunel
 #
 # aa-stage3
-# Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+# Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
 #
 # This file is part of anopa.
 #
@@ -52,7 +52,7 @@ foreground { emptyenv -c s6-setsid aa-stop -D uncaught-logs }
 foreground { aa-echo -DB "Killing remaining processes..." }
 foreground { aa-echo -Dt "Sending SIGTERM to all processes..." }
 foreground { aa-kill -Dst }
-wait -r { } # Reap zombies
+wait -t 4200 { } # Reap zombies
 # logger was killed, and we won't open it back
 fdmove -c 2 1
 foreground { pipeline { aa-echo -Dt "Sending SIGKILL to all processes..." }
@@ -60,7 +60,7 @@ foreground { pipeline { aa-echo -Dt "Sending SIGKILL to all processes..." }
     s6-tai64n
 }
 foreground { aa-kill -sk }
-wait { } # Wait for all children
+wait -t 2300 { } # Wait for all children
 
 foreground { aa-sync }
 foreground { pipeline { aa-echo -DB "Pivoting root..." }
