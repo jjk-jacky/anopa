@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * exec_longrun.c
- * Copyright (C) 2015-2016 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -209,8 +209,10 @@ aa_get_longrun_info (uint16 *id, char *event)
     if (idx == -1)
     {
         r = ftrigr_update (&_aa_ft);
-        if (r <= 0)
+        if (r < 0)
             return -1;
+        else if (r == 0)
+            return 0;
         idx = 0;
     }
 
