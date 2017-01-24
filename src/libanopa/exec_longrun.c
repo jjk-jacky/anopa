@@ -59,10 +59,19 @@ _exec_longrun (int si, aa_mode mode)
         /* this could happen e.g. if the servicedir isn't in scandir, if
          * something failed during aa-enable for example */
 
+        const char *errmsg = "Failed to subscribe to eventdir: ";
+        int l_msg = strlen (errmsg);
+        const char *errstr = error_str (errno);
+        int l_err = strlen (errstr);
+        char msg[l_msg + l_err + 1];
+
+        byte_copy (msg, l_msg, errmsg);
+        byte_copy (msg + l_msg, l_err + 1, errstr);
+
         s->st.event = (is_start) ? AA_EVT_STARTING_FAILED : AA_EVT_STOPPING_FAILED;
         s->st.code = ERR_S6;
         tain_copynow (&s->st.stamp);
-        aa_service_status_set_msg (&s->st, "Failed to subscribe to eventdir");
+        aa_service_status_set_msg (&s->st, msg);
         if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
             aa_strerr_warnu2sys ("write service status file for ", aa_service_name (s));
 
