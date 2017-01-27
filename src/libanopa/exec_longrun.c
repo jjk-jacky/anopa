@@ -42,7 +42,8 @@ _exec_longrun (int si, aa_mode mode)
     char fifodir[l_sn + 1 + sizeof (S6_SUPERVISE_EVENTDIR)];
     tain_t deadline;
     int is_start = (mode & AA_MODE_START) ? 1 : 0;
-    char *event = (is_start) ? "u" : "d";
+    const char *event = (is_start) ? ((s->gets_ready) ? "[udU]" : "u") : "d";
+    const char *cmd = (is_start) ? "u" : (mode & AA_MODE_STOP_ALL) ? "dx" : "d";
     int already = 0;
 
     byte_copy (fifodir, l_sn, aa_service_name (s));
@@ -50,10 +51,9 @@ _exec_longrun (int si, aa_mode mode)
     byte_copy (fifodir + l_sn + 1, sizeof (S6_SUPERVISE_EVENTDIR), S6_SUPERVISE_EVENTDIR);
 
     tain_addsec_g (&deadline, 1);
-    s->ft_id = ftrigr_subscribe_g (&_aa_ft, fifodir,
-            (is_start && s->gets_ready) ? "[udU]" : event,
-            (is_start && s->gets_ready) ? FTRIGR_REPEAT : 0,
-            &deadline);
+    s->ft_id = ftrigr_subscribe_g (&_aa_ft, fifodir, event,
+                                   (*event == '[') ? FTRIGR_REPEAT : 0,
+                                   &deadline);
     if (s->ft_id == 0)
     {
         /* this could happen e.g. if the servicedir isn't in scandir, if
@@ -116,7 +116,7 @@ _exec_longrun (int si, aa_mode mode)
          * IOW this is likely e.g. that it crashed since then, but it isn't
          * really down, or something. So make sure we do send the request to
          * s6-supervise, so it isn't restarted, or indeed brought down if it's
-         * happening right now. Also in STOP_ALL this sends the 'x' event to
+         * happening right now. Also in STOP_ALL this sends the 'x' cmd to
          * s6-supervise as needed as well.
          */
 
@@ -130,7 +130,7 @@ _exec_longrun (int si, aa_mode mode)
              * (notification-fd) and then unset externally, it could come back
              * if s6-supervise was to rewrite the status file.
              */
-            event = NULL;
+            cmd = NULL;
     }
     else
     {
@@ -151,7 +151,7 @@ _exec_longrun (int si, aa_mode mode)
         }
     }
 
-    if (event)
+    if (cmd)
     {
         char dir[l_sn + 1 + sizeof (S6_SUPERVISE_CTLDIR) + 8];
         int r;
@@ -159,8 +159,7 @@ _exec_longrun (int si, aa_mode mode)
         byte_copy (dir, l_sn, aa_service_name (s));
         byte_copy (dir + l_sn, 9 + sizeof (S6_SUPERVISE_CTLDIR), "/" S6_SUPERVISE_CTLDIR "/control");
 
-        r = s6_svc_write (dir, (mode & AA_MODE_STOP_ALL) ? "dx" : event,
-                (mode & AA_MODE_STOP_ALL) ? 2 : 1);
+        r = s6_svc_write (dir, cmd, strlen (cmd));
         if (r <= 0 && !already)
         {
             aa_unsubscribe_for (s->ft_id);
