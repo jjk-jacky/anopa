@@ -42,7 +42,7 @@ _exec_longrun (int si, aa_mode mode)
     char fifodir[l_sn + 1 + sizeof (S6_SUPERVISE_EVENTDIR)];
     tain_t deadline;
     int is_start = (mode & AA_MODE_START) ? 1 : 0;
-    const char *event = (is_start) ? ((s->gets_ready) ? "[udU]" : "u") : "d";
+    const char *event = (is_start) ? ((s->gets_ready) ? "[udU]" : "u") : "D";
     const char *cmd = (is_start) ? "u" : (mode & AA_MODE_STOP_ALL) ? "dx" : "d";
     int already = 0;
 
