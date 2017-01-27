@@ -1314,7 +1314,10 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
                         aa_strerr_warnu3sys ("get (",
                                 (r == -1) ? "update" : "check",
                                 ") longrun information");
-                        break;
+                        if (r == -1)
+                            break;
+                        else
+                            continue;
                     }
                     else if (r == 0)
                         break;
