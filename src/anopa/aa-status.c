@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-status.c
- * Copyright (C) 2015-2016 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -249,7 +249,7 @@ put_list_header (struct config *cfg)
                 {
                     /* try without col1 */
                     len -= cols[1].len;
-                    if (len < len)
+                    if (cfg->cols < len)
                     {
                         aa_strerr_warn1x ("Terminal too small, disabling list mode");
                         cfg->mode = MODE_NORMAL;
