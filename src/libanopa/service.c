@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * service.c
- * Copyright (C) 2015-2016 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -685,6 +685,7 @@ aa_exec_service (int si, aa_mode mode)
          * we use common code for aa-start & aa-stop, so... yeah */
         _exec_cb (si, 0, (pid_t) mode);
 
+    tain_now_g ();
     tain_copynow (&aa_service (si)->ts_exec);
     if (!(mode & AA_MODE_IS_DRY))
     {
