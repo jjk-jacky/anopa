@@ -88,10 +88,19 @@ _exec_longrun (int si, aa_mode mode)
 
         if (!is_start || !s->gets_ready || st6.flagready)
         {
-            already = 1;
-            /* already there; unsubcribe */
-            ftrigr_unsubscribe_g (&_aa_ft, s->ft_id, &deadline);
-            s->ft_id = 0;
+            /* already there: unsubcribe.
+             *
+             * Failure to unsubscribe w/ EINVAL means that the service got where
+             * we wanted *after* we subscribed, and the event was already
+             * treated/is queued up (when non-repeating, i.e. no FTRIGR_REPEAT).
+             * Then, we want to process it later as usual (i.e. keep it & not
+             * set already).
+             */
+            if (aa_unsubscribe_for (s->ft_id) == 0 || errno != EINVAL)
+            {
+                already = 1;
+                s->ft_id = 0;
+            }
         }
 
         /* make sure our status is correct, and timestamped before s6 */
@@ -154,8 +163,7 @@ _exec_longrun (int si, aa_mode mode)
                 (mode & AA_MODE_STOP_ALL) ? 2 : 1);
         if (r <= 0 && !already)
         {
-            tain_addsec_g (&deadline, 1);
-            ftrigr_unsubscribe_g (&_aa_ft, s->ft_id, &deadline);
+            aa_unsubscribe_for (s->ft_id);
             s->ft_id = 0;
 
             s->st.event = (is_start) ? AA_EVT_STARTING_FAILED : AA_EVT_STOPPING_FAILED;
