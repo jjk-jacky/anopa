@@ -20,7 +20,7 @@ entire supervised tree (i.e. be used during stage 3, after B<s6-svscan> has been
 brought down).
 When used, you shouldn't specify any service on the command line.
 
-Also see below for more implications.
+Also see below as well as B<--timeout> for more implications.
 
 =item B<-D, --double-output>
 
@@ -61,6 +61,10 @@ for.
 
 Set default timeout to I<timeout> seconds. You can use 0 for no timeout.
 Timeout can also be set in service in a file I<timeout> in its servicedir.
+
+If the "stop-all" mode is enabled (i.e. option B<--all> used twice), the default
+timeout (whether or not set on command line) will also be used as a maximum
+value.
 
 =item B<-V, --version>
 

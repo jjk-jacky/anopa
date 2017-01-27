@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-stop.c
- * Copyright (C) 2015-2016 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -392,6 +392,12 @@ main (int argc, char * const argv[])
 
     if ((all && (path_list || argc > 0)) || (!all && !path_list && argc < 1))
         dieusage (1);
+
+    if ((mode & AA_MODE_STOP_ALL) && aa_secs_timeout == 0)
+    {
+        aa_strerr_warn1x ("Default timeout cannot be infinite (0) in stop-all mode, ignoring");
+        aa_secs_timeout = DEFAULT_TIMEOUT_SECS;
+    }
 
     if (aa_init_repo (path_repo, (mode & AA_MODE_IS_DRY) ? AA_REPO_READ : AA_REPO_WRITE) < 0)
         aa_strerr_diefu2sys (ERR_IO, "init repository ", path_repo);
