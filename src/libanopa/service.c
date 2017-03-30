@@ -398,6 +398,8 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_autoload_cb al_
         }
         else
             aa_service (si)->secs_timeout = aa_secs_timeout;
+
+        stralloc_free (&sa_to);
     }
 
     stralloc_free (&sa);
