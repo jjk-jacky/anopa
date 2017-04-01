@@ -378,16 +378,24 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_autoload_cb al_
         goto err;
 
     {
-        stralloc sa_to = STRALLOC_ZERO;
+        char buf[UINT_FMT + 1];
+        ssize_t rr;
 
         sa.len -= strlen ("before") + 1;
         stralloc_catb (&sa, "timeout", strlen ("timeout") + 1);
-        if (openreadclose (sa.s, &sa_to, 0) == 0 && sa_to.len > 0)
+
+        rr = openreadnclose_nb (sa.s, buf, UINT_FMT);
+        if (rr < 0 && errno != ENOENT)
+            aa_strerr_warnu3x ("read timeout for ", aa_service_name (aa_service (si)), "; using default");
+
+        if (rr >= 0)
         {
-            r = uint_scan (sa_to.s, &aa_service (si)->secs_timeout);
-            if (!r || (sa_to.s[r] != '\n' && sa_to.s[r] != '\0'))
+            unsigned int i = rr;
+
+            buf[byte_chr (buf, i, '\n')] = '\0';
+            if (!uint0_scan (buf, &i))
             {
-                aa_strerr_warnu3x ("read timeout for ", aa_service_name (aa_service (si)), "; using default");
+                aa_strerr_warn3x ("invalid timeout for ", aa_service_name (aa_service (si)), "; using default");
                 aa_service (si)->secs_timeout = aa_secs_timeout;
             }
             /* in STOP_ALL the default is also a maximum */
@@ -398,8 +406,6 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_autoload_cb al_
         }
         else
             aa_service (si)->secs_timeout = aa_secs_timeout;
-
-        stralloc_free (&sa_to);
     }
 
     stralloc_free (&sa);
