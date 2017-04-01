@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-reset.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -25,9 +25,10 @@
 #include "anopa/config.h"
 
 #include <errno.h>
+#include <strings.h>
 #include <getopt.h>
 #include <skalibs/tai.h>
-#include <skalibs/error.h>
+#include <skalibs/bytestr.h>
 #include <anopa/common.h>
 #include <anopa/output.h>
 #include <anopa/init_repo.h>
@@ -50,8 +51,8 @@ reset_service (const char *name, intptr_t mode)
     aa_service *s;
     int si;
     int r;
-    int old_event;
-    int event;
+    aa_evt old_event;
+    aa_evt event;
 
     r = aa_get_service (name, &si, 1);
     if (r < 0)
@@ -73,7 +74,7 @@ reset_service (const char *name, intptr_t mode)
         int e = errno;
 
         aa_put_err (name, "Failed to read service status file: ", 0);
-        aa_bs_noflush (AA_ERR, error_str (e));
+        aa_bs_noflush (AA_ERR, strerror (e));
         aa_end_err ();
         return;
     }
@@ -113,7 +114,7 @@ reset_service (const char *name, intptr_t mode)
         int e = errno;
 
         aa_put_err (name, "Failed to write service status file: ", 0);
-        aa_bs_noflush (AA_ERR, error_str (e));
+        aa_bs_noflush (AA_ERR, strerror (e));
         aa_end_err ();
     }
     else

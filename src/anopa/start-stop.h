@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * start-stop.h
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -24,6 +24,7 @@
 #define AA_START_STOP_H
 
 #include <signal.h>
+#include <sys/types.h>
 #include <skalibs/genalloc.h>
 #include <skalibs/tai.h>
 #include <anopa/service.h>
@@ -102,7 +103,7 @@ int handle_longrun (aa_mode mode, uint16 id, char event);
 int is_locale_utf8 (void);
 int get_cols (int fd);
 int handle_signals (aa_mode mode);
-void prepare_cb (int cur, int next, int is_needs, int first);
+void prepare_cb (int cur, int next, int is_needs, size_t first);
 void exec_cb (int si, aa_evt evt, pid_t pid);
 void mainloop (aa_mode mode, aa_scan_cb scan_cb);
 void show_stat_service_names (genalloc *ga, const char *title, const char *ansi_color);

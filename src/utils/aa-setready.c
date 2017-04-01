@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-setready.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <skalibs/djbunix.h>
+#include <skalibs/bytestr.h>
 #include <s6/ftrigw.h>
 #include <s6/s6-supervise.h>
 #include <anopa/common.h>
@@ -94,7 +95,7 @@ main (int argc, char * const argv[])
         dieusage (1);
 
     {
-        int l = strlen (argv[0]);
+        size_t l = strlen (argv[0]);
         char fifodir[l + 1 + sizeof (S6_SUPERVISE_EVENTDIR)];
         s6_svstatus_t st6 = S6_SVSTATUS_ZERO;
 

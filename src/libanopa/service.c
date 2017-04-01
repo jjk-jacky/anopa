@@ -21,13 +21,14 @@
  */
 
 #include <sys/stat.h>
+#include <unistd.h>
 #include <errno.h>
 #include <skalibs/djbunix.h> /* fd_close() */
 #include <skalibs/stralloc.h>
 #include <skalibs/genalloc.h>
 #include <skalibs/bytestr.h>
 #include <skalibs/direntry.h>
-#include <skalibs/uint.h>
+#include <skalibs/types.h>
 #include <skalibs/tai.h>
 #include <s6/s6-supervise.h>
 #include <s6/ftrigr.h>
@@ -66,12 +67,12 @@ aa_free_services (aa_close_fd_fn _close_fd)
     genalloc_deepfree (aa_service, &aa_services, free_service);
 }
 
-int
+size_t
 aa_add_name (const char *name)
 {
-    int offset = aa_names.len;
+    size_t offset = aa_names.len;
     if (!stralloc_catb (&aa_names, name, strlen (name) + 1))
-        return -1;
+        return (size_t) -1;
     return offset;
 }
 
@@ -107,6 +108,8 @@ get_new_service (const char *name)
         return (errno = ENOTDIR, -ERR_IO);
 
     s.offset_name = aa_add_name (name);
+    if (s.offset_name == (size_t) -1)
+        return (errno = ENOMEM, -ERR_UNKNOWN);
     genalloc_append (aa_service, &aa_services, &s);
     return genalloc_len (aa_service, &aa_services) - 1;
 }
@@ -114,8 +117,8 @@ get_new_service (const char *name)
 static int
 get_from_list (genalloc *list, const char *name)
 {
-    int l = genalloc_len (int, list);
-    int i;
+    size_t l = genalloc_len (int, list);
+    size_t i;
 
     for (i = 0; i < l; ++i)
         if (!str_diff (name, aa_service_name (aa_service (list_get (list, i)))))
@@ -155,7 +158,7 @@ static int
 contains_fd (const char *filename)
 {
     char buf[UINT_FMT + 1];
-    int r;
+    ssize_t r;
 
     r = openreadnclose_nb (filename, buf, UINT_FMT);
     if (r < 0)
@@ -165,11 +168,15 @@ contains_fd (const char *filename)
         return 0;
     }
 
-    buf[byte_chr (buf, r, '\n')] = '\0';
-    if (!uint0_scan (buf, &r))
     {
-        aa_strerr_warn2x ("invalid ", filename);
-        return 0;
+        unsigned int i = r;
+
+        buf[byte_chr (buf, i, '\n')] = '\0';
+        if (!uint0_scan (buf, &i))
+        {
+            aa_strerr_warn2x ("invalid ", filename);
+            return 0;
+        }
     }
 
     return 1;
@@ -179,7 +186,7 @@ int
 aa_preload_service (int si)
 {
     aa_service_status *svst = &aa_service (si)->st;
-    int l_sn = strlen (aa_service_name (aa_service (si)));
+    size_t l_sn = strlen (aa_service_name (aa_service (si)));
     char buf[l_sn + 1 + sizeof (NOTIFICATION_FILENAME)];
 
     byte_copy (buf, l_sn, aa_service_name (aa_service (si)));
@@ -424,8 +431,8 @@ static int
 check_afters (int si, int *sli, int *has_longrun)
 {
     aa_service *s = aa_service (si);
-    int org = genalloc_len (int, &aa_tmp_list);
-    int i;
+    size_t org = genalloc_len (int, &aa_tmp_list);
+    size_t i;
 
     if (s->ls == AA_LOAD_DONE_CHECKED)
         return 0;
@@ -467,7 +474,7 @@ int
 aa_prepare_mainlist (aa_prepare_cb prepare_cb, aa_exec_cb exec_cb)
 {
     int has_longrun = 0;
-    int i;
+    size_t i;
 
     _exec_cb = exec_cb;
     aa_tmp_list.len = 0;
@@ -491,9 +498,9 @@ aa_prepare_mainlist (aa_prepare_cb prepare_cb, aa_exec_cb exec_cb)
          */
         if (check_afters (si, &sli, &has_longrun) < 0)
         {
-            int l;
-            int j;
-            int found = 0;
+            size_t l;
+            size_t j;
+            size_t found = 0;
 
             add_to_list (&aa_tmp_list, sli, 0);
             l = genalloc_len (int, &aa_tmp_list);
@@ -606,13 +613,13 @@ service_is_ok (aa_mode mode, aa_service *s)
 void
 aa_scan_mainlist (aa_scan_cb scan_cb, aa_mode mode)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < genalloc_len (int, &aa_main_list); )
     {
         aa_service *s;
         int si;
-        int j;
+        size_t j;
 
         si = list_get (&aa_main_list, i);
         s = aa_service (si);

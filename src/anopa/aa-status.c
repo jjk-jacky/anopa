@@ -26,6 +26,7 @@
 
 #include <sys/ioctl.h>
 #include <termios.h>
+#include <strings.h>
 #include <errno.h>
 #include <getopt.h>
 #include <unistd.h>
@@ -37,11 +38,10 @@
 #include <skalibs/genalloc.h>
 #include <skalibs/stralloc.h>
 #include <skalibs/skamisc.h>
-#include <skalibs/uint.h>
+#include <skalibs/types.h>
 #include <skalibs/djbtime.h>
 #include <skalibs/tai.h>
 #include <skalibs/sig.h>
-#include <skalibs/error.h>
 #include <s6/s6-supervise.h>
 #include <anopa/common.h>
 #include <anopa/output.h>
@@ -63,8 +63,8 @@ enum
 struct config
 {
     int mode;
-    int cols;
-    int max_name;
+    size_t cols;
+    size_t max_name;
 };
 
 struct serv
@@ -102,10 +102,10 @@ static unsigned int filter_type = FILTER_NONE;
 static unsigned int filter_status = FILTER_NONE;
 static unsigned int sort_order = SORT_ASC;
 
-static int put_s_max (const char *s, int max, int pad);
+static size_t put_s_max (const char *s, size_t max, int pad);
 
 static void
-put_wstat (int wstat, int max, int pad)
+put_wstat (int wstat, size_t max, int pad)
 {
     char buf[20];
 
@@ -182,7 +182,7 @@ put_time (tain_t *st_stamp, int strict)
 static struct col
 {
     const char *title;
-    int len;
+    size_t len;
 } cols[4] = {
     { .title = "Service",   .len = 8 },
     { .title = "Type",      .len = 8 },
@@ -191,14 +191,14 @@ static struct col
 };
 
 static inline void
-pad_with (int left)
+pad_with (ssize_t left)
 {
     for ( ; left > 0; left -= 10)
         aa_bb_noflush (AA_OUT, "          ", (left >= 10) ? 10 : left);
 }
 
 static inline void
-pad_col (int i, int done)
+pad_col (int i, size_t done)
 {
     if (cols[i].len && cols[i].len > done)
         pad_with (cols[i].len - done);
@@ -207,7 +207,7 @@ pad_col (int i, int done)
 static int
 put_list_header (struct config *cfg)
 {
-    int best;
+    size_t best;
     int i;
 
     if (cfg->max_name + 1 > cols[0].len)
@@ -215,14 +215,14 @@ put_list_header (struct config *cfg)
     else
         best = cols[0].len;
 
-    if (cfg->cols < 0)
+    if (cfg->cols == 0)
     {
         cols[0].len = best;
         cols[3].len = 0;
     }
     else
     {
-        int len;
+        size_t len;
 
         /* try with the best width */
         len = best + cols[1].len + cols[2].len + cols[3].len;
@@ -230,8 +230,8 @@ put_list_header (struct config *cfg)
             cols[0].len = best;
         else
         {
-            int added;
-            int n;
+            size_t added;
+            size_t n;
 
             added = best - cols[0].len;
             n = len - cfg->cols;
@@ -279,10 +279,10 @@ put_list_header (struct config *cfg)
     return 1;
 }
 
-static int
-put_s_max (const char *s, int max, int pad)
+static size_t
+put_s_max (const char *s, size_t max, int pad)
 {
-    int l = strlen (s);
+    size_t l = strlen (s);
 
     if (max <= 4)
         return 0;
@@ -378,7 +378,7 @@ status_service (struct serv *serv, struct config *cfg)
 
     if (serv->is_s6)
     {
-        int max = cols[3].len;
+        size_t max = cols[3].len;
 
         if (serv->st6.pid && !serv->st6.flagfinishing)
         {
@@ -452,7 +452,7 @@ status_service (struct serv *serv, struct config *cfg)
     }
     else
     {
-        int max = cols[3].len;
+        size_t max = cols[3].len;
 
         switch (s->st.event)
         {
@@ -628,7 +628,7 @@ load_service (const char *name, struct config *cfg)
         int e = errno;
 
         aa_put_err (name, "Failed to read service status file: ", 0);
-        aa_bs_noflush (AA_ERR, error_str (e));
+        aa_bs_noflush (AA_ERR, strerror (e));
         aa_end_err ();
         return -1;
     }
@@ -648,7 +648,7 @@ load_service (const char *name, struct config *cfg)
                 int e = errno;
 
                 aa_put_err (name, "Unable to read s6 status: ", 0);
-                aa_bs_noflush (AA_ERR, error_str (e));
+                aa_bs_noflush (AA_ERR, strerror (e));
                 aa_end_err ();
                 return -1;
             }
@@ -670,7 +670,7 @@ load_service (const char *name, struct config *cfg)
 
     if (cfg->mode == MODE_LIST)
     {
-        int l = strlen (name);
+        size_t l = strlen (name);
 
         if (l > cfg->max_name)
             cfg->max_name = l;
@@ -694,8 +694,8 @@ it_all (direntry *d, void *data)
             /* si < 0 could be a error, or just that it was filtered out */
             && (si < 0 || aa_service (si)->st.type == AA_TYPE_LONGRUN))
     {
-        int l = satmp.len;
-        int ln = strlen (d->d_name);
+        size_t l = satmp.len;
+        size_t ln = strlen (d->d_name);
         int r;
 
         /* is this not a logger already? */
@@ -818,7 +818,6 @@ main (int argc, char * const argv[])
     struct config cfg = { 0, };
     int (*sort_fn) (const void *, const void *) = cmp_serv_stamp;
     int all = 0;
-    int i;
     int r;
 
     for (;;)
@@ -958,7 +957,7 @@ main (int argc, char * const argv[])
                     (*path_list != '/' && *path_list != '.') ? path_list : "");
     }
     else
-        for (i = 0; i < argc; ++i)
+        for (int i = 0; i < argc; ++i)
             if (str_equal (argv[i], "-"))
             {
                 if (process_names_from_stdin ((names_cb) load_service, &cfg) < 0)
@@ -971,7 +970,7 @@ main (int argc, char * const argv[])
         qsort (genalloc_s(struct serv, &ga_serv), genalloc_len (struct serv, &ga_serv),
                 sizeof (struct serv), sort_fn);
 
-    for (i = 0; i < genalloc_len (struct serv, &ga_serv); ++i)
+    for (size_t i = 0; i < genalloc_len (struct serv, &ga_serv); ++i)
         status_service (&genalloc_s (struct serv, &ga_serv)[i], &cfg);
 
     return 0;

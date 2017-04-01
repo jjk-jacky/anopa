@@ -21,11 +21,11 @@
  */
 
 #include <unistd.h>
+#include <strings.h>
 #include <errno.h>
 #include <skalibs/djbunix.h>
 #include <skalibs/bytestr.h>
 #include <skalibs/tai.h>
-#include <skalibs/error.h>
 #include <s6/s6-supervise.h>
 #include <s6/ftrigr.h>
 #include <anopa/service.h>
@@ -38,7 +38,7 @@ _exec_longrun (int si, aa_mode mode)
 {
     aa_service *s = aa_service (si);
     s6_svstatus_t st6 = S6_SVSTATUS_ZERO;
-    int l_sn = strlen (aa_service_name (s));
+    size_t l_sn = strlen (aa_service_name (s));
     char fifodir[l_sn + 1 + sizeof (S6_SUPERVISE_EVENTDIR)];
     tain_t deadline;
     int is_start = (mode & AA_MODE_START) ? 1 : 0;
@@ -60,9 +60,9 @@ _exec_longrun (int si, aa_mode mode)
          * something failed during aa-enable for example */
 
         const char *errmsg = "Failed to subscribe to eventdir: ";
-        int l_msg = strlen (errmsg);
-        const char *errstr = error_str (errno);
-        int l_err = strlen (errstr);
+        size_t l_msg = strlen (errmsg);
+        const char *errstr = strerror (errno);
+        size_t l_err = strlen (errstr);
         char msg[l_msg + l_err + 1];
 
         byte_copy (msg, l_msg, errmsg);
@@ -143,7 +143,7 @@ _exec_longrun (int si, aa_mode mode)
         {
             s->st.event = (is_start) ? AA_EVT_STARTING_FAILED : AA_EVT_STOPPING_FAILED;
             s->st.code = ERR_WRITE_STATUS;
-            aa_service_status_set_msg (&s->st, error_str (errno));
+            aa_service_status_set_msg (&s->st, strerror (errno));
 
             if (_exec_cb)
                 _exec_cb (si, s->st.event, 0);
@@ -215,14 +215,14 @@ _exec_longrun (int si, aa_mode mode)
     return 0;
 }
 
-static int idx = -1;
+static size_t idx = (size_t) -1;
 
 int
-aa_get_longrun_info (uint16 *id, char *event)
+aa_get_longrun_info (uint16_t *id, char *event)
 {
     int r;
 
-    if (idx == -1)
+    if (idx == (size_t) -1)
     {
         r = ftrigr_update (&_aa_ft);
         if (r < 0)
@@ -232,21 +232,21 @@ aa_get_longrun_info (uint16 *id, char *event)
         idx = 0;
     }
 
-    for ( ; idx < genalloc_len (uint16, &_aa_ft.list); )
+    for ( ; idx < genalloc_len (uint16_t, &_aa_ft.list); )
     {
-        *id = genalloc_s (uint16, &_aa_ft.list)[idx];
+        *id = genalloc_s (uint16_t, &_aa_ft.list)[idx];
         r = ftrigr_check (&_aa_ft, *id, event);
         ++idx;
         if (r != 0)
             return (r < 0) ? -2 : r;
     }
 
-    idx = -1;
+    idx = (size_t) -1;
     return 0;
 }
 
 int
-aa_unsubscribe_for (uint16 id)
+aa_unsubscribe_for (uint16_t id)
 {
     tain_t deadline;
 

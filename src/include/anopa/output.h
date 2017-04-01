@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * output.h
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -23,8 +23,8 @@
 #ifndef AA_OUTPUT_H
 #define AA_OUTPUT_H
 
-#include <string.h> /* strlen() */
-#include <skalibs/error.h>
+#include <string.h>
+#include <errno.h>
 
 extern const char *PROG;
 
@@ -39,12 +39,12 @@ extern const char *PROG;
 #define AA_ERR      1
 
 extern void aa_set_double_output (int enabled);
-extern void aa_bb_noflush (int where, const char *s, int len);
-extern void aa_bb_flush (int where, const char *s, int len);
+extern void aa_bb_noflush (int where, const char *s, size_t len);
+extern void aa_bb_flush (int where, const char *s, size_t len);
 #define aa_bs_noflush(w,s)  aa_bb_noflush ((w), (s), strlen (s))
 #define aa_bs_flush(w,s)    aa_bb_flush ((w), (s), strlen (s))
-extern void aa_ib_noflush (int where, const char *s, int len);
-extern void aa_ib_flush (int where, const char *s, int len);
+extern void aa_ib_noflush (int where, const char *s, size_t len);
+extern void aa_ib_flush (int where, const char *s, size_t len);
 #define aa_is_noflush(w,s)  aa_ib_noflush ((w), (s), strlen (s))
 #define aa_is_flush(w,s)    aa_ib_flush ((w), (s), strlen (s))
 extern void aa_bs_end (int where);
@@ -93,17 +93,17 @@ extern void aa_strerr_warn (const char *s1,
     aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, s5, s6, 0, 0)
 
 #define aa_strerr_warnu1sys(s1) \
-    aa_strerr_warn ("warning: ", "unable to ", s1, ": ", error_str (errno), 0, 0, 0, 0, 0)
+    aa_strerr_warn ("warning: ", "unable to ", s1, ": ", strerror (errno), 0, 0, 0, 0, 0)
 #define aa_strerr_warnu2sys(s1,s2) \
-    aa_strerr_warn ("warning: ", "unable to ", s1, s2, ": ", error_str (errno), 0, 0, 0, 0)
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, ": ", strerror (errno), 0, 0, 0, 0)
 #define aa_strerr_warnu3sys(s1,s2,s3) \
-    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, ": ", error_str (errno), 0, 0, 0)
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, ": ", strerror (errno), 0, 0, 0)
 #define aa_strerr_warnu4sys(s1,s2,s3,s4) \
-    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, ": ", error_str (errno), 0, 0)
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, ": ", strerror (errno), 0, 0)
 #define aa_strerr_warnu5sys(s1,s2,s3,s4,s5) \
-    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, s5, ": ", error_str (errno), 0)
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, s5, ": ", strerror (errno), 0)
 #define aa_strerr_warnu6sys(s1,s2,s3,s4,s5,s6) \
-    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, s5, s6, ": ", error_str (errno))
+    aa_strerr_warn ("warning: ", "unable to ", s1, s2, s3, s4, s5, s6, ": ", strerror (errno))
 
 extern void aa_strerr_die (int rc,
                            const char *s1,
@@ -117,17 +117,17 @@ extern void aa_strerr_die (int rc,
                            const char *s9);
 
 #define aa_strerr_diefu1sys(rc,s1) \
-    aa_strerr_die (rc, "unable to ", s1, ": ", error_str (errno), 0, 0, 0, 0, 0)
+    aa_strerr_die (rc, "unable to ", s1, ": ", strerror (errno), 0, 0, 0, 0, 0)
 #define aa_strerr_diefu2sys(rc,s1,s2) \
-    aa_strerr_die (rc, "unable to ", s1, s2, ": ", error_str (errno), 0, 0, 0, 0)
+    aa_strerr_die (rc, "unable to ", s1, s2, ": ", strerror (errno), 0, 0, 0, 0)
 #define aa_strerr_diefu3sys(rc,s1,s2,s3) \
-    aa_strerr_die (rc, "unable to ", s1, s2, s3, ": ", error_str (errno), 0, 0, 0)
+    aa_strerr_die (rc, "unable to ", s1, s2, s3, ": ", strerror (errno), 0, 0, 0)
 #define aa_strerr_diefu4sys(rc,s1,s2,s3,s4) \
-    aa_strerr_die (rc, "unable to ", s1, s2, s3, s4, ": ", error_str (errno), 0, 0)
+    aa_strerr_die (rc, "unable to ", s1, s2, s3, s4, ": ", strerror (errno), 0, 0)
 #define aa_strerr_diefu5sys(rc,s1,s2,s3,s4,s5) \
-    aa_strerr_die (rc, "unable to ", s1, s2, s3, s4, s5, ": ", error_str (errno), 0)
+    aa_strerr_die (rc, "unable to ", s1, s2, s3, s4, s5, ": ", strerror (errno), 0)
 #define aa_strerr_diefu6sys(rc,s1,s2,s3,s4,s5,s6) \
-    aa_strerr_die (rc, "unable to ", s1, s2, s3, s4, s5, s6, ": ", error_str (errno))
+    aa_strerr_die (rc, "unable to ", s1, s2, s3, s4, s5, s6, ": ", strerror (errno))
 
 #define aa_strerr_dief1x(rc,s1) \
     aa_strerr_die (rc, s1, 0, 0, 0, 0, 0, 0, 0, 0)

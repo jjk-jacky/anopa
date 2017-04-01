@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-mvlog.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -86,7 +86,7 @@ main (int argc, char * const argv[])
         aa_strerr_dief2x (2, argv[0], ": not a file");
 
     {
-        int l = strlen (argv[1]);
+        size_t l = strlen (argv[1]);
         char newname[l + 27];
         char target[26];
 

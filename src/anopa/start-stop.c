@@ -25,6 +25,7 @@
 #include <sys/ioctl.h>
 #include <langinfo.h>
 #include <errno.h>
+#include <unistd.h>
 #include <skalibs/allreadwrite.h>
 #include <skalibs/djbunix.h>
 #include <skalibs/bytestr.h>
@@ -34,8 +35,7 @@
 #include <skalibs/iopause.h>
 #include <skalibs/selfpipe.h>
 #include <skalibs/sig.h>
-#include <skalibs/uint.h>
-#include <skalibs/uint16.h>
+#include <skalibs/types.h>
 #include <anopa/service.h>
 #include <anopa/ga_int_list.h>
 #include <anopa/output.h>
@@ -82,7 +82,7 @@ clear_draw ()
 
     if (draw & DRAW_CUR_PROGRESS)
     {
-        int i;
+        size_t i;
 
         for (i = 0; i < genalloc_len (struct progress, &ga_progress); ++i)
         {
@@ -181,7 +181,7 @@ draw_waiting (int already_drawn)
     else
         ++tick;
 
-    if (n <= genalloc_len (pid_t, &ga_pid))
+    if ((size_t) n <= genalloc_len (pid_t, &ga_pid))
         si = list_get (&aa_tmp_list, n - 1);
     else
     {
@@ -286,7 +286,7 @@ refresh_draw ()
 
     if ((draw & DRAW_NEED_PASSWORD) && si_password < 0)
     {
-        int i;
+        size_t i;
 
         for (i = 0; i < genalloc_len (struct progress, &ga_progress); ++i)
         {
@@ -321,7 +321,7 @@ refresh_draw ()
 
     if (draw & DRAW_NEED_PROGRESS)
     {
-        int i;
+        size_t i;
 
         for (i = 0; i < genalloc_len (struct progress, &ga_progress); ++i)
         {
@@ -350,19 +350,24 @@ refresh_draw ()
 void
 add_name_to_ga (const char *name, genalloc *ga)
 {
-    int offset = aa_add_name (name);
-    genalloc_append (int, ga, &offset);
+    size_t offset = aa_add_name (name);
+    if (offset == (size_t) -1)
+    {
+        aa_strerr_warnu3sys ("add '", name, "' to list");
+        return;
+    }
+    genalloc_append (size_t, ga, &offset);
 }
 
 void
 remove_fd_from_iop (int fd)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < genalloc_len (iopause_fd, &ga_iop); ++i)
         if (genalloc_s (iopause_fd, &ga_iop)[i].fd == fd)
         {
-            ga_remove (iopause_fd, &ga_iop, i);
+            ga_remove (&ga_iop, sizeof (iopause_fd), i);
             break;
         }
 }
@@ -372,7 +377,7 @@ close_fd_for (int fd, int si)
 {
     if (si < 0)
     {
-        int i;
+        size_t i;
 
         for (i = 0; i < genalloc_len (int, &aa_tmp_list); ++i)
             if (aa_service (list_get (&aa_tmp_list, i))->fd_in == fd
@@ -417,7 +422,7 @@ handle_fd_out (int si)
     for (;;)
     {
         char buf[256];
-        int r;
+        ssize_t r;
 
         r = fd_read (s->fd_out, buf, 256);
         if (r < 0)
@@ -433,7 +438,7 @@ handle_fd_out (int si)
 
         for (;;)
         {
-            int len;
+            size_t len;
 
             len = byte_chr (s->sa_out.s, s->sa_out.len, '\n');
             if (len >= s->sa_out.len)
@@ -460,8 +465,8 @@ handle_fd_progress (int si)
     aa_service *s = aa_service (si);
     struct progress *pg;
     char buf[256];
-    int i;
-    int r;
+    size_t i;
+    ssize_t r;
 
     if (s->pi < 0)
     {
@@ -501,7 +506,7 @@ handle_fd_progress (int si)
     /* PASSWORD */
     if ((r > 3 && buf[1] == '<' && buf[2] == ' ') || pg->is_drawn == DRAWN_PASSWORD_WAITMSG)
     {
-        int rr;
+        size_t rr;
 
         if (pg->is_drawn != DRAWN_PASSWORD_WAITMSG)
         {
@@ -512,7 +517,7 @@ handle_fd_progress (int si)
             i = 1;
 
         rr = byte_rchr (buf + i, r, '\n');
-        if (rr == r)
+        if (rr == (size_t) r)
         {
             if (!stralloc_catb (&pg->aa_pg.sa, buf + i, rr))
                 return -1;
@@ -570,7 +575,7 @@ handle_fd_in (void)
     struct progress *pg;
     char buf[256];
     iopause_fd iop;
-    int r;
+    ssize_t r;
 
     r = fd_read (0, buf, 256);
     if (r < 0)
@@ -604,7 +609,7 @@ int
 handle_fd (int fd)
 {
     int si;
-    int i;
+    size_t i;
 
     if (fd == 0 && si_password >= 0)
         return handle_fd_in ();
@@ -661,9 +666,9 @@ handle_fdw (int fd)
 {
     aa_service *s;
     struct progress *pg;
-    int offset;
-    int len;
-    int r;
+    size_t offset;
+    size_t len;
+    ssize_t r;
 
     if (si_password < 0 || aa_service (si_password)->fd_in != fd)
         return (errno = ENOENT, -1);
@@ -680,7 +685,7 @@ handle_fdw (int fd)
         aa_strerr_warnu2sys ("write to fd_in of service ", aa_service_name (s));
         return r;
     }
-    else if (r < len)
+    else if ((size_t) r < len)
     {
         memmove (pg->aa_pg.sa.s + offset, pg->aa_pg.sa.s + offset + r, len - r);
         pg->aa_pg.sa.len -= r;
@@ -712,7 +717,7 @@ handle_oneshot (int is_start)
     si = list_get (&aa_tmp_list, r - 1);
 
     remove_from_list (&aa_tmp_list, si);
-    ga_remove (pid_t, &ga_pid, r - 1);
+    ga_remove (&ga_pid, sizeof (pid_t), r - 1);
     if (si == si_password)
         end_si_password ();
     if (aa_service (si)->fd_in > 0)
@@ -793,11 +798,11 @@ handle_oneshot (int is_start)
 }
 
 int
-handle_longrun (aa_mode mode, uint16 id, char event)
+handle_longrun (aa_mode mode, uint16_t id, char event)
 {
     int si;
-    int l = genalloc_len (int, &aa_main_list);
-    int i;
+    size_t l = genalloc_len (int, &aa_main_list);
+    size_t i;
 
     for (i = 0; i < l; ++i)
         if (aa_service (list_get (&aa_main_list, i))->ft_id == id)
@@ -919,10 +924,10 @@ handle_signals (aa_mode mode)
 }
 
 void
-prepare_cb (int cur, int next, int is_needs, int first)
+prepare_cb (int cur, int next, int is_needs, size_t first)
 {
-    int l = genalloc_len (int, &aa_tmp_list);
-    int i;
+    size_t l = genalloc_len (int, &aa_tmp_list);
+    size_t i;
 
     if (is_needs)
     {
@@ -1045,8 +1050,8 @@ int
 process_timeouts (aa_mode mode, aa_scan_cb scan_cb)
 {
     int si;
-    int l;
-    int i;
+    size_t l;
+    size_t i;
     tain_t ts_timeout;
     tain_t ts;
     tain_t tms;
@@ -1081,7 +1086,7 @@ process_timeouts (aa_mode mode, aa_scan_cb scan_cb)
                 kill (genalloc_s (pid_t, &ga_pid)[i], SIGKILL);
 
                 remove_from_list (&aa_tmp_list, si);
-                ga_remove (pid_t, &ga_pid, i);
+                ga_remove (&ga_pid, sizeof (pid_t), i);
                 if (si == si_password)
                     end_si_password ();
                 if (aa_service (si)->fd_in > 0)
@@ -1188,7 +1193,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
 {
     sigset_t set;
     iopause_fd iop;
-    int i;
+    size_t i;
 
     if (!genalloc_ready_tuned (iopause_fd, &ga_iop, 2, 0, 0, 1))
         aa_strerr_diefu1sys (ERR_IO, "allocate iopause_fd");
@@ -1305,7 +1310,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
             {
                 for (;;)
                 {
-                    uint16 id;
+                    uint16_t id;
                     char event;
 
                     r = aa_get_longrun_info (&id, &event);
@@ -1340,7 +1345,7 @@ scan:
 void
 show_stat_service_names (genalloc *ga, const char *title, const char *ansi_color)
 {
-    int i;
+    size_t i;
 
     if (genalloc_len (int, ga) <= 0)
         return;

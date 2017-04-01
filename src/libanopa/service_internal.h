@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * service_internal.h
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -24,6 +24,7 @@
 #define AA_SERVICE_INTERNAL_H
 
 #include <skalibs/direntry.h>
+#include <s6/ftrigr.h>
 #include <anopa/service.h>
 
 extern ftrigr_t _aa_ft;
@@ -37,7 +38,7 @@ struct it_data
     aa_autoload_cb al_cb;
 };
 
-extern int _is_valid_service_name (const char *name, int len);
+extern int _is_valid_service_name (const char *name, size_t len);
 
 extern int _name_start_needs (const char *name, struct it_data *it_data);
 extern int _it_start_needs  (direntry *d, void *data);

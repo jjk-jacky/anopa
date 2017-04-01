@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-terminate.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -25,8 +25,11 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <mntent.h>
+#include <strings.h>
 #include <errno.h>
 #include <sys/mount.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <sys/swap.h>
 #include <string.h>
@@ -35,7 +38,7 @@
 #include <linux/loop.h>
 #include <skalibs/djbunix.h>
 #include <skalibs/stralloc.h>
-#include <skalibs/error.h>
+#include <skalibs/bytestr.h>
 #include <anopa/common.h>
 #include <anopa/scan_dir.h>
 #include <anopa/output.h>
@@ -60,7 +63,7 @@ verbose_fail (int e)
     if (level < 2)
         return;
     aa_bs_noflush (AA_OUT, "Failed: ");
-    aa_bs_noflush (AA_OUT, error_str (e));
+    aa_bs_noflush (AA_OUT, strerror (e));
     aa_bs_flush (AA_OUT, "\n");
 }
 
@@ -156,11 +159,11 @@ static int
 do_work (stralloc *sa, do_fn do_it)
 {
     int did = 0;
-    int i;
+    size_t i;
 
     for (i = 0; i < sa->len; )
     {
-        int l;
+        size_t l;
 
         l = strlen (sa->s + i) + 1;
         if (do_it (sa->s + i) < 0)
@@ -182,7 +185,7 @@ it_loops_dms (direntry *d, void *data)
 {
     stralloc **sas = data;
     int i;
-    int l;
+    size_t l;
 
     if (d->d_type != DT_BLK)
         return 0;
@@ -228,11 +231,11 @@ it_loops_dms (direntry *d, void *data)
 static void
 show_left (const char *prefix, stralloc *sa)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < sa->len; )
     {
-        int l;
+        size_t l;
 
         l = strlen (sa->s + i) + 1;
         aa_put_warn (prefix, sa->s +i, 1);
@@ -347,12 +350,12 @@ again:
 
         if (sa.len > 0)
         {
-            int l;
+            size_t l;
 
             l = byte_chr (sa.s, sa.len, '\n') + 1;
             for ( ; l < sa.len; )
             {
-                int e;
+                size_t e;
 
                 /* FIXME: how are spaces-in-filename treated? */
                 e = byte_chr (sa.s + l, sa.len - l, ' ');

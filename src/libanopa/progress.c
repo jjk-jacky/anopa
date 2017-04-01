@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * progress.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -21,7 +21,7 @@
  */
 
 #include <skalibs/bytestr.h>
-#include <skalibs/uint.h>
+#include <skalibs/types.h>
 #include <anopa/progress.h>
 #include <anopa/output.h>
 
@@ -49,12 +49,12 @@ int
 aa_progress_update (aa_progress *pg)
 {
     char *s;
-    int skip;
-    int len;
-    int rr;
+    size_t skip;
+    size_t len;
+    size_t rr;
     int cur;
     int max;
-    int r;
+    size_t r;
 
     /* sanity: we require at least a NUL byte (for empty msg) */
     if (pg->sa.len == 0)
@@ -144,10 +144,10 @@ aa_progress_draw (aa_progress *pg, const char *title, int cols, int is_utf8)
     char buf[UINT_FMT];
     unsigned int p1;
     unsigned int p2;
-    int w;
+    size_t w;
     double d;
-    int n;
-    int i;
+    size_t n;
+    size_t i;
 
     p1 = 100 * pg->pctg;
     p2 = 10000 * pg->pctg - (100 * p1);
@@ -171,7 +171,7 @@ aa_progress_draw (aa_progress *pg, const char *title, int cols, int is_utf8)
     }
 
     /* 7: for "100.0% "   10: margin on the right */
-    w = cols - strlen (title) - 1 - 7 - 10;
+    w = (size_t) cols - strlen (title) - 1 - 7 - 10;
     if (pg->sa.s[0] != '\0')
         w -= byte_chr (pg->sa.s, pg->sa.len, '\0');
     if (w < 10)

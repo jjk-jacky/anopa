@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * exec_oneshot.c
- * Copyright (C) 2015-2016 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <strings.h>
 #include <errno.h>
 #include <skalibs/allreadwrite.h>
 #include <skalibs/djbunix.h>
@@ -30,8 +31,7 @@
 #include <skalibs/selfpipe.h>
 #include <skalibs/bytestr.h>
 #include <skalibs/tai.h>
-#include <skalibs/uint32.h>
-#include <skalibs/error.h>
+#include <skalibs/types.h>
 #include <anopa/service.h>
 #include <anopa/err.h>
 #include <anopa/output.h>
@@ -43,12 +43,12 @@ _exec_oneshot (int si, aa_mode mode)
     aa_service *s = aa_service (si);
     int is_start = (mode & AA_MODE_START) ? 1 : 0;
     char * const filename = (is_start) ? AA_START_FILENAME : AA_STOP_FILENAME;
-    int l_fn = (is_start) ? sizeof(AA_START_FILENAME) : sizeof(AA_STOP_FILENAME);
-    int l_sn = strlen (aa_service_name (s));
+    size_t l_fn = (is_start) ? sizeof(AA_START_FILENAME) : sizeof(AA_STOP_FILENAME);
+    size_t l_sn = strlen (aa_service_name (s));
     char buf[l_sn + 1 +l_fn];
     struct stat st;
-    const char *_err;
-    int _errno;
+    const char *_err = NULL; /* silence warning */
+    int _errno = 0; /* silence warning */
     int p_int[2];
     int p_in[2];
     int p_out[2];
@@ -92,7 +92,7 @@ _exec_oneshot (int si, aa_mode mode)
     {
         s->st.event = (is_start) ? AA_EVT_STARTING_FAILED : AA_EVT_STOPPING_FAILED;
         s->st.code = ERR_WRITE_STATUS;
-        aa_service_status_set_msg (&s->st, error_str (errno));
+        aa_service_status_set_msg (&s->st, strerror (errno));
 
         if (_exec_cb)
             _exec_cb (si, s->st.event, 0);
@@ -206,7 +206,7 @@ _exec_oneshot (int si, aa_mode mode)
         char * const argv[] = { filename, NULL };
         PROG = aa_service_name (s);
         char buf_e[UINT32_FMT];
-        uint32 e;
+        uint32_t e;
 
         selfpipe_finish ();
         /* Ignore SIGINT to make sure one can ^C to timeout a service without
@@ -222,7 +222,7 @@ _exec_oneshot (int si, aa_mode mode)
         if (fd_move (0, p_in[0]) < 0 || fd_move (1, p_out[1]) < 0
                 || fd_copy (2, 1) < 0 || fd_move (3, p_prg[1]) < 0)
         {
-            e = (uint32) errno;
+            e = (uint32_t) errno;
             fd_write (p_int[1], "p", 1);
             uint32_pack (buf_e, e);
             fd_write (p_int[1], buf_e, UINT32_FMT);
@@ -231,7 +231,7 @@ _exec_oneshot (int si, aa_mode mode)
 
         if (chdir (PROG) < 0)
         {
-            e = (uint32) errno;
+            e = (uint32_t) errno;
             fd_write (p_int[1], "c", 1);
             uint32_pack (buf_e, e);
             fd_write (p_int[1], buf_e, UINT32_FMT);
@@ -241,7 +241,7 @@ _exec_oneshot (int si, aa_mode mode)
         buf[l_sn - 1] = '.';
         execv (buf + l_sn - 1, argv);
         /* if it fails... */
-        e = (uint32) errno;
+        e = (uint32_t) errno;
         fd_write (p_int[1], "e", 1);
         uint32_pack (buf_e, e);
         fd_write (p_int[1], buf_e, UINT32_FMT);
@@ -272,9 +272,9 @@ _exec_oneshot (int si, aa_mode mode)
             {
                 char msg[l_fn + 260];
                 char buf[UINT32_FMT];
-                uint32 e = 0;
-                int p = 0;
-                int l;
+                uint32_t e = 0;
+                size_t p = 0;
+                size_t l;
 
                 tain_now_g ();
 
@@ -305,10 +305,10 @@ _exec_oneshot (int si, aa_mode mode)
                         byte_copy (msg + p, l, ": ");
                         p += l;
                     }
-                    l = strlen (error_str (e));
+                    l = strlen (strerror (e));
                     if (p + l >= 260)
                         l = 260 - p - 1;
-                    byte_copy (msg + p, l, error_str (e));
+                    byte_copy (msg + p, l, strerror (e));
                     p += l;
                 }
                 byte_copy (msg + p, 1, "");
@@ -340,11 +340,11 @@ err:
     s->st.code = ERR_IO;
     tain_copynow (&s->st.stamp);
     {
-        int l_ft  = strlen ("Failed to ");
-        int l_err = strlen (_err);
-        int l_buf = strlen (buf);
-        const char *errstr = error_str (_errno);
-        int l_es = strlen (errstr);
+        size_t l_ft  = strlen ("Failed to ");
+        size_t l_err = strlen (_err);
+        size_t l_buf = strlen (buf);
+        const char *errstr = strerror (_errno);
+        size_t l_es = strlen (errstr);
         char msg[l_ft + l_err + l_buf + 2 + l_es + 1];
 
         byte_copy (msg, l_ft, "Failed to ");

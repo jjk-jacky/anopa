@@ -22,6 +22,7 @@
 
 #define _BSD_SOURCE
 
+#include <strings.h>
 #include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -32,8 +33,7 @@
 #include <skalibs/direntry.h>
 #include <skalibs/genalloc.h>
 #include <skalibs/skamisc.h>
-#include <skalibs/error.h>
-#include <skalibs/uint.h>
+#include <skalibs/types.h>
 #include <skalibs/tai.h>
 #include <skalibs/djbunix.h>
 #include <s6/s6-supervise.h>
@@ -108,7 +108,7 @@ preload_service (const char *name)
 
                 put_err_service (name, ERR_IO, 0);
                 add_err (": ");
-                add_err (error_str (e));
+                add_err (strerror (e));
                 end_err ();
             }
         }
@@ -119,7 +119,7 @@ preload_service (const char *name)
      * need to always check for a logger */
     if (r < 0 || aa_service (si)->st.type == AA_TYPE_LONGRUN)
     {
-        int l = satmp.len;
+        size_t l = satmp.len;
 
         /* for longruns, even though the dependency of the logger is auto-added,
          * we still need to ensure the service is loaded */
@@ -194,10 +194,10 @@ add_service (const char *name, void *data)
 
                 put_err_service (name, ERR_IO, 0);
                 add_err (": ");
-                add_err (error_str (e));
+                add_err (strerror (e));
                 end_err ();
 
-                genalloc_append (int, &ga_failed, &si);
+                add_to_list (&ga_failed, si, 0);
             }
         }
     }
@@ -220,7 +220,7 @@ add_service (const char *name, void *data)
         }
         else
         {
-            int i;
+            size_t i;
 
             add_to_list (&aa_main_list, si, 0);
             remove_from_list (&aa_tmp_list, si);
@@ -255,7 +255,7 @@ scan_cb (int si, int sni)
     add_err (": ");
     add_err (aa_service_name (aa_service (sni)));
     end_err ();
-    genalloc_append (int, &ga_depend, &si);
+    add_to_list (&ga_depend, si, 0);
 }
 
 static void
@@ -285,7 +285,7 @@ static void
 stop_supervise_for (int si)
 {
     aa_service *s = aa_service (si);
-    int l_sn = strlen (aa_service_name (s));
+    size_t l_sn = strlen (aa_service_name (s));
     char dir[l_sn + 1 + sizeof (S6_SUPERVISE_CTLDIR) + 8];
     int r;
 
@@ -422,6 +422,8 @@ main (int argc, char * const argv[])
 
     if (all)
     {
+        size_t i;
+
         /* to stop all (up) services, since we've preloaded everything, simply
          * means moving all services from tmp to main list. We just need to make
          * sure to process "valid" services, since there could be LOAD_FAIL ones
@@ -501,9 +503,9 @@ main (int argc, char * const argv[])
 
     genalloc_free (int, &ga_timedout);
     genalloc_free (int, &ga_failed);
-    genalloc_free (int, &ga_unknown);
     genalloc_free (int, &ga_depend);
-    genalloc_free (int, &ga_io);
+    genalloc_free (size_t, &ga_io);
+    genalloc_free (size_t, &ga_unknown);
     genalloc_free (pid_t, &ga_pid);
     genalloc_free (int, &aa_tmp_list);
     genalloc_free (int, &aa_main_list);

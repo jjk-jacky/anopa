@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * services.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -29,7 +29,7 @@ genalloc aa_services    = GENALLOC_ZERO;
 stralloc aa_names       = STRALLOC_ZERO;
 genalloc aa_main_list   = GENALLOC_ZERO;
 genalloc aa_tmp_list    = GENALLOC_ZERO;
-int aa_secs_timeout     = 0;
+unsigned int aa_secs_timeout = 0;
 
 ftrigr_t _aa_ft         = FTRIGR_ZERO;
 aa_exec_cb _exec_cb     = NULL;

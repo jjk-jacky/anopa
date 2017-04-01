@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-kill.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -28,7 +28,8 @@
 #include <skalibs/sig.h>
 #include <skalibs/stralloc.h>
 #include <skalibs/djbunix.h>
-#include <skalibs/uint.h>
+#include <skalibs/bytestr.h>
+#include <skalibs/types.h>
 #include <anopa/common.h>
 #include <anopa/output.h>
 #include <anopa/scan_dir.h>
@@ -68,8 +69,8 @@ it_kill (direntry *d, void *data)
 {
     stralloc *sa = data;
     char c;
-    int l;
-    int r;
+    size_t l;
+    ssize_t r;
 
     /* ignore files, not-number dirs, PID 1 and ourself */
     if (d->d_type != DT_DIR || *d->d_name < '1' || *d->d_name > '9'
@@ -95,8 +96,6 @@ it_kill (direntry *d, void *data)
         if (!uint_scan (d->d_name, &u))
             goto done;
         pid = (pid_t) u;
-        if (pid != u)
-            goto done;
         if (send.hup)
             _kill (pid, SIGHUP);
         if (send.term)

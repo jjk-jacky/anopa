@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * enable_service.c
- * Copyright (C) 2015-2016 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -42,7 +42,7 @@
 
 static int
 copy_from_source (const char        *name,
-                  int                len,
+                  size_t             len,
                   aa_warn_fn         warn_fn,
                   aa_enable_flags    flags,
                   aa_auto_enable_cb  ae_cb);
@@ -112,7 +112,7 @@ static int
 clear_dir (const char *path, int excludes, aa_warn_fn warn_fn)
 {
     DIR *dir;
-    int salen = satmp.len;
+    size_t salen = satmp.len;
 
     dir = opendir (path);
     if (!dir)
@@ -229,7 +229,7 @@ copy_dir (const char        *src,
     for (;;)
     {
         direntry *d;
-        unsigned int len;
+        size_t len;
 
         d = readdir (dir);
         if (!d)
@@ -310,10 +310,10 @@ copy_dir (const char        *src,
     }
 
     {
-        unsigned int l_inst = (instance) ? strlen (instance) : 0;
-        unsigned int l_src = strlen (src);
-        unsigned int l_dst = strlen (dst);
-        unsigned int i = l_satmp;
+        size_t l_inst = (instance) ? strlen (instance) : 0;
+        size_t l_src = strlen (src);
+        size_t l_dst = strlen (dst);
+        size_t i = l_satmp;
         char buf_src[l_src + 1 + l_max + 1];
         char buf_dst[l_dst + 1 + l_max + l_inst + 1];
 
@@ -324,7 +324,7 @@ copy_dir (const char        *src,
 
         while (i < satmp.len)
         {
-            unsigned int len;
+            size_t len;
             int r;
 
             len = strlen (satmp.s + i);
@@ -412,7 +412,7 @@ copy_dir (const char        *src,
                 r = mkfifo (buf_dst, st.st_mode);
             else if (S_ISLNK (st.st_mode))
             {
-                unsigned int l_tmp = satmp.len;
+                size_t l_tmp = satmp.len;
 
                 if ((sareadlink (&satmp, buf_src) < 0) || !stralloc_0 (&satmp))
                     r = -1;
@@ -513,7 +513,7 @@ err:
         return -ERR_IO;
     else
     {
-        unsigned int l_dst = strlen (dst);
+        size_t l_dst = strlen (dst);
         char buf[1 + l_dst + 1];
 
         *buf = '@';
@@ -531,12 +531,12 @@ err:
 
 static int
 copy_from_source (const char        *name,
-                  int                len,
+                  size_t             len,
                   aa_warn_fn         warn_fn,
                   aa_enable_flags    flags,
                   aa_auto_enable_cb  ae_cb)
 {
-    int i;
+    size_t i;
 
     if (aa_sa_sources.len == 0)
         return -ERR_UNKNOWN;
@@ -544,7 +544,7 @@ copy_from_source (const char        *name,
     i = 0;
     for (;;)
     {
-        int l_sce = strlen (aa_sa_sources.s + i);
+        size_t l_sce = strlen (aa_sa_sources.s + i);
         char buf[l_sce + 1 + len + 1];
         struct stat st;
 
@@ -590,7 +590,7 @@ do_auto_needs_wants (const char *name, aa_enable_flags flags, aa_auto_enable_cb 
         aa_auto_enable_cb cb;
         unsigned int flag;
     } data = { .cb = ae_cb };
-    int l_name = strlen (name);
+    size_t l_name = strlen (name);
     int r = 0;
 
     if (!stralloc_catb (&sa, name, l_name))
@@ -645,8 +645,8 @@ aa_enable_service (const char       *_name,
     const char *name = _name;
     const char *instance = NULL;
     mode_t _mode = 0; /* silence warning */
-    int l_name = strlen (name);
-    int len;
+    size_t l_name = strlen (name);
+    size_t len;
     int has_log = 0;
     int r;
 
@@ -703,7 +703,7 @@ aa_enable_service (const char       *_name,
 
     if (has_log)
     {
-        int l = sizeof ("/log/run-args");
+        size_t l = sizeof ("/log/run-args");
         char buf[l_name + l];
         struct stat st;
 

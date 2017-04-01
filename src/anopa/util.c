@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * util.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -20,17 +20,17 @@
  * anopa. If not, see http://www.gnu.org/licenses/
  */
 
+#include <string.h>
+#include <errno.h>
 #include <skalibs/buffer.h>
 #include <skalibs/stralloc.h>
 #include <skalibs/skamisc.h>
-#include <string.h>
-#include <errno.h>
 #include "util.h"
 
 int
 process_names_from_stdin (names_cb process_name, void *data)
 {
-    int salen = satmp.len;
+    size_t salen = satmp.len;
     int r;
 
     for (;;)
@@ -62,9 +62,11 @@ process_names_from_stdin (names_cb process_name, void *data)
 void
 unslash (char *s)
 {
-    int l = strlen (s) - 1;
-    if (l <= 0)
+    size_t l = strlen (s);
+
+    if (l <= 1)
         return;
+    --l;
     if (s[l] == '/')
         s[l] = '\0';
 }

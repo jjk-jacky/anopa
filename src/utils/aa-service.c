@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-service.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -64,7 +64,7 @@ addvar (const char *name, const char *value, exlsn_t *info)
 
     if (el_vardupl (name, info->vars.s, info->vars.len))
         return -ERR_BAD_KEY;
-    if (!stralloc_catb (&info->vars, name, str_len (name) + 1))
+    if (!stralloc_catb (&info->vars, name, strlen (name) + 1))
         return -ERR_ADDVAR;
     if (!stralloc_cats (&info->values, value))
         goto err;
@@ -94,9 +94,9 @@ aa_service (exlsn_t *info)
 {
     stralloc sa = STRALLOC_ZERO;
     char *s;
-    unsigned int len;
+    size_t len;
+    size_t n;
     int r;
-    int n;
 
     if (sagetcwd (&sa) < 0)
         return -ERR_DIRNAME;
@@ -141,7 +141,7 @@ aa_service (exlsn_t *info)
     if (r < 0)
         goto err;
 
-    len = str_len (s);
+    len = strlen (s);
     n = byte_chr (s, len, '@');
     if (n < len)
         s[n] = '\0';

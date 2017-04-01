@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * service_start.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -21,6 +21,7 @@
  */
 
 #include <skalibs/direntry.h>
+#include <skalibs/bytestr.h>
 #include <anopa/service.h>
 #include <anopa/ga_int_list.h>
 #include <anopa/err.h>
@@ -32,7 +33,7 @@ void
 aa_unmark_service (int si)
 {
     aa_service *s = aa_service (si);
-    int i;
+    size_t i;
 
     if (--s->nb_mark > 0)
         return;
@@ -91,16 +92,16 @@ _name_start_needs (const char *name, struct it_data *it_data)
     else if (r < 0)
     {
         aa_service *s = aa_service (it_data->si);
-        int l = genalloc_len (int, &s->needs);
-        int i;
+        size_t l = genalloc_len (int, &s->needs);
+        size_t i;
 
         for (i = 0; i < l; ++i)
             aa_unmark_service (list_get (&s->needs, i));
 
         if (!(it_data->mode & AA_MODE_IS_DRY))
         {
-            int l_n = strlen (name);
-            int l_em = strlen (errmsg[-r]);
+            size_t l_n = strlen (name);
+            size_t l_em = strlen (errmsg[-r]);
             char buf[l_n + 2 + l_em + 1];
 
             byte_copy (buf, l_n, name);

@@ -6,7 +6,7 @@ errmsg.o
 eventmsg.o
 exec_longrun.o
 exec_oneshot.o
-ga_int_list.o
+ga_list.o
 init_repo.o
 output.o
 progress.o

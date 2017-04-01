@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * ga_int_list.h
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -23,20 +23,11 @@
 #ifndef AA_GA_INT_LIST_H
 #define AA_GA_INT_LIST_H
 
-#include <skalibs/genalloc.h>
+#include <anopa/ga_list.h>
 
-#define ga_remove(type, ga, i)     do {         \
-    int len = (ga)->len / sizeof (type);        \
-    int c = len - (i) - 1;                      \
-    if (c > 0)                                  \
-        memmove (genalloc_s (type, (ga)) + (i), genalloc_s (type, (ga)) + (i) + 1, c * sizeof (type)); \
-    genalloc_setlen (type, (ga), len - 1);    \
-} while (0)
-
-#define list_get(ga, i)         (genalloc_s (int, ga)[i])
-
-extern int add_to_list      (genalloc *list, int si, int check_for_dupes);
-extern int remove_from_list (genalloc *list, int si);
-extern int is_in_list       (genalloc *list, int si);
+#define list_get(ga, i)                 ga_get (int, ga, i)
+#define add_to_list(ga, si, chk_dupes)  ga_add_val (ga, sizeof (int), (char const *) &si, chk_dupes)
+#define remove_from_list(ga, si)        ga_remove_val (ga, sizeof (int), (char const *) &si)
+#define is_in_list(ga, si)              (ga_find (ga, sizeof (int), (char const *) &si) >= 0)
 
 #endif /* AA_GA_INT_LIST_H */

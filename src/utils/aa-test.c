@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-test.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -24,7 +24,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include <skalibs/uint.h>
+#include <skalibs/types.h>
 #include <anopa/common.h>
 #include <anopa/output.h>
 
@@ -76,9 +76,9 @@ main (int argc, char * const argv[])
     PROG = "aa-test";
     struct stat st;
     uid_t euid;
-    int mode;
+    int mode = 0; /* silence warning */
     char test = 0;
-    int repeat = -1;
+    unsigned int repeat = 0;
 
     for (;;)
     {
@@ -130,7 +130,9 @@ main (int argc, char * const argv[])
                 if (optarg && !uint0_scan (optarg, &repeat))
                     aa_strerr_diefu2sys (1, "set repeat counter to ", optarg);
                 else if (!optarg)
-                    repeat = 0;
+                    repeat = 1;
+                else
+                    ++repeat;
                 break;
 
             case 'V':
@@ -146,19 +148,16 @@ main (int argc, char * const argv[])
     if (argc != 1 || test == 0)
         dieusage (1);
 
-    if (repeat > 0)
-        ++repeat;
-
 again:
     if (lstat (argv[0], &st) < 0)
     {
         if (errno != ENOENT)
             aa_strerr_diefu2sys (2, "stat ", argv[0]);
-        else if (repeat >= 0)
+        else if (repeat >= 1)
         {
-            if (repeat > 1)
+            if (repeat > 2)
                 --repeat;
-            else if (repeat == 1)
+            else if (repeat == 2)
                 return 3;
             sleep (1);
             goto again;

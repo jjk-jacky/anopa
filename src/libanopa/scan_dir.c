@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * scan_dir.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -22,6 +22,7 @@
 
 #define _BSD_SOURCE
 
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <skalibs/direntry.h>
@@ -60,12 +61,12 @@ aa_scan_dir (stralloc *sa, int files_only, aa_sd_it_fn iterator, void *data)
         if (d->d_type == DT_UNKNOWN)
         {
             struct stat st;
-            int l;
+            size_t l;
             int rr;
 
             l = sa->len;
             sa->s[l - 1] = '/';
-            stralloc_catb (sa, d->d_name, str_len (d->d_name) + 1);
+            stralloc_catb (sa, d->d_name, strlen (d->d_name) + 1);
             rr = stat (sa->s, &st);
             sa->len = l;
             sa->s[l - 1] = '\0';

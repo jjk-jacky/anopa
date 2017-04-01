@@ -1,7 +1,7 @@
 /*
- * anopa - Copyright (C) 2015-2017 Olivier Brunel
+ * anopa - Copyright (C) 2015-2016 Olivier Brunel
  *
- * service_name.c
+ * ga_list.h
  * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
@@ -20,22 +20,17 @@
  * anopa. If not, see http://www.gnu.org/licenses/
  */
 
-#include <skalibs/bytestr.h>
-#include "service_internal.h"
+#ifndef AA_GA_LIST_H
+#define AA_GA_LIST_H
 
-int
-_is_valid_service_name (const char *name, size_t len)
-{
-    size_t r;
+#include <sys/types.h>
+#include <skalibs/genalloc.h>
 
-    if (len == 0)
-        return 0;
-    if (name[0] == '.')
-        return 0;
-    if (name[0] == '@' || name[len - 1] == '@')
-        return 0;
-    r = byte_chr (name, len, '/');
-    if (r < len && !str_equal (name + r, "/log"))
-        return 0;
-    return 1;
-}
+#define ga_get(type, ga, i)             (genalloc_s (type, ga)[i])
+
+void ga_remove      (genalloc *ga, size_t size, int i);
+int  ga_find        (genalloc *ga, size_t size, void const *val);
+int  ga_add_val     (genalloc *ga, size_t size, void const *val, int check_for_dupes);
+int  ga_remove_val  (genalloc *ga, size_t size, void const *val);
+
+#endif /* AA_GA_LIST_H */

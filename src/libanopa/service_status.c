@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * service_status.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -26,7 +26,7 @@
 #include <skalibs/allreadwrite.h>
 #include <skalibs/djbunix.h>
 #include <skalibs/bytestr.h>
-#include <skalibs/uint32.h>
+#include <skalibs/types.h>
 #include <skalibs/tai.h>
 #include <anopa/service_status.h>
 
@@ -40,9 +40,9 @@ aa_service_status_free (aa_service_status *svst)
 int
 aa_service_status_read (aa_service_status *svst, const char *dir)
 {
-    unsigned int len = strlen (dir);
+    size_t len = strlen (dir);
     char file[len + 1 + sizeof (AA_SVST_FILENAME)];
-    uint32 u;
+    uint32_t u;
 
     /* most cases should be w/out a message, so we'll only need FIXED_SIZE and
      * one extra byte to NUL-terminate the (empty) message */
@@ -80,7 +80,7 @@ aa_service_status_read (aa_service_status *svst, const char *dir)
 int
 aa_service_status_write (aa_service_status *svst, const char *dir)
 {
-    unsigned int len = strlen (dir);
+    size_t len = strlen (dir);
     char file[len + 1 + sizeof (AA_SVST_FILENAME)];
     mode_t mask;
     int r;
@@ -90,8 +90,8 @@ aa_service_status_write (aa_service_status *svst, const char *dir)
         return -1;
 
     tain_pack (svst->sa.s, &svst->stamp);
-    uint32_pack (svst->sa.s + 12, (uint32) svst->event);
-    uint32_pack (svst->sa.s + 16, (uint32) svst->code);
+    uint32_pack (svst->sa.s + 12, (uint32_t) svst->event);
+    uint32_pack (svst->sa.s + 16, (uint32_t) svst->code);
     if (svst->sa.len < AA_SVST_FIXED_SIZE)
         svst->sa.len = AA_SVST_FIXED_SIZE;
 
@@ -115,7 +115,7 @@ aa_service_status_write (aa_service_status *svst, const char *dir)
 int
 aa_service_status_set_msg (aa_service_status *svst, const char *msg)
 {
-    int len;
+    size_t len;
 
     len = strlen (msg);
     if (len > AA_SVST_MAX_MSG_SIZE)

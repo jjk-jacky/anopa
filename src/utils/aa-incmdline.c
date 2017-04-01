@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-incmdline.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -51,9 +51,9 @@ main (int argc, char * const argv[])
     int quiet = 0;
     int req = 0;
     char safe = '\0';
-    int len_arg;
-    int start;
-    int i;
+    size_t len_arg;
+    size_t start;
+    size_t i;
 
     for (;;)
     {
@@ -125,7 +125,7 @@ main (int argc, char * const argv[])
                 || sa.s[i] == '\n' || sa.s[i] == '\0')
         {
             int found = (i - start == len_arg && !str_diffn (sa.s + start, argv[0], len_arg));
-            int len;
+            size_t len;
 
             if (sa.s[i] != '=')
             {

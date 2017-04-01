@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-ctty.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -23,7 +23,7 @@
 #include <getopt.h>
 #include <termios.h>
 #include <sys/ioctl.h>
-#include <skalibs/uint.h>
+#include <skalibs/types.h>
 #include <skalibs/djbunix.h>
 #include <anopa/common.h>
 #include <anopa/output.h>
@@ -69,7 +69,7 @@ main (int argc, char * const argv[], char const * const *envp)
                 break;
 
             case 'f':
-                if (!uint0_scan (optarg, &fd))
+                if (!uint0_scan (optarg, (unsigned int *) &fd))
                     aa_strerr_diefu1sys (1, "set fd");
                 break;
 

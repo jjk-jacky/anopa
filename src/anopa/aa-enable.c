@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-enable.c
- * Copyright (C) 2015-2016 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -27,6 +27,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/stat.h>
@@ -35,8 +36,7 @@
 #include <skalibs/stralloc.h>
 #include <skalibs/genalloc.h>
 #include <skalibs/direntry.h>
-#include <skalibs/error.h>
-#include <skalibs/uint.h>
+#include <skalibs/types.h>
 #include <skalibs/skamisc.h>
 #include <s6/s6-supervise.h>
 #include <anopa/common.h>
@@ -44,7 +44,7 @@
 #include <anopa/init_repo.h>
 #include <anopa/scan_dir.h>
 #include <anopa/enable_service.h>
-#include <anopa/ga_int_list.h>
+#include <anopa/ga_list.h>
 #include <anopa/stats.h>
 #include <anopa/err.h>
 #include "util.h"
@@ -74,29 +74,29 @@ warn_cb (const char *name, int err)
 {
     aa_put_warn (cur_name, name, 0);
     aa_bs_noflush (AA_ERR, ": ");
-    aa_bs_noflush (AA_ERR, error_str (err));
+    aa_bs_noflush (AA_ERR, strerror (err));
     aa_end_warn ();
 }
 
 static void
 ae_cb (const char *name, aa_enable_flags type)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < names.len; i += strlen (names.s + i) + 1)
         if (str_equal (name, names.s + i))
             return;
 
-    genalloc_append (int, &ga_next, &names.len);
+    genalloc_append (size_t, &ga_next, &names.len);
     stralloc_catb (&names, name, strlen (name) + 1);
 }
 
 static int
 enable_service (const char *name, intptr_t from_next)
 {
-    int offset;
+    size_t offset;
+    size_t i;
     int r;
-    int i;
 
     if (*name == '/')
         cur_name = name + byte_rchr (name, strlen (name), '/') + 1;
@@ -113,11 +113,11 @@ enable_service (const char *name, intptr_t from_next)
          * - in upgrade mode, the auto-added are treated differently, so
          *   anything specified needs to be treated now (even w/out folder)
          */
-        for (i = 0; i < genalloc_len (int, &ga_next); ++i)
-            if (str_equal (cur_name, names.s + list_get (&ga_next, i)))
+        for (i = 0; i < genalloc_len (size_t, &ga_next); ++i)
+            if (str_equal (cur_name, names.s + ga_get (size_t, &ga_next, i)))
             {
-                offset = list_get (&ga_next, i);
-                ga_remove (int, &ga_next, i);
+                offset = ga_get (size_t, &ga_next, i);
+                ga_remove (&ga_next, sizeof (size_t), i);
                 goto process;
             }
 
@@ -140,11 +140,11 @@ process:
         if (r == -ERR_IO)
         {
             aa_bs_noflush (AA_ERR, ": ");
-            aa_bs_noflush (AA_ERR, error_str (e));
+            aa_bs_noflush (AA_ERR, strerror (e));
             aa_end_err ();
         }
 
-        genalloc_append (int, &ga_failed, &offset);
+        genalloc_append (size_t, &ga_failed, &offset);
         cur_name = NULL;
         return -1;
     }
@@ -181,11 +181,11 @@ it_list (direntry *d, void *data)
         enable_service (d->d_name, 0);
     else
     {
-        int l;
+        size_t l;
 
         l = sa_pl.len;
         sa_pl.s[l - 1] = '/';
-        stralloc_catb (&sa_pl, d->d_name, str_len (d->d_name) + 1);
+        stralloc_catb (&sa_pl, d->d_name, strlen (d->d_name) + 1);
         enable_service (sa_pl.s, 0);
         sa_pl.len = l;
         sa_pl.s[l - 1] = '\0';
@@ -377,13 +377,13 @@ main (int argc, char * const argv[])
         else
             enable_service (argv[i], 0);
 
-    while (genalloc_len (int, &ga_next) > 0)
+    while (genalloc_len (size_t, &ga_next) > 0)
     {
-        int offset;
+        size_t offset;
 
-        i = genalloc_len (int, &ga_next) - 1;
-        offset = list_get (&ga_next, i);
-        genalloc_setlen (int, &ga_next, i);
+        i = genalloc_len (size_t, &ga_next) - 1;
+        offset = ga_get (size_t, &ga_next, i);
+        genalloc_setlen (size_t, &ga_next, i);
         if (!(flags & AA_FLAG_UPGRADE_SERVICEDIR))
             enable_service (names.s + offset, 1 + offset);
         else
@@ -399,7 +399,7 @@ main (int argc, char * const argv[])
 
                     aa_put_err (names.s + offset, errmsg[ERR_IO], 1);
                     aa_bs_noflush (AA_ERR, ": " "unable to check for existing servicedir" ": ");
-                    aa_bs_noflush (AA_ERR, error_str (e));
+                    aa_bs_noflush (AA_ERR, strerror (e));
                     aa_end_err ();
                 }
                 else
@@ -420,11 +420,11 @@ main (int argc, char * const argv[])
     if (!(flags & AA_FLAG_UPGRADE_SERVICEDIR))
     {
         if ((set_crash || set_finish) && mkdir (SVSCANDIR, S_IRWXU) < 0)
-            aa_put_err ("Failed to create " SVSCANDIR, error_str (errno), 1);
+            aa_put_err ("Failed to create " SVSCANDIR, strerror (errno), 1);
         if (set_crash && symlink (set_crash, SCANDIR_CRASH) < 0)
-            aa_put_err ("Failed to create symlink " SCANDIR_CRASH, error_str (errno), 1);
+            aa_put_err ("Failed to create symlink " SCANDIR_CRASH, strerror (errno), 1);
         if (set_finish && symlink (set_finish, SCANDIR_FINISH) < 0)
-            aa_put_err ("Failed to create symlink " SCANDIR_FINISH, error_str (errno), 1);
+            aa_put_err ("Failed to create symlink " SCANDIR_FINISH, strerror (errno), 1);
     }
 
     if (alarm_s6)
@@ -436,8 +436,8 @@ main (int argc, char * const argv[])
             aa_strerr_diefu1x (2, "alarm s6-svscan: supervisor not listening");
     }
 
-    genalloc_free (int, &ga_failed);
-    genalloc_free (int, &ga_next);
+    genalloc_free (size_t, &ga_failed);
+    genalloc_free (size_t, &ga_next);
     stralloc_free (&sa_pl);
     stralloc_free (&names);
     return 0;

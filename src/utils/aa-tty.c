@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-tty.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -45,10 +45,10 @@ main (int argc, char * const argv[])
 {
     PROG = "aa-tty";
     char file[256];
-    int max = sizeof (file) - sizeof (PREFIX) - sizeof (NAME) + 1;
+    size_t max = sizeof (file) - sizeof (PREFIX) - sizeof (NAME) + 1;
     char name[max];
-    int skip;
-    int r;
+    size_t skip;
+    ssize_t r;
 
     for (;;)
     {
@@ -93,13 +93,13 @@ main (int argc, char * const argv[])
         aa_strerr_diefu2sys (2, "read ", file);
     /* last entry is the active one */
     skip = byte_rchr (name, r, ' ') + 1;
-    if (skip > r)
+    if (skip > (size_t) r)
         skip = 0;
 
     for (;;)
     {
         const char *s = name + skip;
-        int l = r - skip;
+        size_t l = r - skip;
 
         byte_copy (file + sizeof (PREFIX) - 1, l, s);
         byte_copy (file + sizeof (PREFIX) - 2 + l, sizeof (NAME), NAME);

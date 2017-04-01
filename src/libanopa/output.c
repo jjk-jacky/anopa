@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * output.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -48,7 +48,7 @@ aa_set_double_output (int enabled)
 }
 
 void
-aa_bb_noflush (int where, const char *s, int len)
+aa_bb_noflush (int where, const char *s, size_t len)
 {
     putb_noflush (where, s, len);
     if (double_output)
@@ -56,7 +56,7 @@ aa_bb_noflush (int where, const char *s, int len)
 }
 
 void
-aa_bb_flush (int where, const char *s, int len)
+aa_bb_flush (int where, const char *s, size_t len)
 {
     putb_flush (where, s, len);
     if (double_output)
@@ -64,7 +64,7 @@ aa_bb_flush (int where, const char *s, int len)
 }
 
 void
-aa_ib_noflush (int where, const char *s, int len)
+aa_ib_noflush (int where, const char *s, size_t len)
 {
     if (is_tty (where))
         putb_noflush (where, s, len);
@@ -73,7 +73,7 @@ aa_ib_noflush (int where, const char *s, int len)
 }
 
 void
-aa_ib_flush (int where, const char *s, int len)
+aa_ib_flush (int where, const char *s, size_t len)
 {
     if (is_tty (where))
         putb_flush (where, s, len);

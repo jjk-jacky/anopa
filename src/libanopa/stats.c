@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * stats.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -20,11 +20,11 @@
  * anopa. If not, see http://www.gnu.org/licenses/
  */
 
-#include <skalibs/uint.h>
+#include <skalibs/types.h>
 #include <skalibs/buffer.h>
 #include <skalibs/genalloc.h>
 #include <anopa/output.h>
-#include <anopa/ga_int_list.h>
+#include <anopa/ga_list.h>
 
 void
 aa_show_stat_nb (int nb, const char *title, const char *ansi_color)
@@ -51,18 +51,18 @@ aa_show_stat_names (const char  *names,
                     const char  *title,
                     const char  *ansi_color)
 {
-    int i;
+    size_t i;
 
-    if (genalloc_len (int, ga_offets) <= 0)
+    if (genalloc_len (size_t, ga_offets) <= 0)
         return;
 
     aa_put_title (0, title, "", 0);
-    for (i = 0; i < genalloc_len (int, ga_offets); ++i)
+    for (i = 0; i < genalloc_len (size_t, ga_offets); ++i)
     {
         if (i > 0)
             aa_bs_noflush (AA_OUT, "; ");
         aa_is_noflush (AA_OUT, ansi_color);
-        aa_bs_noflush (AA_OUT, names + list_get (ga_offets, i));
+        aa_bs_noflush (AA_OUT, names + ga_get (size_t, ga_offets, i));
         aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
     }
     aa_end_title ();

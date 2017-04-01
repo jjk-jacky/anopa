@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-mount.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <sys/mount.h>
 #include <skalibs/stralloc.h>
+#include <skalibs/bytestr.h>
 #include <anopa/common.h>
 #include <anopa/output.h>
 #include "mount-constants.h"
@@ -33,7 +34,7 @@
 struct mnt_opt
 {
     const char *name;
-    unsigned int len;
+    size_t len;
     unsigned long value;
     enum {
         OP_ADD,
@@ -75,12 +76,12 @@ add_option (stralloc *sa, unsigned long *flags, char const *options)
         mnt_opt ("sync",            ADD, MS_SYNCHRONOUS)
     };
 #undef mnt_opt
-    unsigned int nb = sizeof (mnt_options) / sizeof (*mnt_options);
+    size_t nb = sizeof (mnt_options) / sizeof (*mnt_options);
 
     for (;;)
     {
-        unsigned int e;
-        unsigned int i;
+        size_t e;
+        size_t i;
 
         e = str_chr (options, ',');
         for (i = 0; i < nb; ++i)

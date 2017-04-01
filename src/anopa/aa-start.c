@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-start.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -26,6 +26,7 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <langinfo.h>
+#include <strings.h>
 #include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -37,12 +38,10 @@
 #include <skalibs/bytestr.h>
 #include <skalibs/direntry.h>
 #include <skalibs/genalloc.h>
-#include <skalibs/error.h>
 #include <skalibs/tai.h>
 #include <skalibs/iopause.h>
 #include <skalibs/djbunix.h>
-#include <skalibs/uint16.h>
-#include <skalibs/uint.h>
+#include <skalibs/types.h>
 #include <anopa/common.h>
 #include <anopa/err.h>
 #include <anopa/init_repo.h>
@@ -76,7 +75,7 @@ check_essential (int si)
     {
         struct stat st;
         const char *name = aa_service_name (aa_service (si));
-        int l_name = strlen (name);
+        size_t l_name = strlen (name);
         char buf[l_name + 1 + sizeof (ESSENTIAL_FILENAME)];
 
         byte_copy (buf, l_name, name);
@@ -88,7 +87,7 @@ check_essential (int si)
             {
                 int e = errno;
                 put_warn (name, "Failed to stat " ESSENTIAL_FILENAME ": ", 0);
-                add_warn (error_str (e));
+                add_warn (strerror (e));
                 end_warn ();
             }
         }
@@ -157,10 +156,10 @@ add_service (const char *name, void *data)
 
                 put_err_service (name, ERR_IO, 0);
                 add_err (": ");
-                add_err (error_str (e));
+                add_err (strerror (e));
                 end_err ();
 
-                genalloc_append (int, &ga_failed, &si);
+                add_to_list (&ga_failed, si, 0);
                 check_essential (si);
             }
         }
@@ -186,10 +185,7 @@ add_service (const char *name, void *data)
                 end_err ();
             }
 
-            if (r == -ERR_DEPEND)
-                genalloc_append (int, &ga_depend, &si);
-            else
-                genalloc_append (int, &ga_failed, &si);
+            add_to_list ((r == -ERR_DEPEND) ? &ga_depend : &ga_failed, si, 0);
             check_essential (si);
         }
     }
@@ -216,7 +212,7 @@ scan_cb (int si, int sni)
     add_err (": ");
     add_err (aa_service_name (aa_service (sni)));
     end_err ();
-    genalloc_append (int, &ga_depend, &si);
+    add_to_list (&ga_depend, si, 0);
     check_essential (si);
 }
 
@@ -374,9 +370,9 @@ main (int argc, char * const argv[])
     genalloc_free (int, &ga_timedout);
     genalloc_free (int, &ga_failed);
     genalloc_free (int, &ga_depend);
-    genalloc_free (int, &ga_unknown);
-    genalloc_free (int, &ga_io);
-    genalloc_free (int, &ga_skipped);
+    genalloc_free (size_t, &ga_io);
+    genalloc_free (size_t, &ga_unknown);
+    genalloc_free (size_t, &ga_skipped);
     genalloc_free (pid_t, &ga_pid);
     genalloc_free (int, &aa_tmp_list);
     genalloc_free (int, &aa_main_list);
