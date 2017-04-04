@@ -3,7 +3,7 @@
 # anopa - Copyright (C) 2015-2017 Olivier Brunel
 #
 # aa-stage0
-# Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+# Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
 #
 # This file is part of anopa.
 #
@@ -70,7 +70,7 @@ if { aa-echo -DB "Moving /root-fs to /..." }
 if { aa-mount -DBd / /root-fs/run/initramfs }
 fdmove -c 2 1
 backtick -n -D /sbin/init INIT { aa-incmdline -rf /root-fs/proc/cmdline init }
-import -u INIT
+importas -u INIT INIT
 cd /root-fs
 if { aa-mount -M . / }
 ./run/initramfs/bin/emptyenv -c ./run/initramfs/bin/aa-chroot . ${INIT}

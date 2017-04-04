@@ -36,7 +36,7 @@ fdmove 2 4
 # Make sure we're sane
 cd /
 backtick -n TTY { aa-tty }
-import -u TTY
+importas -u TTY TTY
 redirfd -r 0 ${TTY}
 redirfd -w 1 /dev/console
 

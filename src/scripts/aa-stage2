@@ -3,7 +3,7 @@
 # anopa - Copyright (C) 2015-2017 Olivier Brunel
 #
 # aa-stage2
-# Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+# Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
 #
 # This file is part of anopa.
 #
@@ -37,14 +37,14 @@ if -n -t
 {
   # We want the actual tty on stdin
   backtick -n TTY { aa-tty }
-  import -u TTY
+  importas -u TTY TTY
   redirfd -r 0 ${TTY}
   # Reopen the console for stdout
   redirfd -w 1 /dev/console
   # And start everything
   foreground { aa-echo -DB "Stage 2: Initializing system..." }
   backtick -n -D onboot LISTDIR { aa-incmdline -Drs aa }
-  import -u LISTDIR
+  importas -u LISTDIR LISTDIR
   # We have a tty in stdin, become session leader and set controlling terminal.
   # This is so Ctrl+C will trigger a SIGINT to aa-start, so one can manually
   # timeout a service.
