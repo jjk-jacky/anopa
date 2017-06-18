@@ -6,6 +6,37 @@ aa-command - Helper to trigger one of anopa's commands
 
 B<aa-command> I<COMMAND> [I<ARG..>]
 
+=head1 DEPRECATED
+
+B<aa-command>(1) has been deprecated and will be removed in the next version of
+B<anopa>. A better way to achieve similar results is via a longrun service, thus
+guaranteeing same environment, proper logging, etc
+
+For example, such longrun could be named aa-command and have the following
+I<run> file :
+
+    #!/usr/bin/execlineb -P
+    fdmove -c 2 1
+    fdmove -c 4 1
+    fdmove 1 3
+    s6-ipcserver -1 -- socket
+    s6-ipcserver-access -i rules --
+    fdmove 2 4
+    s6-sudod -2
+    ./aa-command
+
+With the following I<aa-command> file :
+
+    #!/usr/bin/execlineb -s1
+    ifelse -n { test $1 = start -o $1 = stop -o =1 = reset }
+    { if { aa-echo -De "Invalid command: $1" } exit 1 }
+    if { aa-echo -Dn +w "Running: " +b "aa-${1} $@" }
+    exec aa-${1} -D $@
+
+And to e.g. start service foobar, one would simply do something like :
+
+    s6-sudo /run/services/aa-command/socket start foobar
+
 =head1 DESCRIPTION
 
 B<aa-command>(1) is a simple B<execline> script that can be used to run one of
