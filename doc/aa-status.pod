@@ -222,7 +222,7 @@ that is starting will be matched via I<stopped>.
 
 This script I<start>/I<stop> succesfully ran (i.e. and returned 0).
 
-=item B<Up> / B<Up & Ready>
+=item B<Up> / B<Up; Getting ready...> / B<Up & Ready>
 
 (I<long-run services only.>)
 
@@ -234,6 +234,9 @@ automatically restarted when it goes down.
 
 In standard output (i.e. without option B<--list>), this information is shown
 under "Mode".
+
+I<Up; Getting ready...> is shown when a service is up, supports readiness, but
+isn't yet ready (i.e. event 'u' occured, but not 'U').
 
 I<Up & Ready> means that the service indicated readiness (or it was set via e.g.
 B<aa-setready>(1)). Both times for up ('u') and readiness ('U') are shown,
