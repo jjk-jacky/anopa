@@ -11,7 +11,7 @@ start/stop them and other related functions.
 
 ## Free Software
 
-anopa - Copyright (C) 2015-2016 Olivier Brunel <jjk@jjacky.com>
+anopa - Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
 
 anopa is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software

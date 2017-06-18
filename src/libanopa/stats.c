@@ -1,5 +1,5 @@
 /*
- * anopa - Copyright (C) 2015-2016 Olivier Brunel
+ * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * stats.c
  * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
