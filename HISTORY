@@ -1,4 +1,62 @@
 
+# 2017-06-20, v0.5.0
+
+ !  Makefile: Fix install w/ dynamic library. Thanks to linsam.
+
+ !  tty: Fix when multiple devices are listed as console. Thanks to linsam.
+
+ !  Fix possible memory corruption. Thanks to John O'M.
+
+ !  start/stop: Fix setting longruns as timed out
+    Only oneshots should be marked as timed out, longruns should not have
+    their status modified because it would be "take over" the s6 status (at
+    least from aa-status) while it shouldn't.
+
+    Most obvious example is when timing out while waiting for readiness:
+    surely the status of the services remains "Up", not "Timed out"
+
+ +  status: Report "Up; Getting ready..." as needed
+    Longruns that are up (i.e. not (yet) ready) but do support readiness
+    will be announced as such, making it obvious they support readiness and
+    therefore aren't yet in their "final" state.
+
++++ enable: Add --alarm-s6
+    When adding new servicedirs to an active repodir (i.e. its scandir has a
+    running s6-svscan), for new longruns to be properly set/usable we need to
+    "alarm" s6-svscan, so it rescans the scandir.
+
+    This had to be done manually via `s6-svscanctl -a $REPODIR/.scandir` but
+    can now be done automatically from aa-enable.
+
+ !  start/stop: Fix issues on 32bit systems. Thanks to John O'M.
+
+ !  stage0: Fix stderr not on console upon break
+
+*** stage4: Open a shell if aa-terminate fails
+
+*** stage3: Tweak wait-ing post TERM/KILL
+    - After TERM we give processes ~4s to end instead of immediately trying
+      to KILL them;
+    - After KILL we only wait up to ~2s, then move on (instead of blocking
+      should there be a process in uninterruptible sleep)
+
+*** stop: Wait for longruns to be Down & Ready (not just Down)
+
+*** stop: In stop-all, default timeout becomes a maximum
+    So any timeout defined in a file timeout in servicedir will be ignored
+    if more than the default (or 0 for infinite).
+
+ *  stage3: Set default/max timeout to 20s
+
+ *  Deprecate aa-command
+
+--- Remove deprecated aa-mvlog
+
+*** Bump dependencies to skalibs 2.5.0.0; execline 2.3.0.1 and s6 2.5.0.0
+
+ !  Plus a few (other) fixes; see git log for details
+
+
 # 2016-01-10, v0.4.0
 
  !  stop: Fix not creating down file
