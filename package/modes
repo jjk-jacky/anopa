@@ -6,7 +6,6 @@ aa-enable               0755
 aa-incmdline            0755
 aa-kill                 0755
 aa-mount                0755
-aa-mvlog                0755
 aa-pivot                0755
 aa-reboot               0755
 aa-reset                0755
