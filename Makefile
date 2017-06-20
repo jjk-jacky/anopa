@@ -47,13 +47,13 @@ clean:
 distclean: clean
 	@exec rm -f config.mak package/deps.mak src/include/${package}/config.h $(DOC_TARGETS)
 
-tgz: distclean $(DOC_TARGETS)
+txz: distclean $(DOC_TARGETS)
 	@./tools/gen-deps.sh > package/deps.mak 2> /dev/null && \
 	. package/info && \
 	rm -rf /tmp/$$package-$$version && \
 	cp -a . /tmp/$$package-$$version && \
 	cd /tmp && \
-	tar -zpcv --owner=0 --group=0 --numeric-owner --exclude=.git* -f /tmp/$$package-$$version.tar.gz $$package-$$version && \
+	tar -Jpcv --owner=0 --group=0 --numeric-owner --exclude=.git* -f /tmp/$$package-$$version.tar.xz $$package-$$version && \
 	exec rm -rf /tmp/$$package-$$version
 
 strip: $(ALL_LIBS) $(ALL_BINS)
