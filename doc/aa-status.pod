@@ -260,3 +260,17 @@ end-of-finish ('D') are shown, though in list mode (option B<--list>) only the
 later in shown.
 
 =back
+
+=head1 ENVIRONMENT VARIABLES
+
+The following environment variables are used :
+
+=over
+
+=item B<AA_REPODIR>
+
+The full path to the repository directory, unless specified via B<--repodir> If
+neither the environment variable nor the option are used, defaults to
+I</run/services>
+
+=back

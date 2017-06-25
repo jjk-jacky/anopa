@@ -45,6 +45,7 @@
 #include <s6/s6-supervise.h>
 #include <anopa/common.h>
 #include <anopa/output.h>
+#include <anopa/get_repodir.h>
 #include <anopa/init_repo.h>
 #include <anopa/scan_dir.h>
 #include <anopa/service.h>
@@ -813,7 +814,7 @@ int
 main (int argc, char * const argv[])
 {
     PROG = "aa-status";
-    const char *path_repo = "/run/services";
+    const char *path_repo = aa_get_repodir ();
     const char *path_list = NULL;
     struct config cfg = { 0, };
     int (*sort_fn) (const void *, const void *) = cmp_serv_stamp;

@@ -31,6 +31,7 @@
 #include <skalibs/bytestr.h>
 #include <anopa/common.h>
 #include <anopa/output.h>
+#include <anopa/get_repodir.h>
 #include <anopa/init_repo.h>
 #include <anopa/service.h>
 #include <anopa/service_status.h>
@@ -147,7 +148,7 @@ int
 main (int argc, char * const argv[])
 {
     PROG = "aa-reset";
-    const char *path_repo = "/run/services";
+    const char *path_repo = aa_get_repodir ();
     intptr_t mode = MODE_NONE;
     int i;
     int r;

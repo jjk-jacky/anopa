@@ -39,6 +39,7 @@
 #include <s6/s6-supervise.h>
 #include <anopa/common.h>
 #include <anopa/err.h>
+#include <anopa/get_repodir.h>
 #include <anopa/init_repo.h>
 #include <anopa/output.h>
 #include <anopa/scan_dir.h>
@@ -308,7 +309,7 @@ int
 main (int argc, char * const argv[])
 {
     PROG = "aa-stop";
-    const char *path_repo = "/run/services";
+    const char *path_repo = aa_get_repodir ();
     const char *path_list = NULL;
     int all = 0;
     int i;

@@ -265,3 +265,17 @@ that those specified:
 - If servicedir already exists in repodir, nothing is done
 
 - Else, they are enabled as usual (i.e. as if without the B<--upgrade> option)
+
+=head1 ENVIRONMENT VARIABLES
+
+The following environment variables are used :
+
+=over
+
+=item B<AA_REPODIR>
+
+The full path to the repository directory, unless specified via B<--repodir> If
+neither the environment variable nor the option are used, defaults to
+I</run/services>
+
+=back

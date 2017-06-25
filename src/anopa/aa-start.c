@@ -44,6 +44,7 @@
 #include <skalibs/types.h>
 #include <anopa/common.h>
 #include <anopa/err.h>
+#include <anopa/get_repodir.h>
 #include <anopa/init_repo.h>
 #include <anopa/output.h>
 #include <anopa/scan_dir.h>
@@ -242,7 +243,7 @@ int
 main (int argc, char * const argv[])
 {
     PROG = "aa-start";
-    const char *path_repo = "/run/services";
+    const char *path_repo = aa_get_repodir ();
     const char *path_list = NULL;
     int i;
 

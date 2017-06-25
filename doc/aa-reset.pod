@@ -60,3 +60,17 @@ Note that a service either "Starting" or "Stopping" will never be reset.
 
 You can use B<-> as service name to read actual service names from stdin, where
 there must be one name per line.
+
+=head1 ENVIRONMENT VARIABLES
+
+The following environment variables are used :
+
+=over
+
+=item B<AA_REPODIR>
+
+The full path to the repository directory, unless specified via B<--repodir> If
+neither the environment variable nor the option are used, defaults to
+I</run/services>
+
+=back

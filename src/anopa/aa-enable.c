@@ -41,6 +41,7 @@
 #include <s6/s6-supervise.h>
 #include <anopa/common.h>
 #include <anopa/output.h>
+#include <anopa/get_repodir.h>
 #include <anopa/init_repo.h>
 #include <anopa/scan_dir.h>
 #include <anopa/enable_service.h>
@@ -220,7 +221,7 @@ int
 main (int argc, char * const argv[])
 {
     PROG = "aa-enable";
-    const char *path_repo = "/run/services";
+    const char *path_repo = aa_get_repodir ();
     const char *path_list = NULL;
     const char *set_crash = NULL;
     const char *set_finish = NULL;
