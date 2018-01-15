@@ -1,0 +1,59 @@
+=head1 NAME
+
+aa-hiercopy - Copy a directory structure recursively
+
+=head1 SYNOPSIS
+
+B<aa-hiercopy> [B<-D>] I<SOURCE> I<DESTINATION>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-D, --double-output>
+
+Enable double-output mode. Instead of using stdout for regular output, and
+stderr for warnings and errors, everything is sent both to stdout and stderr.
+This is intended to redirect stderr to a log file, so full output can be both
+shown on console and logged.
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-hiercopy>(1) recursively copies I<SOURCE> to I<DESTINATION>, which is
+created if it doesn't exist. The permissions are preserved. The owner and group
+are preserved if the user is the superuser.
+
+Much like B<s6-hiercopy> this is simply a wrapper around a function of skalibs,
+therefore it behaves very much the same. A notable difference however, is that
+if I<SOURCE> is a symlink, B<aa-hiercopy>(1) will instead resolve it, whereas
+B<s6-hiercopy> would simply copy the symlink itself.
+
+=head1 RETURN CODES
+
+Possible errors are:
+
+=over
+
+=item B<1>
+Usage error
+
+=item B<2>
+Failed to lstat I<SOURCE>
+
+=item B<3>
+Failed to resolve symlink I<SOURCE>
+
+=item B<4>
+Error during the copy
+
+=back

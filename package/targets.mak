@@ -3,6 +3,7 @@ aa-chroot \
 aa-ctty \
 aa-echo \
 aa-enable \
+aa-hiercopy \
 aa-incmdline \
 aa-kill \
 aa-mount \
@@ -38,6 +39,7 @@ aa-command.1 \
 aa-ctty.1 \
 aa-echo.1 \
 aa-enable.1 \
+aa-hiercopy.1 \
 aa-incmdline.1 \
 aa-kill.1 \
 aa-mount.1 \

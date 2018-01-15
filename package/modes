@@ -3,6 +3,7 @@ aa-command              0755
 aa-ctty                 0755
 aa-echo                 0755
 aa-enable               0755
+aa-hiercopy             0755
 aa-incmdline            0755
 aa-kill                 0755
 aa-mount                0755
