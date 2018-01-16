@@ -266,6 +266,38 @@ that those specified:
 
 - Else, they are enabled as usual (i.e. as if without the B<--upgrade> option)
 
+=head1 RETURN CODES
+
+The possible return codes are:
+
+=over
+
+=item B<0>
+Success
+
+=item B<1>
+Usage error (invalid option, etc)
+
+=item B<2>
+Memory error
+
+=item B<3>
+Internal state error (should not happen, else it's a bug to be reported)
+
+=item B<4>
+IO error
+
+=item B<5>
+Failed to init repository
+
+=item B<6>
+Failed to alarm B<s6-svscan>
+
+=item B<23>
+Failed to enable at least one service
+
+=back
+
 =head1 ENVIRONMENT VARIABLES
 
 The following environment variables are used :

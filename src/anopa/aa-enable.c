@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-enable.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -229,9 +229,9 @@ main (int argc, char * const argv[])
     int r;
 
     if (!stralloc_catb (&aa_sa_sources, SOURCE_ETC, sizeof (SOURCE_ETC)))
-        aa_strerr_diefu1sys (1, "stralloc_catb");
+        aa_strerr_diefu1sys (2, "stralloc_catb");
     if (!stralloc_catb (&aa_sa_sources, SOURCE_USR, sizeof (SOURCE_USR)))
-        aa_strerr_diefu1sys (1, "stralloc_catb");
+        aa_strerr_diefu1sys (2, "stralloc_catb");
 
     for (;;)
     {
@@ -310,7 +310,7 @@ main (int argc, char * const argv[])
             case 's':
                 unslash (optarg);
                 if (!stralloc_catb (&aa_sa_sources, optarg, strlen (optarg) + 1))
-                    aa_strerr_diefu1sys (1, "stralloc_catb");
+                    aa_strerr_diefu1sys (2, "stralloc_catb");
                 break;
 
             case 'u':
@@ -328,7 +328,7 @@ main (int argc, char * const argv[])
                 if (extra == 1)
                     flags |= AA_FLAG_NO_SUPERVISE;
                 else
-                    aa_strerr_dief1x (1, "internal error processing options");
+                    aa_strerr_dief1x (3, "internal error processing options");
                 extra = 0;
                 break;
 
@@ -347,11 +347,11 @@ main (int argc, char * const argv[])
     if (r < 0)
     {
         if (r == -ERR_IO_REPODIR)
-            aa_strerr_diefu2sys (1, "create repository ", path_repo);
+            aa_strerr_diefu2sys (5, "create repository ", path_repo);
         else if (r == -ERR_IO_SCANDIR)
-            aa_strerr_diefu3sys (1, "create scandir ", path_repo, "/" AA_SCANDIR_DIRNAME);
+            aa_strerr_diefu3sys (5, "create scandir ", path_repo, "/" AA_SCANDIR_DIRNAME);
         else
-            aa_strerr_diefu2sys (1, "init repository ", path_repo);
+            aa_strerr_diefu2sys (5, "init repository ", path_repo);
     }
 
     /* process listdir (path_list) first, to ensure if the service was also
@@ -364,6 +364,7 @@ main (int argc, char * const argv[])
         stralloc_catb (&sa_pl, path_list, strlen (path_list) + 1);
         r = aa_scan_dir (&sa_pl, 0, it_list, NULL);
         if (r < 0)
+            /* -r == ERR_IO, since it_list always returns 0 */
             aa_strerr_diefu3sys (-r, "read list directory ",
                     (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
                     (*path_list != '/' && *path_list != '.') ? path_list : "");
@@ -432,14 +433,17 @@ main (int argc, char * const argv[])
     {
         r = s6_svc_writectl (AA_SCANDIR_DIRNAME, S6_SVSCAN_CTLDIR, "a", 1);
         if (r < 0)
-            aa_strerr_diefu1sys (2, "alarm s6-svscan");
+            aa_strerr_diefu1sys (6, "alarm s6-svscan");
         else if (r == 0)
-            aa_strerr_diefu1x (2, "alarm s6-svscan: supervisor not listening");
+            aa_strerr_diefu1x (6, "alarm s6-svscan: supervisor not listening");
     }
+
+    r = (ga_failed.len == 0) ? 0 : 23;
 
     genalloc_free (size_t, &ga_failed);
     genalloc_free (size_t, &ga_next);
     stralloc_free (&sa_pl);
     stralloc_free (&names);
-    return 0;
+
+    return r;
 }
