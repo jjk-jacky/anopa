@@ -62,7 +62,7 @@ aa_show_stat_names (const char  *names,
         if (i > 0)
             aa_bs_noflush (AA_OUT, "; ");
         aa_is_noflush (AA_OUT, ansi_color);
-        aa_bs_noflush (AA_OUT, names + ga_get (size_t, ga_offets, i));
+        aa_bs_flush (AA_OUT, names + ga_get (size_t, ga_offets, i));
         aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
     }
     aa_end_title ();
