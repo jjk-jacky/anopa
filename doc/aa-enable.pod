@@ -14,11 +14,11 @@ B<aa-enable> [B<-D>] [B<-r> I<REPODIR>] [B<-c> I<CRASH>] [B<-f> I<FINISH>]
 
 =item B<-a, --alarm-s6>
 
-Alarms I<s6-svscan> as last step; This obviously assumes there is a running
-instance of I<s6-svscan> running on I<REPODIR/.scandir>; Also note that it will
+Alarms B<s6-svscan> as last step; This obviously assumes there is a running
+instance of B<s6-svscan> running on I<REPODIR/.scandir>; Also note that it will
 do it regardless of whether longruns where added or not.
 
-"Alarm" means I<s6-svscan> will immediately perform a scan of its scandir to
+"Alarm" means B<s6-svscan> will immediately perform a scan of its scandir to
 check for (new) services. This is equivalent to manually running
 C<s6-svscan -a REPODIR/.scandir> afterwards.
 
