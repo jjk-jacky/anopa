@@ -328,7 +328,7 @@ Source directory containing available servicedirs. This is where the
 administrator can define its own servicedirs, either because they're not
 provided by packages, or to be used instead. Used by B<aa-enable>(1).
 
-=item I</etc/anopa/enabled>
+=item I</etc/anopa/enabled/onboot>
 
 List directory containing either empty regular files, whose name is the name of
 a service to enable on boot, or directories, whose name is the name of a service
@@ -337,33 +337,51 @@ to enable on boot.
 In the later case, the content of the folder will also be merged/copied over
 into the servicedir.
 
-Used by B<aa-enable>(1) from B<aa-stage1>(1).
+Must be used manually withy B<aa-enable>(1) to generate
+I</var/lib/repodir/onboot>
 
 =item I</etc/anopa/listdirs/onboot>
 
 List directory containing empty regular files, whose name is the name of a
 service to start on boot. Used by B<aa-start>(1) from B<aa-stage2>(1).
 
+=item I</var/lib/repodir/onboot>
+
+Repository directory which will be copied into I</run/services> on boot (using
+B<aa-hiercopy>(1)) by B<aa-stage1>(1), thus ensuring its content remains
+unchanged whilst the runtime repository lives in memory (I</run> being expected
+to be a tmpfs).
+
+Used by B<aa-stage1>(1).
+
 =item I</run/services>
 
 Runtime repository, the service repository for the current system, containing a
 directory I<.scandir>, with symlinks for all long-run services, used by
 B<s6-svscan> as its scandir. Used by B<aa-enable>(1), B<aa-start>(1) and
-B<aa-stop>(1).
+B<aa-stop>(1), copied from I</var/lib/repodir/onboot> by B<aa-stage1>(1).
 
 =back
 
-On boot, B<aa-enable>(1) is used to create the runtime repository. To do so, it
-reads the content of the listdir, and for each service named there copies the
-corresponding servicedir from a source directory into the runtime repository. If
-listdir contained a directory, its content is then merged/copied over into the
-newlu created servicedir, allowing easy custom service-specific configuration.
+Ahead of time, the repository directory I</var/lib/repodir/onboot> needs to be
+created. This is expected to be done with B<aa-enable>(1), using
+I</etc/anopa/enabled/onboot> as listdir.
+
+To do so, it reads the content of the listdir, and for each service named there
+copies the corresponding servicedir from a source directory into the runtime
+repository. If listdir contained a directory, its content is then merged/copied
+over into the newly created servicedir, allowing easy custom service-specific
+configuration.
 
 Source directories are looked up in order, thus allowing the administrator to
 provide not only its own servicedirs, but its own version of a given servicedir.
 
 Refer to B<aa-enable>(1) for more on how it works and how the copy operation
 takes place.
+
+
+On boot, B<aa-hiercopy>(1) is used to copy the repository directory as runtime
+repository I</run/services>
 
 Then, B<aa-start>(1) is used to start all services in order, getting the system
 up & ready. Refer to B<aa-start>(1) for more on how it works; Refer to

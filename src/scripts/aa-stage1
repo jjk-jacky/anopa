@@ -3,7 +3,7 @@
 # anopa - Copyright (C) 2015-2017 Olivier Brunel
 #
 # aa-stage1
-# Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+# Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
 #
 # This file is part of anopa.
 #
@@ -49,9 +49,16 @@ cd /
 umask 022
 
 # Create the repository
-foreground { emptyenv -c
-aa-enable -Dql /etc/anopa/enabled -k uncaught-logs -f @LIBEXECDIR@/aa-stage3 }
+backtick -n -D onboot REPODIR { aa-incmdline -Drs aa }
+backtick -n -D onboot REPODIR {
+    importas -u REPODIR REPODIR
+    if { aa-test -e /var/lib/repodir/$REPODIR } echo $REPODIR
+}
+importas -u REPODIR REPODIR
+foreground { aa-echo -Dt "Copying ${REPODIR} repodir as /run/services..." }
+foreground { emptyenv -c aa-hiercopy -D /var/lib/repodir/$REPODIR /run/services }
 
+foreground { aa-echo -Dt "Starting s6-svscan..." }
 # Make sure the FIFO needed for the switch to stage 2 is there
 ifelse -X -n { aa-test -Dp /run/services/.scandir/uncaught-logs/fifo }
 {
