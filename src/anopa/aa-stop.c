@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-stop.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -72,10 +72,10 @@ autoload_cb (int si, aa_al al, const char *name, int err)
 {
     int aa = (mode & AA_MODE_IS_DRY) ? AA_ERR : AA_OUT;
 
-    aa_bs_noflush (aa, "auto-add: ");
-    aa_bs_noflush (aa, aa_service_name (aa_service (si)));
-    aa_bs_noflush (aa, " needs ");
-    aa_bs_noflush (aa, name);
+    aa_bs (aa, "auto-add: ");
+    aa_bs (aa, aa_service_name (aa_service (si)));
+    aa_bs (aa, " needs ");
+    aa_bs (aa, name);
     aa_bs_flush (aa, "\n");
 }
 
@@ -293,8 +293,8 @@ stop_supervise_for (int si)
     if (s->st.type != AA_TYPE_LONGRUN)
         return;
 
-    aa_bs_noflush (AA_OUT, "Stopping s6-supervise for ");
-    aa_bs_noflush (AA_OUT, aa_service_name (s));
+    aa_bs (AA_OUT, "Stopping s6-supervise for ");
+    aa_bs (AA_OUT, aa_service_name (s));
     aa_bs_flush (AA_OUT, "...\n");
 
     byte_copy (dir, l_sn, aa_service_name (s));
@@ -491,7 +491,7 @@ main (int argc, char * const argv[])
 
     if (!(mode & AA_MODE_IS_DRY))
     {
-        aa_bs_noflush (AA_OUT, "\n");
+        aa_bs (AA_OUT, "\n");
         put_title (1, PROG, "Completed.", 1);
         aa_show_stat_nb (nb_already, "Not up", ANSI_HIGHLIGHT_GREEN_ON);
         aa_show_stat_nb (nb_done, "Stopped", ANSI_HIGHLIGHT_GREEN_ON);

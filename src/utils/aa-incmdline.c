@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-incmdline.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -160,7 +160,7 @@ main (int argc, char * const argv[])
                     return 3;
                 else if (!quiet)
                 {
-                    aa_bb_noflush (AA_OUT, sa.s + start, len);
+                    aa_bb (AA_OUT, sa.s + start, len);
                     aa_bs_flush (AA_OUT, "\n");
                 }
                 return 0;

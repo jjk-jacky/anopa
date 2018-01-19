@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * die_version.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -30,8 +30,8 @@ extern char const *PROG;
 void
 aa_die_version (void)
 {
-    aa_bs_noflush (AA_OUT, PROG);
-    aa_bs_noflush (AA_OUT, " v" ANOPA_VERSION "\n");
+    aa_bs (AA_OUT, PROG);
+    aa_bs (AA_OUT, " v" ANOPA_VERSION "\n");
     aa_bs_flush (AA_OUT,
             "Copyright (C) 2015-2017 Olivier Brunel - https://jjacky.com/anopa\n"
             "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"

@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-echo.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -145,7 +145,7 @@ main (int argc, char * const argv[])
         dieusage (1);
 
     if (blank)
-        aa_bs_noflush (where, "\n");
+        aa_bs (where, "\n");
     if (put)
         put ("", NULL, 0);
     for (i = 0; i < argc; ++i)
@@ -153,22 +153,22 @@ main (int argc, char * const argv[])
         if (*argv[i] == '+')
         {
             if (str_equal (argv[i], "+g") || str_equal (argv[i], "+green"))
-                aa_is_noflush (where, ANSI_HIGHLIGHT_GREEN_ON);
+                aa_is (where, ANSI_HIGHLIGHT_GREEN_ON);
             else if (str_equal (argv[i], "+b") || str_equal (argv[i], "+blue"))
-                aa_is_noflush (where, ANSI_HIGHLIGHT_BLUE_ON);
+                aa_is (where, ANSI_HIGHLIGHT_BLUE_ON);
             else if (str_equal (argv[i], "+y") || str_equal (argv[i], "+yellow"))
-                aa_is_noflush (where, ANSI_HIGHLIGHT_YELLOW_ON);
+                aa_is (where, ANSI_HIGHLIGHT_YELLOW_ON);
             else if (str_equal (argv[i], "+r") || str_equal (argv[i], "+red"))
-                aa_is_noflush (where, ANSI_HIGHLIGHT_RED_ON);
+                aa_is (where, ANSI_HIGHLIGHT_RED_ON);
             else if (str_equal (argv[i], "+w") || str_equal (argv[i], "+white"))
-                aa_is_noflush (where, ANSI_HIGHLIGHT_ON);
+                aa_is (where, ANSI_HIGHLIGHT_ON);
             else if (str_equal (argv[i], "+n") || str_equal (argv[i], "+normal"))
-                aa_is_noflush (where, ANSI_HIGHLIGHT_OFF);
+                aa_is (where, ANSI_HIGHLIGHT_OFF);
             else
-                aa_bs_noflush (where, argv[i] + 1);
+                aa_bs (where, argv[i] + 1);
         }
         else
-            aa_bs_noflush (where, argv[i]);
+            aa_bs (where, argv[i]);
     }
     aa_bs_end (where);
 

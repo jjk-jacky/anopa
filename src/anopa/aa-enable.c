@@ -74,8 +74,8 @@ static void
 warn_cb (const char *name, int err)
 {
     aa_put_warn (cur_name, name, 0);
-    aa_bs_noflush (AA_ERR, ": ");
-    aa_bs_noflush (AA_ERR, strerror (err));
+    aa_bs (AA_ERR, ": ");
+    aa_bs (AA_ERR, strerror (err));
     aa_end_warn ();
 }
 
@@ -140,8 +140,8 @@ process:
         aa_put_err (cur_name, errmsg[-r], r != -ERR_IO);
         if (r == -ERR_IO)
         {
-            aa_bs_noflush (AA_ERR, ": ");
-            aa_bs_noflush (AA_ERR, strerror (e));
+            aa_bs (AA_ERR, ": ");
+            aa_bs (AA_ERR, strerror (e));
             aa_end_err ();
         }
 
@@ -152,8 +152,8 @@ process:
 
     if (!quiet)
     {
-        aa_bs_noflush (AA_OUT, "Enabled: ");
-        aa_bs_noflush (AA_OUT, cur_name);
+        aa_bs (AA_OUT, "Enabled: ");
+        aa_bs (AA_OUT, cur_name);
         aa_bs_flush (AA_OUT, "\n");
     }
 
@@ -161,8 +161,8 @@ process:
     {
         if (!quiet)
         {
-            aa_bs_noflush (AA_OUT, "Enabled: ");
-            aa_bs_noflush (AA_OUT, cur_name);
+            aa_bs (AA_OUT, "Enabled: ");
+            aa_bs (AA_OUT, cur_name);
             aa_bs_flush (AA_OUT, "/log\n");
         }
         ++nb_enabled;
@@ -400,8 +400,8 @@ main (int argc, char * const argv[])
                     int e = errno;
 
                     aa_put_err (names.s + offset, errmsg[ERR_IO], 1);
-                    aa_bs_noflush (AA_ERR, ": " "unable to check for existing servicedir" ": ");
-                    aa_bs_noflush (AA_ERR, strerror (e));
+                    aa_bs (AA_ERR, ": " "unable to check for existing servicedir" ": ");
+                    aa_bs (AA_ERR, strerror (e));
                     aa_end_err ();
                 }
                 else
@@ -414,7 +414,7 @@ main (int argc, char * const argv[])
         }
     }
 
-    aa_bs_noflush (AA_OUT, "\n");
+    aa_bs (AA_OUT, "\n");
     aa_put_title (1, PROG, "Completed", 1);
     aa_show_stat_nb (nb_enabled, "Enabled", ANSI_HIGHLIGHT_GREEN_ON);
     aa_show_stat_names (names.s, &ga_failed, "Failed", ANSI_HIGHLIGHT_RED_ON);

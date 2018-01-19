@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-kill.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -51,13 +51,13 @@ static void _kill (pid_t pid, int sig)
 
     u = pid;
     buf[uint_fmt (buf, u)] = 0;
-    aa_bs_noflush (AA_OUT, "kill(");
+    aa_bs (AA_OUT, "kill(");
     if (u == (unsigned int) -1)
-        aa_bs_noflush (AA_OUT, "-1");
+        aa_bs (AA_OUT, "-1");
     else
-        aa_bs_noflush (AA_OUT, buf);
-    aa_bs_noflush (AA_OUT, ",");
-    aa_bs_noflush (AA_OUT, sig_name (sig));
+        aa_bs (AA_OUT, buf);
+    aa_bs (AA_OUT, ",");
+    aa_bs (AA_OUT, sig_name (sig));
     aa_bs_flush (AA_OUT, ")\n");
 }
 #else

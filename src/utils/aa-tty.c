@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-tty.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -108,7 +108,7 @@ main (int argc, char * const argv[])
         {
             if (errno == ENOENT)
             {
-                aa_bs_noflush (AA_OUT, "/dev/");
+                aa_bs (AA_OUT, "/dev/");
                 aa_bb_flush (AA_OUT, s, l);
                 return 0;
             }

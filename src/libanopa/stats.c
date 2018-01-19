@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * stats.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -34,14 +34,14 @@ aa_show_stat_nb (int nb, const char *title, const char *ansi_color)
     if (nb <= 0)
         return;
 
-    aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_BLUE_ON);
-    aa_bs_noflush (AA_OUT, "  -> ");
-    aa_is_noflush (AA_OUT, ansi_color);
-    aa_bs_noflush (AA_OUT, title);
-    aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
-    aa_bs_noflush (AA_OUT, ": ");
+    aa_is (AA_OUT, ANSI_HIGHLIGHT_BLUE_ON);
+    aa_bs (AA_OUT, "  -> ");
+    aa_is (AA_OUT, ansi_color);
+    aa_bs (AA_OUT, title);
+    aa_is (AA_OUT, ANSI_HIGHLIGHT_ON);
+    aa_bs (AA_OUT, ": ");
     buf[uint_fmt (buf, nb)] = '\0';
-    aa_bs_noflush (AA_OUT, buf);
+    aa_bs (AA_OUT, buf);
     aa_end_title ();
 }
 
@@ -60,10 +60,10 @@ aa_show_stat_names (const char  *names,
     for (i = 0; i < genalloc_len (size_t, ga_offets); ++i)
     {
         if (i > 0)
-            aa_bs_noflush (AA_OUT, "; ");
-        aa_is_noflush (AA_OUT, ansi_color);
-        aa_bs_flush (AA_OUT, names + ga_get (size_t, ga_offets, i));
-        aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
+            aa_bs (AA_OUT, "; ");
+        aa_is (AA_OUT, ansi_color);
+        aa_bs (AA_OUT, names + ga_get (size_t, ga_offets, i));
+        aa_is (AA_OUT, ANSI_HIGHLIGHT_ON);
     }
     aa_end_title ();
 }

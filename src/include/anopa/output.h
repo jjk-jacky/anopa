@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * output.h
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -39,13 +39,13 @@ extern const char *PROG;
 #define AA_ERR      1
 
 extern void aa_set_double_output (int enabled);
-extern void aa_bb_noflush (int where, const char *s, size_t len);
+extern void aa_bb (int where, const char *s, size_t len);
 extern void aa_bb_flush (int where, const char *s, size_t len);
-#define aa_bs_noflush(w,s)  aa_bb_noflush ((w), (s), strlen (s))
+#define aa_bs(w,s)  aa_bb ((w), (s), strlen (s))
 #define aa_bs_flush(w,s)    aa_bb_flush ((w), (s), strlen (s))
-extern void aa_ib_noflush (int where, const char *s, size_t len);
+extern void aa_ib (int where, const char *s, size_t len);
 extern void aa_ib_flush (int where, const char *s, size_t len);
-#define aa_is_noflush(w,s)  aa_ib_noflush ((w), (s), strlen (s))
+#define aa_is(w,s)  aa_ib ((w), (s), strlen (s))
 #define aa_is_flush(w,s)    aa_ib_flush ((w), (s), strlen (s))
 extern void aa_bs_end (int where);
 #define aa_end_err()        aa_bs_end (AA_ERR)

@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-status.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -141,12 +141,12 @@ put_time (tain_t *st_stamp, int strict)
         localtmn_fmt (buf, &local);
         buf[19] = ' ';
         buf[20] = '\0';
-        aa_bs_noflush (AA_OUT, buf);
+        aa_bs (AA_OUT, buf);
         return;
     }
 
-    aa_bb_noflush (AA_OUT, buf, localtmn_fmt (buf, &local));
-    aa_bs_noflush (AA_OUT, " (");
+    aa_bb (AA_OUT, buf, localtmn_fmt (buf, &local));
+    aa_bs (AA_OUT, " (");
     tain_sub (&stamp, &STAMP, st_stamp);
     if (stamp.sec.x > 86400)
     {
@@ -154,8 +154,8 @@ put_time (tain_t *st_stamp, int strict)
         stamp.sec.x -= 86400 * n;
 
         buf[uint_fmt (buf, n)] = '\0';
-        aa_bs_noflush (AA_OUT, buf);
-        aa_bs_noflush (AA_OUT, "d ");
+        aa_bs (AA_OUT, buf);
+        aa_bs (AA_OUT, "d ");
     }
     if (stamp.sec.x > 3600)
     {
@@ -163,8 +163,8 @@ put_time (tain_t *st_stamp, int strict)
         stamp.sec.x -= 3600 * n;
 
         buf[uint_fmt (buf, n)] = '\0';
-        aa_bs_noflush (AA_OUT, buf);
-        aa_bs_noflush (AA_OUT, "h ");
+        aa_bs (AA_OUT, buf);
+        aa_bs (AA_OUT, "h ");
     }
     if (stamp.sec.x > 60)
     {
@@ -172,12 +172,12 @@ put_time (tain_t *st_stamp, int strict)
         stamp.sec.x -= 60 * n;
 
         buf[uint_fmt (buf, n)] = '\0';
-        aa_bs_noflush (AA_OUT, buf);
-        aa_bs_noflush (AA_OUT, "m ");
+        aa_bs (AA_OUT, buf);
+        aa_bs (AA_OUT, "m ");
     }
     buf[uint_fmt (buf, stamp.sec.x)] = '\0';
-    aa_bs_noflush (AA_OUT, buf);
-    aa_bs_noflush (AA_OUT, "s ago)\n");
+    aa_bs (AA_OUT, buf);
+    aa_bs (AA_OUT, "s ago)\n");
 }
 
 static struct col
@@ -195,7 +195,7 @@ static inline void
 pad_with (ssize_t left)
 {
     for ( ; left > 0; left -= 10)
-        aa_bb_noflush (AA_OUT, "          ", (left >= 10) ? 10 : left);
+        aa_bb (AA_OUT, "          ", (left >= 10) ? 10 : left);
 }
 
 static inline void
@@ -264,18 +264,18 @@ put_list_header (struct config *cfg)
         cols[3].len += cfg->cols - len;
     }
 
-    aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
+    aa_is (AA_OUT, ANSI_HIGHLIGHT_ON);
     for (i = 0; i < 4; ++i)
     {
         if (i < 3 && cols[i].len == 0)
             continue;
 
-        aa_bs_noflush (AA_OUT, cols[i].title);
+        aa_bs (AA_OUT, cols[i].title);
         if (i < 3)
             pad_col (i, strlen (cols[i].title));
     }
-    aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
-    aa_bs_flush (AA_OUT, "\n");
+    aa_is (AA_OUT, ANSI_HIGHLIGHT_OFF);
+    aa_bs (AA_OUT, "\n");
 
     return 1;
 }
@@ -289,12 +289,12 @@ put_s_max (const char *s, size_t max, int pad)
         return 0;
     else if (l >= max)
     {
-        aa_bb_noflush (AA_OUT, s, max - 4);
-        aa_bs_noflush (AA_OUT, "... ");
+        aa_bb (AA_OUT, s, max - 4);
+        aa_bs (AA_OUT, "... ");
     }
     else
     {
-        aa_bs_noflush (AA_OUT, s);
+        aa_bs (AA_OUT, s);
         if (!pad)
             return l;
         pad_col (0, l);
@@ -306,7 +306,7 @@ put_s_max (const char *s, size_t max, int pad)
     if (cfg->mode == MODE_LIST)         \
         max -= put_s_max (s, max, 0);   \
     else                                \
-        aa_bs_noflush (AA_OUT, s);
+        aa_bs (AA_OUT, s);
 
 static void
 status_service (struct serv *serv, struct config *cfg)
@@ -317,17 +317,17 @@ status_service (struct serv *serv, struct config *cfg)
 
     if (cfg->mode == MODE_DRY_LIST)
     {
-        aa_bs_noflush (AA_OUT, aa_service_name (s));
-        aa_bs_flush (AA_OUT, "\n");
+        aa_bs (AA_OUT, aa_service_name (s));
+        aa_bs (AA_OUT, "\n");
         return;
     }
     else if (cfg->mode == MODE_LIST)
     {
         if (first && !put_list_header (cfg))
-            aa_bs_noflush (AA_OUT, "\n");
+            aa_bs (AA_OUT, "\n");
     }
     else if (!first)
-        aa_bs_noflush (AA_OUT, "\n");
+        aa_bs (AA_OUT, "\n");
 
     if (cfg->mode == MODE_LIST)
     {
@@ -336,15 +336,15 @@ status_service (struct serv *serv, struct config *cfg)
         if (cols[1].len)
         {
             if (s->st.type == AA_TYPE_ONESHOT)
-                aa_bs_noflush (AA_OUT, "oneshot");
+                aa_bs (AA_OUT, "oneshot");
             else
-                aa_bs_noflush (AA_OUT, "longrun");
+                aa_bs (AA_OUT, "longrun");
             pad_col (1, 7);
         }
 
         if (!serv->is_s6 && s->st.event == AA_EVT_NONE)
         {
-            aa_bs_noflush (AA_OUT, "-");
+            aa_bs (AA_OUT, "-");
             pad_col (2, 1);
         }
         else
@@ -352,29 +352,29 @@ status_service (struct serv *serv, struct config *cfg)
     }
     else
     {
-        aa_bs_noflush (AA_OUT, "Service: ");
-        aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
-        aa_bs_noflush (AA_OUT, aa_service_name (s));
-        aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
+        aa_bs (AA_OUT, "Service: ");
+        aa_is (AA_OUT, ANSI_HIGHLIGHT_ON);
+        aa_bs (AA_OUT, aa_service_name (s));
+        aa_is (AA_OUT, ANSI_HIGHLIGHT_OFF);
         if (s->st.type == AA_TYPE_ONESHOT)
-            aa_bs_noflush (AA_OUT, " (one-shot)");
+            aa_bs (AA_OUT, " (one-shot)");
         else
-            aa_bs_noflush (AA_OUT, " (long-run)");
-        aa_bs_noflush (AA_OUT, "\n");
+            aa_bs (AA_OUT, " (long-run)");
+        aa_bs (AA_OUT, "\n");
 
-        aa_bs_noflush (AA_OUT, "Since:   ");
+        aa_bs (AA_OUT, "Since:   ");
         if (!serv->is_s6 && s->st.event == AA_EVT_NONE)
-            aa_bs_noflush (AA_OUT, "-\n");
+            aa_bs (AA_OUT, "-\n");
         else
             put_time (&serv->stamp, 0);
 
         if (serv->is_s6 && serv->st6.flagready)
         {
-            aa_bs_noflush (AA_OUT, "Ready:   ");
+            aa_bs (AA_OUT, "Ready:   ");
             put_time (&serv->st6.readystamp, 0);
         }
 
-        aa_bs_noflush (AA_OUT, "Status:  ");
+        aa_bs (AA_OUT, "Status:  ");
     }
 
     if (serv->is_s6)
@@ -385,7 +385,7 @@ status_service (struct serv *serv, struct config *cfg)
         {
             char buf[UINT_FMT];
 
-            aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_GREEN_ON);
+            aa_is (AA_OUT, ANSI_HIGHLIGHT_GREEN_ON);
             put_s ("Up");
             if (serv->st6.flagready)
             {
@@ -395,7 +395,7 @@ status_service (struct serv *serv, struct config *cfg)
             {
                 put_s ("; Getting ready...");
             }
-            aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
+            aa_is (AA_OUT, ANSI_HIGHLIGHT_OFF);
             put_s (" (PID ");
             buf[uint_fmt (buf, serv->st6.pid)] = '\0';
             put_s (buf);
@@ -407,7 +407,7 @@ status_service (struct serv *serv, struct config *cfg)
 
             if (cfg->mode != MODE_LIST)
             {
-                aa_bs_noflush (AA_OUT, "\nMode:    ");
+                aa_bs (AA_OUT, "\nMode:    ");
                 if (serv->st6.flagwant)
                 {
                     put_s ("Automatic restart (want up)");
@@ -420,21 +420,21 @@ status_service (struct serv *serv, struct config *cfg)
         }
         else
         {
-            aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
+            aa_is (AA_OUT, ANSI_HIGHLIGHT_ON);
             put_s ("Down");
             if (serv->st6.flagready)
             {
                 put_s (" & Ready");
             }
-            aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
+            aa_is (AA_OUT, ANSI_HIGHLIGHT_OFF);
             put_s (" (");
             put_wstat (serv->st6.wstat, max, 0);
             if (serv->st6.flagwant && serv->st6.flagwantup)
             {
                 put_s ("; ");
-                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_BLUE_ON);
+                aa_is (AA_OUT, ANSI_HIGHLIGHT_BLUE_ON);
                 put_s ("To be restarted");
-                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
+                aa_is (AA_OUT, ANSI_HIGHLIGHT_OFF);
             }
             put_s (")");
 
@@ -446,7 +446,7 @@ status_service (struct serv *serv, struct config *cfg)
              */
             if (cfg->mode != MODE_LIST && serv->st6.flagwant && serv->st6.flagwantup)
             {
-                aa_bs_noflush (AA_OUT, "\nMode:    ");
+                aa_bs (AA_OUT, "\nMode:    ");
                 put_s ("Automatic restart (want up)");
             }
         }
@@ -462,9 +462,9 @@ status_service (struct serv *serv, struct config *cfg)
                 break;
 
             case AA_EVT_ERROR:
-                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_RED_ON);
+                aa_is (AA_OUT, ANSI_HIGHLIGHT_RED_ON);
                 put_s (eventmsg[s->st.event]);
-                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
+                aa_is (AA_OUT, ANSI_HIGHLIGHT_OFF);
                 put_s (": ");
                 put_s (errmsg[s->st.code]);
                 msg = aa_service_status_get_msg (&s->st);
@@ -477,21 +477,21 @@ status_service (struct serv *serv, struct config *cfg)
 
             case AA_EVT_STARTING:
             case AA_EVT_STOPPING:
-                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_BLUE_ON);
+                aa_is (AA_OUT, ANSI_HIGHLIGHT_BLUE_ON);
                 put_s (eventmsg[s->st.event]);
-                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
+                aa_is (AA_OUT, ANSI_HIGHLIGHT_OFF);
                 break;
 
             case AA_EVT_STARTING_FAILED:
             case AA_EVT_STOPPING_FAILED:
-                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_RED_ON);
+                aa_is (AA_OUT, ANSI_HIGHLIGHT_RED_ON);
                 put_s (eventmsg[s->st.event]);
-                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
+                aa_is (AA_OUT, ANSI_HIGHLIGHT_OFF);
                 if (cfg->mode == MODE_LIST && max <= 6)
                 {
                     if (max > 1)
-                        aa_bb_noflush (AA_OUT, "...", (max > 4) ? 3 : max - 1);
-                    aa_bs_noflush (AA_OUT, " ");
+                        aa_bb (AA_OUT, "...", (max > 4) ? 3 : max - 1);
+                    aa_bs (AA_OUT, " ");
                 }
                 else
                 {
@@ -508,14 +508,14 @@ status_service (struct serv *serv, struct config *cfg)
 
             case AA_EVT_START_FAILED:
             case AA_EVT_STOP_FAILED:
-                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_RED_ON);
+                aa_is (AA_OUT, ANSI_HIGHLIGHT_RED_ON);
                 put_s (eventmsg[s->st.event]);
-                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
+                aa_is (AA_OUT, ANSI_HIGHLIGHT_OFF);
                 if (cfg->mode == MODE_LIST && max <= 6)
                 {
                     if (max > 1)
-                        aa_bb_noflush (AA_OUT, "...", (max > 4) ? 3 : max - 1);
-                    aa_bs_noflush (AA_OUT, " ");
+                        aa_bb (AA_OUT, "...", (max > 4) ? 3 : max - 1);
+                    aa_bs (AA_OUT, " ");
                 }
                 else
                 {
@@ -525,9 +525,9 @@ status_service (struct serv *serv, struct config *cfg)
                 break;
 
             case AA_EVT_STARTED:
-                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_GREEN_ON);
+                aa_is (AA_OUT, ANSI_HIGHLIGHT_GREEN_ON);
                 put_s (eventmsg[s->st.event]);
-                aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
+                aa_is (AA_OUT, ANSI_HIGHLIGHT_OFF);
                 break;
 
             case AA_EVT_STOPPED:
@@ -538,7 +538,7 @@ status_service (struct serv *serv, struct config *cfg)
                 break;
         }
     }
-    aa_bs_flush (AA_OUT, "\n");
+    aa_bs (AA_OUT, "\n");
 
     if (first)
         first = 0;
@@ -629,7 +629,7 @@ load_service (const char *name, struct config *cfg)
         int e = errno;
 
         aa_put_err (name, "Failed to read service status file: ", 0);
-        aa_bs_noflush (AA_ERR, strerror (e));
+        aa_bs (AA_ERR, strerror (e));
         aa_end_err ();
         return -1;
     }
@@ -649,7 +649,7 @@ load_service (const char *name, struct config *cfg)
                 int e = errno;
 
                 aa_put_err (name, "Unable to read s6 status: ", 0);
-                aa_bs_noflush (AA_ERR, strerror (e));
+                aa_bs (AA_ERR, strerror (e));
                 aa_end_err ();
                 return -1;
             }
@@ -974,5 +974,6 @@ main (int argc, char * const argv[])
     for (size_t i = 0; i < genalloc_len (struct serv, &ga_serv); ++i)
         status_service (&genalloc_s (struct serv, &ga_serv)[i], &cfg);
 
+    aa_bb_flush (AA_OUT, "", 0);
     return 0;
 }

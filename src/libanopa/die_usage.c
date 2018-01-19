@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * die_usage.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -28,11 +28,11 @@ extern char const *PROG;
 void
 aa_die_usage (int rc, const char *usage, const char *details)
 {
-    aa_bs_noflush (AA_OUT, "Usage: ");
-    aa_bs_noflush (AA_OUT, PROG);
-    aa_bs_noflush (AA_OUT, " ");
-    aa_bs_noflush (AA_OUT, usage);
-    aa_bs_noflush (AA_OUT, "\n\n");
+    aa_bs (AA_OUT, "Usage: ");
+    aa_bs (AA_OUT, PROG);
+    aa_bs (AA_OUT, " ");
+    aa_bs (AA_OUT, usage);
+    aa_bs (AA_OUT, "\n\n");
     aa_bs_flush (AA_OUT, details);
     _exit (rc);
 }

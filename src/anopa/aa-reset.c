@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-reset.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -75,7 +75,7 @@ reset_service (const char *name, intptr_t mode)
         int e = errno;
 
         aa_put_err (name, "Failed to read service status file: ", 0);
-        aa_bs_noflush (AA_ERR, strerror (e));
+        aa_bs (AA_ERR, strerror (e));
         aa_end_err ();
         return;
     }
@@ -115,17 +115,17 @@ reset_service (const char *name, intptr_t mode)
         int e = errno;
 
         aa_put_err (name, "Failed to write service status file: ", 0);
-        aa_bs_noflush (AA_ERR, strerror (e));
+        aa_bs (AA_ERR, strerror (e));
         aa_end_err ();
     }
     else
     {
         aa_put_title (1, name, "", 0);
-        aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
-        aa_bs_noflush (AA_OUT, eventmsg[old_event]);
-        aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
-        aa_bs_noflush (AA_OUT, " -> ");
-        aa_bs_noflush (AA_OUT, eventmsg[event]);
+        aa_is (AA_OUT, ANSI_HIGHLIGHT_OFF);
+        aa_bs (AA_OUT, eventmsg[old_event]);
+        aa_is (AA_OUT, ANSI_HIGHLIGHT_ON);
+        aa_bs (AA_OUT, " -> ");
+        aa_bs (AA_OUT, eventmsg[event]);
         aa_end_title ();
     }
 }

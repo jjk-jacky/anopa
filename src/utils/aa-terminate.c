@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-terminate.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -52,8 +52,8 @@ verbose_do (const char *s1, const char *s2)
 {
     if (level < 2)
         return;
-    aa_bs_noflush (AA_OUT, s1);
-    aa_bs_noflush (AA_OUT, s2);
+    aa_bs (AA_OUT, s1);
+    aa_bs (AA_OUT, s2);
     aa_bs_flush (AA_OUT, "...\n");
 }
 
@@ -62,8 +62,8 @@ verbose_fail (int e)
 {
     if (level < 2)
         return;
-    aa_bs_noflush (AA_OUT, "Failed: ");
-    aa_bs_noflush (AA_OUT, strerror (e));
+    aa_bs (AA_OUT, "Failed: ");
+    aa_bs (AA_OUT, strerror (e));
     aa_bs_flush (AA_OUT, "\n");
 }
 

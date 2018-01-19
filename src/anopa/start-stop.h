@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * start-stop.h
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -113,19 +113,19 @@ void show_stat_service_names (genalloc *ga, const char *title, const char *ansi_
     clear_draw (); \
     aa_put_err (name, msg, end); \
 } while (0)
-#define add_err(s)                      aa_bs_noflush (AA_ERR, s)
+#define add_err(s)                      aa_bs (AA_ERR, s)
 #define put_err_service(name,err,end)   put_err (name, errmsg[err], end)
 #define end_warn()                      aa_end_warn ()
 #define put_warn(name,msg,end)          do { \
     clear_draw (); \
     aa_put_warn (name, msg, end); \
 } while (0)
-#define add_warn(s)                     aa_bs_noflush (AA_ERR, s)
+#define add_warn(s)                     aa_bs (AA_ERR, s)
 #define end_title()                     aa_end_title ()
 #define put_title(main,name,title,end)  do { \
     clear_draw (); \
     aa_put_title (main, name, title, end); \
 } while (0)
-#define add_title(s)                    aa_bs_noflush (AA_OUT, s)
+#define add_title(s)                    aa_bs (AA_OUT, s)
 
 #endif /* AA_START_STOP_H */

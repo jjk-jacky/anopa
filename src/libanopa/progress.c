@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * progress.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -179,31 +179,31 @@ aa_progress_draw (aa_progress *pg, const char *title, int cols, int is_utf8)
     d = pg->pctg * w * per_c;
     n = d / per_c;
 
-    aa_is_noflush (AA_OUT, title);
-    aa_is_noflush (AA_OUT, ":");
+    aa_is (AA_OUT, title);
+    aa_is (AA_OUT, ":");
     if (w)
     {
-        aa_is_noflush (AA_OUT, edge[0]);
+        aa_is (AA_OUT, edge[0]);
         for (i = 0; i < n; ++i)
-            aa_is_noflush (AA_OUT, bars[per_c - 1]);
+            aa_is (AA_OUT, bars[per_c - 1]);
         if (n < w)
-            aa_is_noflush (AA_OUT, bars[(int) d % per_c]);
+            aa_is (AA_OUT, bars[(int) d % per_c]);
         for (i = n + 1; i < w; ++i)
-            aa_is_noflush (AA_OUT, edge[1]);
-        aa_is_noflush (AA_OUT, edge[2]);
+            aa_is (AA_OUT, edge[1]);
+        aa_is (AA_OUT, edge[2]);
     }
-    aa_is_noflush (AA_OUT, " ");
+    aa_is (AA_OUT, " ");
 
     buf[uint_fmt (buf, p1)] = '\0';
-    aa_is_noflush (AA_OUT, buf);
-    aa_is_noflush (AA_OUT, ".");
+    aa_is (AA_OUT, buf);
+    aa_is (AA_OUT, ".");
     if (uint_fmt (buf, p2) == 1)
         buf[1] = '0';
     buf[2] = '\0';
-    aa_is_noflush (AA_OUT, buf);
-    aa_is_noflush (AA_OUT, "% ");
+    aa_is (AA_OUT, buf);
+    aa_is (AA_OUT, "% ");
 
     if (pg->sa.s[0] != '\0')
-        aa_is_noflush (AA_OUT, pg->sa.s);
+        aa_is (AA_OUT, pg->sa.s);
     aa_is_flush (AA_OUT, "\n");
 }

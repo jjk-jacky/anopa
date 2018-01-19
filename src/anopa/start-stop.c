@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * start-stop.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -117,18 +117,18 @@ draw_password ()
     struct progress *pg = &genalloc_s (struct progress, &ga_progress)[s->pi];
 
     if (pg->is_drawn == DRAWN_PASSWORD_READY)
-        aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
-    aa_is_noflush (AA_OUT, aa_service_name (s));
+        aa_is (AA_OUT, ANSI_HIGHLIGHT_ON);
+    aa_is (AA_OUT, aa_service_name (s));
     if (pg->is_drawn == DRAWN_PASSWORD_READY)
-        aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_OFF);
-    aa_is_noflush (AA_OUT, ": ");
-    aa_is_noflush (AA_OUT, pg->aa_pg.sa.s);
+        aa_is (AA_OUT, ANSI_HIGHLIGHT_OFF);
+    aa_is (AA_OUT, ": ");
+    aa_is (AA_OUT, pg->aa_pg.sa.s);
     aa_is_flush (AA_OUT, " : ");
     draw |= DRAW_CUR_PASSWORD;
 }
 
 static void
-is_noflush_time (int secs)
+is_time (int secs)
 {
     char buf[UINT_FMT];
     int mins;
@@ -139,14 +139,14 @@ is_noflush_time (int secs)
     if (mins > 0)
     {
         buf[uint_fmt (buf, mins)] = '\0';
-        aa_is_noflush (AA_OUT, buf);
-        aa_is_noflush (AA_OUT, "m");
+        aa_is (AA_OUT, buf);
+        aa_is (AA_OUT, "m");
     }
     if (secs > 0)
     {
         buf[uint_fmt (buf, secs)] = '\0';
-        aa_is_noflush (AA_OUT, buf);
-        aa_is_noflush (AA_OUT, "s");
+        aa_is (AA_OUT, buf);
+        aa_is (AA_OUT, "s");
     }
 }
 
@@ -162,7 +162,7 @@ draw_waiting (int already_drawn)
     int secs;
 
     if (already_drawn)
-        aa_is_noflush (AA_OUT, ANSI_CLEAR_BEFORE ANSI_START_LINE);
+        aa_is (AA_OUT, ANSI_CLEAR_BEFORE ANSI_START_LINE);
 
     nb = genalloc_len (pid_t, &ga_pid) + nb_wait_longrun;
     if (nb <= 0)
@@ -211,33 +211,33 @@ draw_waiting (int already_drawn)
     }
 
     if (nb > 1 || secs >= 0)
-        aa_is_noflush (AA_OUT, "[");
+        aa_is (AA_OUT, "[");
 
     if (nb > 1)
     {
         buf[uint_fmt (buf, n)] = '\0';
-        aa_is_noflush (AA_OUT, buf);
-        aa_is_noflush (AA_OUT, "/");
+        aa_is (AA_OUT, buf);
+        aa_is (AA_OUT, "/");
         buf[uint_fmt (buf, nb)] = '\0';
-        aa_is_noflush (AA_OUT, buf);
+        aa_is (AA_OUT, buf);
         if (secs >= 0)
-            aa_is_noflush (AA_OUT, "; ");
+            aa_is (AA_OUT, "; ");
     }
 
     if (secs >= 0)
     {
-        is_noflush_time (secs);
-        aa_is_noflush (AA_OUT, "/");
+        is_time (secs);
+        aa_is (AA_OUT, "/");
         if (aa_service (si)->secs_timeout > 0)
-            is_noflush_time (aa_service (si)->secs_timeout);
+            is_time (aa_service (si)->secs_timeout);
         else if (is_utf8)
-            aa_is_noflush (AA_OUT, "\u221e"); /* infinity sign */
+            aa_is (AA_OUT, "\u221e"); /* infinity sign */
         else
-            aa_is_noflush (AA_OUT, "Inf");
+            aa_is (AA_OUT, "Inf");
     }
 
     if (nb > 1 || secs >= 0)
-        aa_is_noflush (AA_OUT, "] ");
+        aa_is (AA_OUT, "] ");
 
     aa_is_flush (AA_OUT, aa_service_name (aa_service (si)));
 
@@ -446,8 +446,8 @@ handle_fd_out (int si)
 
             ++len;
             clear_draw ();
-            aa_bs_noflush (AA_OUT, aa_service_name (s));
-            aa_bs_noflush (AA_OUT, ": ");
+            aa_bs (AA_OUT, aa_service_name (s));
+            aa_bs (AA_OUT, ": ");
             aa_bb_flush (AA_OUT, s->sa_out.s, len);
 
             memmove (s->sa_out.s, s->sa_out.s + len, s->sa_out.len - len);
@@ -636,9 +636,9 @@ end_si_password (void)
 
     clear_draw ();
     /* we put the message into the service output */
-    aa_bs_noflush (AA_OUT, aa_service_name (s));
-    aa_bs_noflush (AA_OUT, ": ");
-    aa_bs_noflush (AA_OUT, pg->aa_pg.sa.s);
+    aa_bs (AA_OUT, aa_service_name (s));
+    aa_bs (AA_OUT, ": ");
+    aa_bs (AA_OUT, pg->aa_pg.sa.s);
     aa_bs_flush (AA_OUT, "\n");
 
     remove_fd_from_iop (s->fd_in);
@@ -822,8 +822,8 @@ handle_longrun (aa_mode mode, uint16_t id, char event)
         if (event == 'u' || event == 'd')
         {
             clear_draw ();
-            aa_bs_noflush (AA_OUT, aa_service_name (aa_service (si)));
-            aa_bs_noflush (AA_OUT, ": ");
+            aa_bs (AA_OUT, aa_service_name (aa_service (si)));
+            aa_bs (AA_OUT, ": ");
             aa_bs_flush (AA_OUT, (event == 'u')
                     ? "Started; Getting ready...\n"
                     : "Down; Will restart...\n");
@@ -977,15 +977,15 @@ exec_cb (int si, aa_evt evt, pid_t pid)
                     && s->gets_ready
                     && s->st.code == ERR_ALREADY_UP)
             {
-                aa_bs_noflush (AA_OUT, aa_service_name (s));
+                aa_bs (AA_OUT, aa_service_name (s));
                 aa_bs_flush (AA_OUT, ": Getting ready...\n");
             }
             else
             {
                 if (!(pid & AA_MODE_IS_DRY))
-                    aa_bs_noflush (AA_OUT,
+                    aa_bs (AA_OUT,
                             (pid & AA_MODE_START) ? "Starting " : "Stopping ");
-                aa_bs_noflush (AA_OUT, aa_service_name (aa_service (si)));
+                aa_bs (AA_OUT, aa_service_name (aa_service (si)));
                 aa_bs_flush (AA_OUT, (pid & AA_MODE_IS_DRY) ? "\n" : "...\n");
             }
             break;
@@ -1354,10 +1354,10 @@ show_stat_service_names (genalloc *ga, const char *title, const char *ansi_color
     for (i = 0; i < genalloc_len (int, ga); ++i)
     {
         if (i > 0)
-            aa_bs_noflush (AA_OUT, "; ");
-        aa_is_noflush (AA_OUT, ansi_color);
-        aa_bs_noflush (AA_OUT, aa_service_name (aa_service (list_get (ga, i))));
-        aa_is_noflush (AA_OUT, ANSI_HIGHLIGHT_ON);
+            aa_bs (AA_OUT, "; ");
+        aa_is (AA_OUT, ansi_color);
+        aa_bs (AA_OUT, aa_service_name (aa_service (list_get (ga, i))));
+        aa_is (AA_OUT, ANSI_HIGHLIGHT_ON);
     }
     end_title ();
 }
