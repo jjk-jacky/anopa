@@ -4,7 +4,7 @@ aa-umount - Unmount a filesystem
 
 =head1 SYNOPSIS
 
-B<aa-umount> [B<-D>] [B<-f> | B<-l>] I<MOUNTPOINT>
+B<aa-umount> [B<-D>] [B<-O> I<FILE|FD>] [B<-f> | B<-l>] I<MOUNTPOINT>
 
 =head1 OPTIONS
 
@@ -29,6 +29,13 @@ Show help screen and exit.
 
 Perform a lazy unmount: make the mount point unavailable for new accesses, and
 actually perform the unmount when the mount point ceases to be busy.
+
+=item B<-O, --log-file> I<FILE|FD>
+
+Will duplicate all output (everything written to stdout or stderr) to the given
+file or file descriptor. I<FILE|FD> can either be a (previously opened for
+writing) file descriptor (must be > 2), or a file which will then be opened in
+append mode.
 
 =item B<-V, --version>
 

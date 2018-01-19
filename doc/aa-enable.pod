@@ -4,9 +4,10 @@ aa-enable - Enable services, i.e. copy servicedirs to repodir
 
 =head1 SYNOPSIS
 
-B<aa-enable> [B<-D>] [B<-r> I<REPODIR>] [B<-c> I<CRASH>] [B<-f> I<FINISH>]
-[B<-k> I<SERVICE>] [B<-S> I<SOURCEDIR>] [B<-s> I<SOURCEDIR>] [B<-l> I<LISTDIR>]
-[B<-N>] [B<-W>] [B<-u>] [B<-a>] [B<--no-supervise>] [B<-q>] [I<SERVICE...>]
+B<aa-enable> [B<-D>] [B<-O> I<FILE|FD>] [B<-r> I<REPODIR>] [B<-c> I<CRASH>]
+[B<-f> I<FINISH>] [B<-k> I<SERVICE>] [B<-S> I<SOURCEDIR>] [B<-s> I<SOURCEDIR>]
+[B<-l> I<LISTDIR>] [B<-N>] [B<-W>] [B<-u>] [B<-a>] [B<--no-supervise>] [B<-q>]
+[I<SERVICE...>]
 
 =head1 OPTIONS
 
@@ -67,6 +68,13 @@ I</etc/anopa/listdirs/>
 
 Don't auto-enable any services listed under directory I<needs> of a service
 being (auto-)enabled.
+
+=item B<-O, --log-file> I<FILE|FD>
+
+Will duplicate all output (everything written to stdout or stderr) to the given
+file or file descriptor. I<FILE|FD> can either be a (previously opened for
+writing) file descriptor (must be > 2), or a file which will then be opened in
+append mode.
 
 =item B<-q, --quiet>
 

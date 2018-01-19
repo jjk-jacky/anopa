@@ -39,6 +39,8 @@ extern const char *PROG;
 #define AA_ERR      1
 
 extern void aa_set_double_output (int enabled);
+extern int  aa_set_log_file (const char *file_or_fd);
+extern void aa_set_log_file_or_die (const char *file_or_fd);
 extern void aa_bb (int where, const char *s, size_t len);
 extern void aa_bb_flush (int where, const char *s, size_t len);
 #define aa_bs(w,s)  aa_bb ((w), (s), strlen (s))

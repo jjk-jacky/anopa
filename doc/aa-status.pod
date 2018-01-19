@@ -4,8 +4,9 @@ aa-status - Show status of services
 
 =head1 SYNOPSIS
 
-B<aa-status> [B<-D>] [B<-r> I<repodir>] [B<-a>] [B<-f> I<filter>] [B<-L>]
-[B<-n>] [B<-l> I<listdir>] [B<-s> I<sort>] [B<-R>] [B<-N>] [I<service...>]
+B<aa-status> [B<-D>] [B<-O> I<FILE|FD>] [B<-r> I<repodir>] [B<-a>] [B<-f>
+I<filter>] [B<-L>] [B<-n>] [B<-l> I<listdir>] [B<-s> I<sort>] [B<-R>] [B<-N>]
+[I<service...>]
 
 =head1 OPTIONS
 
@@ -52,6 +53,13 @@ Sort services by name. Default is by time, see B<--sort> for more.
 =item B<-n, --dry-list>
 
 Only show service names, one per line.
+
+=item B<-O, --log-file> I<FILE|FD>
+
+Will duplicate all output (everything written to stdout or stderr) to the given
+file or file descriptor. I<FILE|FD> can either be a (previously opened for
+writing) file descriptor (must be > 2), or a file which will then be opened in
+append mode.
 
 =item B<-R, --reverse>
 

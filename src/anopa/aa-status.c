@@ -795,6 +795,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...] [service...]",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
             " -l, --listdir DIR             Use DIR to list services to get status of\n"
             " -a, --all                     Show status of all services\n"
@@ -832,6 +833,7 @@ main (int argc, char * const argv[])
             { "list",               no_argument,        NULL,   'L' },
             { "name",               no_argument,        NULL,   'N' },
             { "dry-list",           no_argument,        NULL,   'n' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "reverse",            no_argument,        NULL,   'R' },
             { "repodir",            required_argument,  NULL,   'r' },
             { "sort",               required_argument,  NULL,   's' },
@@ -840,7 +842,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "aDf:hl:LNnRr:s:V", longopts, NULL);
+        c = getopt_long (argc, argv, "aDf:hl:LNnO:Rr:s:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -876,6 +878,10 @@ main (int argc, char * const argv[])
 
             case 'n':
                 cfg.mode = MODE_DRY_LIST;
+                break;
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
                 break;
 
             case 'R':

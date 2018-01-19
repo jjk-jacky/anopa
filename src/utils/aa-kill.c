@@ -116,6 +116,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...]",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -u, --hup                     Send SIGHUP\n"
             " -t, --term                    Send SIGTERM then SIGCONT\n"
             " -k, --kill                    Send SIGKILL\n"
@@ -136,6 +137,7 @@ main (int argc, char * const argv[])
             { "double-output",      no_argument,        NULL,   'D' },
             { "help",               no_argument,        NULL,   'h' },
             { "kill",               no_argument,        NULL,   'k' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "skip-at",            no_argument,        NULL,   's' },
             { "term",               no_argument,        NULL,   't' },
             { "hup",                no_argument,        NULL,   'u' },
@@ -144,7 +146,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "DhkstuV", longopts, NULL);
+        c = getopt_long (argc, argv, "DhkO:stuV", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -158,6 +160,10 @@ main (int argc, char * const argv[])
 
             case 'k':
                 send.kill = 1;
+                break;
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
                 break;
 
             case 's':

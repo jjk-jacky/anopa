@@ -23,15 +23,24 @@
 #include <unistd.h> /* isatty() */
 #include <skalibs/bytestr.h>
 #include <skalibs/buffer.h>
+#include <skalibs/djbunix.h>
+#include <skalibs/types.h>
 #include <anopa/output.h>
+#include <anopa/err.h> /* ERR_IO */
 
 static int istty[2] = { -1, 0 };
 static int double_output = 0;
+
+static char buf_log[BUFFER_OUTSIZE];
+static buffer_t buffer_log = BUFFER_ZERO;
 
 #define is_tty(n)           (istty[0] > -1 || chk_tty ()) && istty[n]
 
 #define putb(w,s,l)         buffer_put ((w) ? buffer_2 : buffer_1small, s, l)
 #define putb_flush(w,s,l)   buffer_putflush ((w) ? buffer_2 : buffer_1small, s, l)
+
+#define logb(s,l)           buffer_put (&buffer_log, s, l)
+#define logb_flush(s,l)     buffer_putflush (&buffer_log, s, l)
 
 static int
 chk_tty (void)
@@ -47,12 +56,70 @@ aa_set_double_output (int enabled)
     double_output = !!enabled;
 }
 
+int aa_set_log_file (const char *file_or_fd)
+{
+    if (buffer_log.fd >= 0)
+    {
+        fd_close (buffer_log.fd);
+        buffer_log.fd = -1;
+    }
+
+    if (!file_or_fd)
+        return 0;
+
+    if (*file_or_fd >= '0' && *file_or_fd <= '9')
+    {
+        /* Note: we don't allow to use a fd <= 2 */
+        errno = 0;
+        if (!int0_scan (file_or_fd, &buffer_log.fd) || buffer_log.fd <= 2)
+        {
+            if (errno == 0)
+                errno = EINVAL;
+            buffer_log.fd = -1;
+            return -1;
+        }
+    }
+    else
+    {
+        buffer_log.fd = open_append (file_or_fd);
+        if (buffer_log.fd < 0)
+            return -2;
+    }
+
+    if (!buffer_init (&buffer_log, &fd_writev, buffer_log.fd, buf_log, sizeof (buf_log)))
+    {
+        int e = errno;
+        fd_close (buffer_log.fd);
+        errno = e;
+        buffer_log.fd = -1;
+        return -3;
+    }
+
+    return 0;
+}
+
+void aa_set_log_file_or_die (const char *file_or_fd)
+{
+    int r;
+
+    r = aa_set_log_file (file_or_fd);
+    if (r < 0)
+    {
+        if (r == -1)
+            aa_strerr_diefu3sys (1, "set logfile to FD '", file_or_fd, "'");
+        else
+            aa_strerr_diefu3sys (ERR_IO, "set logfile to '", file_or_fd, "'");
+    }
+}
+
 void
 aa_bb (int where, const char *s, size_t len)
 {
     putb (where, s, len);
     if (double_output)
         putb (!where, s, len);
+    if (buffer_log.fd >= 0)
+        logb (s, len);
 }
 
 void
@@ -61,6 +128,8 @@ aa_bb_flush (int where, const char *s, size_t len)
     putb_flush (where, s, len);
     if (double_output)
         putb_flush (!where, s, len);
+    if (buffer_log.fd >= 0)
+        logb_flush (s, len);
 }
 
 void

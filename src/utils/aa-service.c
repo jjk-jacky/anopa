@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-service.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -163,6 +163,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION] PROG...",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -l, --log                     Use parent directory as servicedir\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
@@ -184,12 +185,13 @@ main (int argc, char const **argv, char const *const *envp)
             { "double-output",      no_argument,        NULL,   'D' },
             { "help",               no_argument,        NULL,   'h' },
             { "log",                no_argument,        NULL,   'l' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "version",            no_argument,        NULL,   'V' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, (char * const *) argv, "+DhlV", longopts, NULL);
+        c = getopt_long (argc, (char * const *) argv, "+DhlO:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -203,6 +205,10 @@ main (int argc, char const **argv, char const *const *envp)
 
             case 'l':
                 islog = 1;
+                break;
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
                 break;
 
             case 'V':

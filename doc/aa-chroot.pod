@@ -4,7 +4,7 @@ aa-chroot - Execute command within given chroot jail
 
 =head1 SYNOPSIS
 
-B<aa-chroot> [B<-D>] I<NEWROOT> I<COMMAND> [I<ARG...>]
+B<aa-chroot> [B<-D>] [B<-O> I<FILE|FD>] I<NEWROOT> I<COMMAND> [I<ARG...>]
 
 =head1 OPTIONS
 
@@ -20,6 +20,13 @@ shown on console and logged.
 =item B<-h, --help>
 
 Show help screen and exit.
+
+=item B<-O, --log-file> I<FILE|FD>
+
+Will duplicate all output (everything written to stdout or stderr) to the given
+file or file descriptor. I<FILE|FD> can either be a (previously opened for
+writing) file descriptor (must be > 2), or a file which will then be opened in
+append mode.
 
 =item B<-V, --version>
 

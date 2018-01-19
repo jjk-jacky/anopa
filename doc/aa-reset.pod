@@ -4,7 +4,8 @@ aa-reset - Reset status of one-shot services
 
 =head1 SYNOPSIS
 
-B<aa-reset> [B<-D>] [B<-r> I<repodir>] [B<-A> | B<-a> | B<-o>] [I<service...>]
+B<aa-reset> [B<-D>] [B<-O> I<FILE|FD>] [B<-r> I<repodir>] [B<-A> | B<-a> |
+B<-o>] [I<service...>]
 
 =head1 OPTIONS
 
@@ -28,6 +29,13 @@ shown on console and logged.
 =item B<-h, --help>
 
 Show help screen and exit.
+
+=item B<-O, --log-file> I<FILE|FD>
+
+Will duplicate all output (everything written to stdout or stderr) to the given
+file or file descriptor. I<FILE|FD> can either be a (previously opened for
+writing) file descriptor (must be > 2), or a file which will then be opened in
+append mode.
 
 =item B<-o, --stopped>
 

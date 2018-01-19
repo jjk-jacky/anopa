@@ -4,7 +4,7 @@ aa-teminate - Tries to close/unmount everything it can
 
 =head1 SYNOPSIS
 
-B<aa-terminate> [B<-D>] [B<-l>] [B<-a>] [B<-q> | B<-v>]
+B<aa-terminate> [B<-D>] [B<-O> I<FILE|FD>] [B<-l>] [B<-a>] [B<-q> | B<-v>]
 
 =head1 OPTIONS
 
@@ -32,6 +32,13 @@ When nothing can be done anymore (see L<B<DESCRIPTION>|/DESCRIPTION> below) and
 there are still active mount points, run the loop again performing lazy
 unmounts: making the mount point unavailable for new accesses, and actually
 performing the unmount when the mount point ceases to be busy.
+
+=item B<-O, --log-file> I<FILE|FD>
+
+Will duplicate all output (everything written to stdout or stderr) to the given
+file or file descriptor. I<FILE|FD> can either be a (previously opened for
+writing) file descriptor (must be > 2), or a file which will then be opened in
+append mode.
 
 =item B<-q, --quiet>
 

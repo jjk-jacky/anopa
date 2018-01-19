@@ -264,6 +264,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...] [service...]",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
             " -l, --listdir DIR             Use DIR to list services to stop\n"
             " -k, --skip SERVICE            Skip (do not stop) SERVICE\n"
@@ -324,6 +325,7 @@ main (int argc, char * const argv[])
             { "skip",               required_argument,  NULL,   'k' },
             { "listdir",            required_argument,  NULL,   'l' },
             { "dry-list",           no_argument,        NULL,   'n' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "repodir",            required_argument,  NULL,   'r' },
             { "timeout",            required_argument,  NULL,   't' },
             { "version",            no_argument,        NULL,   'V' },
@@ -332,7 +334,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "aDhk:l:nr:t:Vv", longopts, NULL);
+        c = getopt_long (argc, argv, "aDhk:l:nO:r:t:Vv", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -362,6 +364,10 @@ main (int argc, char * const argv[])
 
             case 'n':
                 mode |= AA_MODE_IS_DRY;
+                break;
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
                 break;
 
             case 'r':

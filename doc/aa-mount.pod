@@ -4,8 +4,8 @@ aa-mount - Mount a filesystem
 
 =head1 SYNOPSIS
 
-B<aa-mount> [B<-D>] [B<-B> | B<-M>] [B<-r> | B<-w>] [B<-d>] [B<-t> I<FSTYPE>]
-[B<-o> I<OPTIONS>] I<DEVICE> I<MOUNTPOINT>
+B<aa-mount> [B<-D>] [B<-O> I<FILE|FD>] [B<-B> | B<-M>] [B<-r> | B<-w>] [B<-d>]
+[B<-t> I<FSTYPE>] [B<-o> I<OPTIONS>] I<DEVICE> I<MOUNTPOINT>
 
 =head1 OPTIONS
 
@@ -41,6 +41,13 @@ Show help screen and exit.
 Move subtree specified as I<DEVICE> to I<MOUNTPOINT> So the content will be
 atomically moved from its old location (I<DEVICE>) into the new one
 (I<MOUNTPOINT>).
+
+=item B<-O, --log-file> I<FILE|FD>
+
+Will duplicate all output (everything written to stdout or stderr) to the given
+file or file descriptor. I<FILE|FD> can either be a (previously opened for
+writing) file descriptor (must be > 2), or a file which will then be opened in
+append mode.
 
 =item B<-o, --options> I<OPTIONS>
 

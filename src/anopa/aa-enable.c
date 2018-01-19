@@ -199,6 +199,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...] [service...]",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
             " -S, --reset-source DIR        Reset list of source directories to DIR\n"
             " -s, --source DIR              Add DIR as source directories\n"
@@ -245,6 +246,7 @@ main (int argc, char * const argv[])
             { "skip-down",          required_argument,  NULL,   'k' },
             { "listdir",            required_argument,  NULL,   'l' },
             { "no-needs",           no_argument,        NULL,   'N' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "quiet",              no_argument,        NULL,   'q' },
             { "repodir",            required_argument,  NULL,   'r' },
             { "reset-source",       required_argument,  NULL,   'S' },
@@ -257,7 +259,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "ac:Df:hk:l:Nqr:S:s:uVW", longopts, NULL);
+        c = getopt_long (argc, argv, "ac:Df:hk:l:NO:qr:S:s:uVW", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -292,6 +294,10 @@ main (int argc, char * const argv[])
 
             case 'N':
                 flags &= ~AA_FLAG_AUTO_ENABLE_NEEDS;
+                break;
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
                 break;
 
             case 'q':

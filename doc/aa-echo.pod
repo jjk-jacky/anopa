@@ -4,7 +4,8 @@ aa-echo - Shows a message
 
 =head1 SYNOPSIS
 
-B<aa-echo> [B<-D>] [B<-B>] [B<-T> | B<-t> | B<-w> | B<-e> | B<-n>] I<MESSAGE...>
+B<aa-echo> [B<-D>] [B<-O> I<FILE|FD>]
+[B<-B>] [B<-T> | B<-t> | B<-w> | B<-e> | B<-n>] I<MESSAGE...>
 
 =head1 OPTIONS
 
@@ -35,6 +36,13 @@ Show help screen and exit.
 Show I<MESSAGE...> as regular text, i.e. without any prefix or color. This can
 be used for simple echo, but make sure to see how arguments making up
 I<MESSAGE...> are processed.
+
+=item B<-O, --log-file> I<FILE|FD>
+
+Will duplicate all output (everything written to stdout or stderr) to the given
+file or file descriptor. I<FILE|FD> can either be a (previously opened for
+writing) file descriptor (must be > 2), or a file which will then be opened in
+append mode.
 
 =item B<-T, --title>
 

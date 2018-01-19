@@ -135,6 +135,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...] [service...]",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -r, --repodir DIR             Use DIR as repository directory\n"
             " -A, --auto                    Automatic mode\n"
             " -a, --started                 Reset to Started\n"
@@ -160,6 +161,7 @@ main (int argc, char * const argv[])
             { "started",            no_argument,        NULL,   'a' },
             { "double-output",      no_argument,        NULL,   'D' },
             { "help",               no_argument,        NULL,   'h' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "stopped",            no_argument,        NULL,   'o' },
             { "repodir",            required_argument,  NULL,   'r' },
             { "version",            no_argument,        NULL,   'V' },
@@ -167,7 +169,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "AaDhor:V", longopts, NULL);
+        c = getopt_long (argc, argv, "AaDhO:or:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -186,6 +188,10 @@ main (int argc, char * const argv[])
 
             case 'h':
                 dieusage (0);
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
+                break;
 
             case 'o':
                 mode = MODE_STOPPED;

@@ -4,8 +4,8 @@ aa-stop - Stop services
 
 =head1 SYNOPSIS
 
-B<aa-stop> [B<-D>] [B<-r> I<repodir>] [B<-l> I<listdir>] [B<-a>]
-[B<-k> I<service>] [B<-t> I<timeout>] [B<-n>] [B<-v>] [I<service...>]
+B<aa-stop> [B<-D>] [B<-O> I<FILE|FD>] [B<-r> I<repodir>] [B<-l> I<listdir>]
+[B<-a>] [B<-k> I<service>] [B<-t> I<timeout>] [B<-n>] [B<-v>] [I<service...>]
 
 =head1 OPTIONS
 
@@ -51,6 +51,13 @@ I</etc/anopa/listdirs/>
 =item B<-n, --dry-list>
 
 Only print the name of the services, but do not stop anything.
+
+=item B<-O, --log-file> I<FILE|FD>
+
+Will duplicate all output (everything written to stdout or stderr) to the given
+file or file descriptor. I<FILE|FD> can either be a (previously opened for
+writing) file descriptor (must be > 2), or a file which will then be opened in
+append mode.
 
 =item B<-r, --repodir> I<dir>
 

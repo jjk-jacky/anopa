@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-reboot.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -31,6 +31,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "OPTION",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -r, --reboot                  Reboot the machine NOW\n"
             " -H, --halt                    Halt the machine NOW\n"
             " -p, --poweroff                Power off the machine NOW\n"
@@ -60,6 +61,7 @@ main (int argc, char * const argv[])
             { "double-output",      no_argument,        NULL,   'D' },
             { "halt",               no_argument,        NULL,   'H' },
             { "help",               no_argument,        NULL,   'h' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "poweroff",           no_argument,        NULL,   'p' },
             { "reboot",             no_argument,        NULL,   'r' },
             { "version",            no_argument,        NULL,   'V' },
@@ -67,7 +69,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "DHhprV", longopts, NULL);
+        c = getopt_long (argc, argv, "DHhO:prV", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -82,6 +84,10 @@ main (int argc, char * const argv[])
 
             case 'h':
                 dieusage (0);
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
+                break;
 
             case 'p':
                 i = 1;

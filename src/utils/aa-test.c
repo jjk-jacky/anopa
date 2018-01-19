@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-test.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -53,6 +53,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "OPTION FILE",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -b, --block                   Test whether FILE is a block special\n"
             " -d, --directory               Test whether FILE is a directory\n"
             " -e, --exists                  Test whether FILE exists\n"
@@ -90,6 +91,7 @@ main (int argc, char * const argv[])
             { "file",               no_argument,        NULL,   'f' },
             { "help",               no_argument,        NULL,   'h' },
             { "symlink",            no_argument,        NULL,   'L' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "pipe",               no_argument,        NULL,   'p' },
             { "read",               no_argument,        NULL,   'r' },
             { "repeat",             optional_argument,  NULL,   'R' },
@@ -101,7 +103,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "bDdefhLprR::SVwx", longopts, NULL);
+        c = getopt_long (argc, argv, "bDdefhLO:prR::SVwx", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -125,6 +127,10 @@ main (int argc, char * const argv[])
 
             case 'h':
                 dieusage (0);
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
+                break;
 
             case 'R':
                 if (optarg && !uint0_scan (optarg, &repeat))

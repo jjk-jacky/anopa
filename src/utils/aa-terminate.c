@@ -258,6 +258,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...]",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -v, --verbose                 Show what was done\n"
             " -q, --quiet                   No warnings for what's left\n"
             " -l, --lazy-umounts            Try lazy umount as last resort\n"
@@ -287,6 +288,7 @@ main (int argc, char * const argv[])
             { "double-output",      no_argument,        NULL,   'D' },
             { "help",               no_argument,        NULL,   'h' },
             { "lazy-umounts",       no_argument,        NULL,   'l' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "quiet",              no_argument,        NULL,   'q' },
             { "version",            no_argument,        NULL,   'V' },
             { "verbose",            no_argument,        NULL,   'v' },
@@ -294,7 +296,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "aDhlqVv", longopts, NULL);
+        c = getopt_long (argc, argv, "aDhlO:qVv", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -312,6 +314,10 @@ main (int argc, char * const argv[])
 
             case 'l':
                 lazy = 1;
+                break;
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
                 break;
 
             case 'q':

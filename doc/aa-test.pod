@@ -4,8 +4,8 @@ aa-test - Test file types
 
 =head1 SYNOPSIS
 
-B<aa-test> [B<-D>] [B<-b> | B<-d> | B<-e> | B<-f> | B<-L> | B<-p> | B<-S> |
-B<-r> | B<-w> | B<-x>] [B<-R> [I<TIMES>]] I<FILE>
+B<aa-test> [B<-D>] [B<-O> I<FILE|FD>] [B<-b> | B<-d> | B<-e> | B<-f> | B<-L> |
+B<-p> | B<-S> | B<-r> | B<-w> | B<-x>] [B<-R> [I<TIMES>]] I<FILE>
 
 =head1 OPTIONS
 
@@ -41,6 +41,13 @@ Show help screen and exit.
 =item B<-L, --symlink>
 
 Test whether I<FILE> exists and is a symlink
+
+=item B<-O, --log-file> I<FILE|FD>
+
+Will duplicate all output (everything written to stdout or stderr) to the given
+file or file descriptor. I<FILE|FD> can either be a (previously opened for
+writing) file descriptor (must be > 2), or a file which will then be opened in
+append mode.
 
 =item B<-p, --pipe>
 

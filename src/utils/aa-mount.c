@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-mount.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -126,6 +126,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...] DEVICE MOUNTPOINT",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -B, --bind                    Remount a subtree somewhere else\n"
             " -M, --move                    Move a subtree to some other place\n"
             " -t, --type FSTYPE             Use FSTYPE as type of filesystem\n"
@@ -155,6 +156,7 @@ main (int argc, char * const argv[])
             { "mkdir",              no_argument,        NULL,   'd' },
             { "help",               no_argument,        NULL,   'h' },
             { "move",               no_argument,        NULL,   'M' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "options",            required_argument,  NULL,   'o' },
             { "read-only",          no_argument,        NULL,   'r' },
             { "type",               required_argument,  NULL,   't' },
@@ -164,7 +166,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "BDdhMo:rt:Vw", longopts, NULL);
+        c = getopt_long (argc, argv, "BDdhMO:o:rt:Vw", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -188,6 +190,10 @@ main (int argc, char * const argv[])
             case 'M':
                 if (!add_option (&sa, &flags, "move"))
                     aa_strerr_diefu1sys (2, "build user options");
+                break;
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
                 break;
 
             case 'o':

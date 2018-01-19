@@ -4,7 +4,7 @@ aa-setready - Set a service (un)ready
 
 =head1 SYNOPSIS
 
-B<aa-setready> [B<-D>] [B<-U> | B<-N>] I<SERVICEDIR>
+B<aa-setready> [B<-D>] [B<-O> I<FILE|FD>] [B<-U> | B<-N>] I<SERVICEDIR>
 
 =head1 OPTIONS
 
@@ -24,6 +24,13 @@ Show help screen and exit.
 =item B<-N, --unready>
 
 Mark the service unready and emit event 'N' on I<event> fifodir.
+
+=item B<-O, --log-file> I<FILE|FD>
+
+Will duplicate all output (everything written to stdout or stderr) to the given
+file or file descriptor. I<FILE|FD> can either be a (previously opened for
+writing) file descriptor (must be > 2), or a file which will then be opened in
+append mode.
 
 =item B<-U, --ready>
 

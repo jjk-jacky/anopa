@@ -44,6 +44,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION...] MESSAGE...",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -B, --blank-first             Print a blank line (LF) first\n"
             " -T, --title                   Show a main title (default)\n"
             " -t, --title2                  Show a secondary title\n"
@@ -82,6 +83,7 @@ main (int argc, char * const argv[])
             { "error",              no_argument,        NULL,   'e' },
             { "help",               no_argument,        NULL,   'h' },
             { "normal",             no_argument,        NULL,   'n' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "title",              no_argument,        NULL,   'T' },
             { "title2",             no_argument,        NULL,   't' },
             { "version",            no_argument,        NULL,   'V' },
@@ -90,7 +92,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "BDehnTtVw", longopts, NULL);
+        c = getopt_long (argc, argv, "BDehnO:TtVw", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -114,6 +116,10 @@ main (int argc, char * const argv[])
             case 'n':
                 put = NULL;
                 where = AA_OUT;
+                break;
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
                 break;
 
             case 'T':

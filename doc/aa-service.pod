@@ -4,7 +4,7 @@ aa-service - Helper for execline script to get service name/instance
 
 =head1 SYNOPSIS
 
-B<aa-service> [B<-D>] [B<-l>] I<PROG...>
+B<aa-service> [B<-D>] [B<-O> I<FILE|FD>] [B<-l>] I<PROG...>
 
 =head1 OPTIONS
 
@@ -25,6 +25,13 @@ Show help screen and exit.
 
 To use for a service logger run script, i.e. when current folder will be
 subfolder I<log> of the servicedir.
+
+=item B<-O, --log-file> I<FILE|FD>
+
+Will duplicate all output (everything written to stdout or stderr) to the given
+file or file descriptor. I<FILE|FD> can either be a (previously opened for
+writing) file descriptor (must be > 2), or a file which will then be opened in
+append mode.
 
 =item B<-V, --version>
 

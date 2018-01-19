@@ -33,6 +33,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTION] NAME",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -f, --file FILE               Use FILE instead of /proc/cmdline\n"
             " -q, --quiet                   Don't write value (if any) to stdout\n"
             " -s, --safe[=C]                Ignore argument if value contain C (default: '/')\n"
@@ -62,6 +63,7 @@ main (int argc, char * const argv[])
             { "file",               no_argument,        NULL,   'f' },
             { "help",               no_argument,        NULL,   'h' },
             { "quiet",              no_argument,        NULL,   'q' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "required",           no_argument,        NULL,   'r' },
             { "safe",               optional_argument,  NULL,   's' },
             { "version",            no_argument,        NULL,   'V' },
@@ -69,7 +71,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "Df:hqrs::V", longopts, NULL);
+        c = getopt_long (argc, argv, "Df:hO:qrs::V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -84,6 +86,10 @@ main (int argc, char * const argv[])
 
             case 'h':
                 dieusage (0);
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
+                break;
 
             case 'q':
                 quiet = 1;

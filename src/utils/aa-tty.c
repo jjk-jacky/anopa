@@ -35,6 +35,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -h, --help                    Show this help screen and exit\n"
             " -V, --version                 Show version information and exit\n"
             );
@@ -55,12 +56,13 @@ main (int argc, char * const argv[])
         struct option longopts[] = {
             { "double-output",      no_argument,        NULL,   'D' },
             { "help",               no_argument,        NULL,   'h' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "version",            no_argument,        NULL,   'V' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "DhV", longopts, NULL);
+        c = getopt_long (argc, argv, "DhO:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -71,6 +73,10 @@ main (int argc, char * const argv[])
 
             case 'h':
                 dieusage (0);
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
+                break;
 
             case 'V':
                 aa_die_version ();

@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * aa-umount.c
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -34,6 +34,7 @@ dieusage (int rc)
 {
     aa_die_usage (rc, "[OPTIONS...] MOUNTPOINT",
             " -D, --double-output           Enable double-output mode\n"
+            " -O, --log-file FILE|FD        Write log to FILE|FD\n"
             " -f, --force                   Force unmount even if busy (NFS only)\n"
             " -l, --lazy                    Perform lazy unmounting\n"
             " -h, --help                    Show this help screen and exit\n"
@@ -54,12 +55,13 @@ main (int argc, char * const argv[])
             { "force",              no_argument,        NULL,   'f' },
             { "help",               no_argument,        NULL,   'h' },
             { "lazy",               no_argument,        NULL,   'l' },
+            { "log-file",           required_argument,  NULL,   'O' },
             { "version",            no_argument,        NULL,   'V' },
             { NULL, 0, 0, 0 }
         };
         int c;
 
-        c = getopt_long (argc, argv, "DfhlV", longopts, NULL);
+        c = getopt_long (argc, argv, "DfhlO:V", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -77,6 +79,10 @@ main (int argc, char * const argv[])
 
             case 'l':
                 flags = MNT_DETACH;
+                break;
+
+            case 'O':
+                aa_set_log_file_or_die (optarg);
                 break;
 
             case 'V':
