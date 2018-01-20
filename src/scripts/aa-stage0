@@ -3,7 +3,7 @@
 # anopa - Copyright (C) 2015-2017 Olivier Brunel
 #
 # aa-stage0
-# Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+# Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
 #
 # This file is part of anopa.
 #
@@ -33,10 +33,10 @@ background
     s6-tai64n
 }
 
-# aa-* tools will send output to both 1 & 2 via -D
+# aa-* tools will duplicate their output to 3 via -O3
 fdclose 3
-fdmove 2 4
-foreground { aa-echo -D "Stage 0: Mounting root file system..." }
+fdmove 3 4
+foreground { aa-echo -O3 "Stage 0: Mounting root file system..." }
 
 # Safety
 cd /
@@ -45,32 +45,30 @@ umask 022
 # Start services
 foreground { if -n
 {
-  if { emptyenv -c s6-setsid aa-ctty -Ds aa-start -D -r /services -l onboot }
+  if { emptyenv -c s6-setsid aa-ctty -O3 -s aa-start -O3 -r /services -l onboot }
   foreground {
     # if "break" was specified on kernel cmdline, let's open a shell
-    if -t { aa-incmdline -Dqf /root-fs/proc/cmdline break }
-    foreground { aa-echo -DB "Break requested" }
-    foreground { aa-echo -Dt "Trying to open a shell; " +g exit +w " to continue" }
-    fdmove -c 2 1
+    if -t { aa-incmdline -O3 -qf /root-fs/proc/cmdline break }
+    foreground { aa-echo -O3 -B "Break requested" }
+    foreground { aa-echo -O3 -t "Trying to open a shell; " +g exit +w " to continue" }
     emptyenv -c sh -i
   }
 }
 
 # aa-start failed (i.e. an essential service failed to be started), so we assume
 # the root fs wasn't mounted: try a shell so user has a chance to fix things
-foreground { aa-echo -DBe "Mouting root file system failed" }
-foreground { aa-echo -Dt "Trying to open a shell; " +g exit +w " to continue" }
-fdmove -c 2 1
+foreground { aa-echo -O3 -Be "Mouting root file system failed" }
+foreground { aa-echo -O3 -t "Trying to open a shell; " +g exit +w " to continue" }
 emptyenv -c sh -i
 }
 
-if { aa-echo -DB "Moving /root-fs to /..." }
+if { aa-echo -O3 -B "Moving /root-fs to /..." }
 # First we mount bind the rootfs (initramfs) onto /run/initramfs so we can come
 # back to it for stage 4
-if { aa-mount -DBd / /root-fs/run/initramfs }
-fdmove -c 2 1
+if { aa-mount -O3 -Bd / /root-fs/run/initramfs }
 backtick -n -D /sbin/init INIT { aa-incmdline -rf /root-fs/proc/cmdline init }
 importas -u INIT INIT
+fdclose 3
 cd /root-fs
 if { aa-mount -M . / }
 ./run/initramfs/bin/emptyenv -c ./run/initramfs/bin/aa-chroot . ${INIT}

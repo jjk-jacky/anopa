@@ -39,32 +39,31 @@ background
     s6-tai64n
 }
 
-# aa-* tools will send output to both 1 & 2 via -D
+# aa-* tools will duplicate their output to 3 via -O3
 fdclose 3
-fdmove 2 4
-foreground { aa-echo -DB "Stage 1: Preparing system..." }
+fdmove 3 4
+foreground { aa-echo -O3 -B "Stage 1: Preparing system..." }
 
 # Safety
 cd /
 umask 022
 
 # Create the repository
-backtick -n -D onboot REPODIR { aa-incmdline -Drs aa }
+backtick -n -D onboot REPODIR { aa-incmdline -O3 -rs aa }
 backtick -n -D onboot REPODIR {
     importas -u REPODIR REPODIR
     if { aa-test -e /var/lib/repodir/$REPODIR } echo $REPODIR
 }
 importas -u REPODIR REPODIR
-foreground { aa-echo -Dt "Copying ${REPODIR} repodir as /run/services..." }
-foreground { emptyenv -c aa-hiercopy -D /var/lib/repodir/$REPODIR /run/services }
+foreground { aa-echo -O3 -t "Copying ${REPODIR} repodir as /run/services..." }
+foreground { emptyenv -c aa-hiercopy -O3 /var/lib/repodir/$REPODIR /run/services }
 
-foreground { aa-echo -Dt "Starting s6-svscan..." }
+foreground { aa-echo -O3 -t "Starting s6-svscan..." }
 # Make sure the FIFO needed for the switch to stage 2 is there
-ifelse -X -n { aa-test -Dp /run/services/.scandir/uncaught-logs/fifo }
+ifelse -X -n { aa-test -O3 -p /run/services/.scandir/uncaught-logs/fifo }
 {
-    foreground { aa-echo -DBe "Cannot start s6-svscan: No uncaught-logs fifo found" }
-    fdmove -c 2 1
-    foreground { aa-echo -t "Trying to open a shell..." }
+    foreground { aa-echo -O3 -Be "Cannot start s6-svscan: No uncaught-logs fifo found" }
+    foreground { aa-echo -O3 -t "Trying to open a shell..." }
     emptyenv -c sh -i
 }
 
@@ -72,6 +71,8 @@ ifelse -X -n { aa-test -Dp /run/services/.scandir/uncaught-logs/fifo }
 redirfd -r 0 /dev/null
 redirfd -wnb 1 /run/services/uncaught-logs/fifo # (black magic: doesn't block)
 fdmove -c 2 1
+# close logger
+fdclose 3
 
 # Fork the stage2 script and have it ready to start as soon as the catch-all
 # logger is in place

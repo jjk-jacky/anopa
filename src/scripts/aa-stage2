@@ -3,7 +3,7 @@
 # anopa - Copyright (C) 2015-2017 Olivier Brunel
 #
 # aa-stage2
-# Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+# Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
 #
 # This file is part of anopa.
 #
@@ -31,7 +31,7 @@ background
   s6-tai64n
 }
 fdclose 3
-fdmove 2 4
+fdmove 3 4
 
 if -n -t
 {
@@ -39,17 +39,18 @@ if -n -t
   backtick -n TTY { aa-tty }
   importas -u TTY TTY
   redirfd -r 0 ${TTY}
-  # Reopen the console for stdout
+  # Reopen the console
   redirfd -w 1 /dev/console
+  fdmove -c 2 1
   # And start everything
-  foreground { aa-echo -DB "Stage 2: Initializing system..." }
-  backtick -n -D onboot LISTDIR { aa-incmdline -Drs aa }
+  foreground { aa-echo -O3 -B "Stage 2: Initializing system..." }
+  backtick -n -D onboot LISTDIR { aa-incmdline -O3 -rs aa }
   importas -u LISTDIR LISTDIR
   # We have a tty in stdin, become session leader and set controlling terminal.
   # This is so Ctrl+C will trigger a SIGINT to aa-start, so one can manually
   # timeout a service.
-  if { emptyenv -c s6-setsid aa-ctty -D aa-start -D -l /etc/anopa/listdirs/${LISTDIR} }
-  aa-echo -DB "System ready."
+  if { emptyenv -c s6-setsid aa-ctty -O3 aa-start -O3 -l /etc/anopa/listdirs/${LISTDIR} }
+  aa-echo -O3 -B "System ready."
 }
 
 # Something went wrong, likely aa-start failed (i.e. an essential service failed
@@ -57,7 +58,7 @@ if -n -t
 # has a chance to fix things
 redirfd -r 0 /dev/console
 redirfd -w 1 /dev/console
-foreground { aa-echo -DBe "System initialization failed" }
 fdmove -c 2 1
-foreground { aa-echo -t "Trying to open a shell..." }
+foreground { aa-echo -O3 -Be "System initialization failed" }
+foreground { aa-echo -O3 -t "Trying to open a shell..." }
 emptyenv -c sh -i

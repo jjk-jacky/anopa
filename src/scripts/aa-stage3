@@ -3,7 +3,7 @@
 # anopa - Copyright (C) 2015-2017 Olivier Brunel
 #
 # aa-stage3
-# Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+# Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
 #
 # This file is part of anopa.
 #
@@ -28,10 +28,12 @@ background
     fdclose 4 fdmove 0 3
     redirfd -a 1 /var/log/boot/current
     fdmove -c 2 1
+    # put a @ as first char in argv[0] so it is skipped by the aa-kill calls
+    exec -a @logger
     s6-tai64n
 }
 fdclose 3
-fdmove 2 4
+fdmove 3 4
 
 # Make sure we're sane
 cd /
@@ -39,34 +41,27 @@ backtick -n TTY { aa-tty }
 importas -u TTY TTY
 redirfd -r 0 ${TTY}
 redirfd -w 1 /dev/console
+fdmove -c 2 1
 
-foreground { aa-echo -DB "Stage 3: Preparing ${1}..." }
+foreground { aa-echo -O3 -B "Stage 3: Preparing ${1}..." }
 # Stop all running services -- s6-svscan did only exec into us, leaving the
 # whole supervised tree intact. Here we stop everything (longrun & oneshot) in
 # order, save for the catch-all (it will get an 'x' though).
-foreground { emptyenv -c s6-setsid aa-ctty -Ds aa-stop -D -aak uncaught-logs -t20 }
+foreground { emptyenv -c s6-setsid aa-ctty -O3 -s aa-stop -O3 -aak uncaught-logs -t20 }
 # Now stop the catch-all logger (its supervisor will then exit)
-foreground { emptyenv -c s6-setsid aa-stop -D uncaught-logs }
+foreground { emptyenv -c s6-setsid aa-stop -O3 uncaught-logs }
 
 # Kill everything left
-foreground { aa-echo -DB "Killing remaining processes..." }
-foreground { aa-echo -Dt "Sending SIGTERM to all processes..." }
-foreground { aa-kill -Dst }
+foreground { aa-echo -O3 -B "Killing remaining processes..." }
+foreground { aa-echo -O3 -t "Sending SIGTERM to all processes..." }
+foreground { aa-kill -O3 -st }
 wait -t 4200 { } # Reap zombies
-# logger was killed, and we won't open it back
-fdmove -c 2 1
-foreground { pipeline { aa-echo -Dt "Sending SIGKILL to all processes..." }
-    redirfd -a 1 /var/log/boot/current
-    s6-tai64n
-}
-foreground { aa-kill -sk }
+foreground { aa-echo -O3 -t "Sending SIGKILL to all processes..." }
+foreground { aa-kill -O3 -sk }
 wait -t 2300 { } # Wait for all children
 
 foreground { aa-sync }
-foreground { pipeline { aa-echo -DB "Pivoting root..." }
-    redirfd -a 1 /var/log/boot/current
-    s6-tai64n
-}
+foreground { aa-echo -O3 -B "Pivoting root..." }
 
 cd /run/initramfs
 foreground {
@@ -75,16 +70,15 @@ foreground {
         # grab the chroot binary for after the pivot
         if { cp /bin/aa-chroot . }
         # PIVOT!
-        if { aa-pivot . root-fs }
+        if { aa-pivot -O3 . root-fs }
     }
 
     # Something went wrong
-    foreground { pipeline { aa-echo -DBe "Unable to ${1}: Failed to pivot root" }
-        redirfd -a 1 /var/log/boot/current
-        s6-tai64n
-    }
-    foreground { aa-echo -t "Trying to open a shell..." }
+    foreground { aa-echo -O3 -Be "Unable to ${1}: Failed to pivot root" }
+    foreground { aa-echo -O3 -t "Trying to open a shell..." }
     emptyenv -c sh -i
 }
+# close the logger now
+fdclose 3
 # And let initramfs end things ($1 is halt/reboot/poweroff)
 ./aa-chroot . /shutdown ${1}
