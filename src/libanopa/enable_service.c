@@ -668,7 +668,7 @@ aa_enable_service (const char       *_name,
         struct stat st;
 
         if (stat (_name, &st) < 0)
-            return ERR_IO;
+            return -ERR_IO;
         else if (S_ISREG (st.st_mode))
             /* file; so nothing special to do, we can "drop" the path */
             _name = name;
