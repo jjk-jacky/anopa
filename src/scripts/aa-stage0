@@ -71,4 +71,4 @@ importas -u INIT INIT
 fdclose 3
 cd /root-fs
 if { aa-mount -M . / }
-./run/initramfs/bin/emptyenv -c ./run/initramfs/bin/aa-chroot . ${INIT}
+./run/initramfs/bin/emptyenv -c ./run/initramfs/bin/aa-chroot . $INIT
