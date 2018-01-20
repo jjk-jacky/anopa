@@ -22,7 +22,6 @@ aa-tty \
 aa-umount
 
 BIN_SCRIPTS_TARGET := \
-aa-command \
 aa-shutdown
 
 LIBEXEC_SCRIPTS_TARGET := \
@@ -35,7 +34,6 @@ aa-stage4
 DOC_TARGETS := \
 anopa.1 \
 aa-chroot.1 \
-aa-command.1 \
 aa-ctty.1 \
 aa-echo.1 \
 aa-enable.1 \
