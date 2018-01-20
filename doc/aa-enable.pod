@@ -35,6 +35,9 @@ stderr for warnings and errors, everything is sent both to stdout and stderr.
 This is intended to redirect stderr to a log file, so full output can be both
 shown on console and logged.
 
+B<Deprecation warning:> Note that this option has been deprecated and will be
+removed in the next version; You should use B<--log-file> instead.
+
 =item B<-f, --set-finish> I<FINISH>
 
 Create a symlink I<REPODIR/.scandir/.s6-svscan/finish> that points to I<FINISH>.

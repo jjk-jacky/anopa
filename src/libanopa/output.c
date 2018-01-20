@@ -53,6 +53,7 @@ chk_tty (void)
 void
 aa_set_double_output (int enabled)
 {
+    aa_strerr_warn1x ("--double-output has been deprecated, see to use --log-file instead");
     double_output = !!enabled;
 }
 
