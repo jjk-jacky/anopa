@@ -410,6 +410,8 @@ main (int argc, char * const argv[])
                     aa_bs (AA_ERR, ": " "unable to check for existing servicedir" ": ");
                     aa_bs (AA_ERR, strerror (e));
                     aa_end_err ();
+
+                    genalloc_append (size_t, &ga_failed, &offset);
                 }
                 else
                 {
