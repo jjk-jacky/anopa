@@ -39,7 +39,6 @@ enum
     RC_FATAL_INIT_REPO  = (1 << 1 | 1),     /* only by "commands" */
     RC_FATAL_IO         = (2 << 1 | 1),
     RC_FATAL_MEMORY     = (3 << 1 | 1),
-    RC_FATAL_ALARM_S6   = (4 << 1 | 1),     /* only by aa-enable */
 
     RC_FATAL_EXEC       = (55 << 1 | 1),    /* so rc=111; execline style */
 

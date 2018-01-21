@@ -449,10 +449,13 @@ main (int argc, char * const argv[])
     if (alarm_s6)
     {
         r = s6_svc_writectl (AA_SCANDIR_DIRNAME, S6_SVSCAN_CTLDIR, "a", 1);
-        if (r < 0)
-            aa_strerr_diefu1sys (RC_FATAL_ALARM_S6, "alarm s6-svscan");
-        else if (r == 0)
-            aa_strerr_diefu1x (RC_FATAL_ALARM_S6, "alarm s6-svscan: supervisor not listening");
+        if (r <= 0)
+        {
+            aa_put_err ("Failed to alarm s6-svscan",
+                        (r < 0) ? strerror (errno) : "supervisor not listening",
+                        1);
+            rc |= RC_ST_ALARM_S6;
+        }
     }
 
     if (ga_failed.len > 0)

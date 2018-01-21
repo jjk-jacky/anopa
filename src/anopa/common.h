@@ -32,9 +32,10 @@ enum
     RC_ST_UNKNOWN       = 1 << 1,   /* at least 1 service unknown */
     RC_ST_SKIPPED       = 1 << 2,   /* at least 1 service skipped (start) */
     RC_ST_FAILED        = 1 << 3,   /* at least 1 service failed */
-    RC_ST_ESSENTIAL     = 1 << 4,   /* at least 1 failed service was essential */
-
-    RC_ST_SYMLINK       = 1 << 5    /* at least 1 symlink couldn't be created */
+    RC_ST_ESSENTIAL     = 1 << 4,   /* at least 1 failed service was essential (start) */
+    /* enable only: */
+    RC_ST_SYMLINK       = 1 << 5,   /* at least 1 symlink couldn't be created */
+    RC_ST_ALARM_S6      = 1 << 6    /* failed to alarm s6 */
 };
 
 #endif /* _AA_COMMON_H */
