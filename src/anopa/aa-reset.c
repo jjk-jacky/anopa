@@ -82,7 +82,7 @@ reset_service (const char *name, intptr_t mode)
 
     if (s->st.type == AA_TYPE_LONGRUN)
     {
-        aa_put_err (name, "Can only reset ont-shot services", 1);
+        aa_put_err (name, "Can only reset one-shot services", 1);
         return;
     }
 
