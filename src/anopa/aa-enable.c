@@ -64,6 +64,7 @@ static stralloc sa_pl = STRALLOC_ZERO;
 static const char *cur_name = NULL;
 static stralloc names = STRALLOC_ZERO;
 static int nb_enabled = 0;
+static genalloc ga_unknown = GENALLOC_ZERO;
 static genalloc ga_failed = GENALLOC_ZERO;
 static genalloc ga_next = GENALLOC_ZERO;
 static const char *skip = NULL;
@@ -145,7 +146,7 @@ process:
             aa_end_err ();
         }
 
-        genalloc_append (size_t, &ga_failed, &offset);
+        genalloc_append (size_t, (r == -ERR_UNKNOWN) ? &ga_unknown : &ga_failed, &offset);
         cur_name = NULL;
         return -1;
     }
@@ -424,6 +425,7 @@ main (int argc, char * const argv[])
     aa_put_title (1, PROG, "Completed", 1);
     aa_show_stat_nb (nb_enabled, "Enabled", ANSI_HIGHLIGHT_GREEN_ON);
     aa_show_stat_names (names.s, &ga_failed, "Failed", ANSI_HIGHLIGHT_RED_ON);
+    aa_show_stat_names (names.s, &ga_unknown, "Unknown", ANSI_HIGHLIGHT_RED_ON);
 
     if (!(flags & AA_FLAG_UPGRADE_SERVICEDIR))
     {
@@ -447,6 +449,7 @@ main (int argc, char * const argv[])
     r = (ga_failed.len == 0) ? 0 : 23;
 
     genalloc_free (size_t, &ga_failed);
+    genalloc_free (size_t, &ga_unknown);
     genalloc_free (size_t, &ga_next);
     stralloc_free (&sa_pl);
     stralloc_free (&names);
