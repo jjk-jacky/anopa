@@ -118,7 +118,7 @@ main (int argc, char * const argv[])
         {
             st6.flagready = 1;
             if (!tain_now (&st6.readystamp))
-                aa_strerr_diefu1sys (4, "tain_now");
+                aa_strerr_diefu1sys (4, "init timestamp");
         }
         else
             st6.flagready = 0;
