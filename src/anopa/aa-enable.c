@@ -229,6 +229,7 @@ main (int argc, char * const argv[])
     const char *set_finish = NULL;
     int i;
     int r;
+    int rc = RC_OK;
 
     if (!stralloc_catb (&aa_sa_sources, SOURCE_ETC, sizeof (SOURCE_ETC)))
         aa_strerr_diefu1sys (RC_FATAL_MEMORY, "stralloc_catb");
@@ -434,9 +435,15 @@ main (int argc, char * const argv[])
         if ((set_crash || set_finish) && mkdir (SVSCANDIR, S_IRWXU) < 0)
             aa_put_err ("Failed to create " SVSCANDIR, strerror (errno), 1);
         if (set_crash && symlink (set_crash, SCANDIR_CRASH) < 0)
+        {
             aa_put_err ("Failed to create symlink " SCANDIR_CRASH, strerror (errno), 1);
+            rc |= RC_ST_SYMLINK;
+        }
         if (set_finish && symlink (set_finish, SCANDIR_FINISH) < 0)
+        {
             aa_put_err ("Failed to create symlink " SCANDIR_FINISH, strerror (errno), 1);
+            rc |= RC_ST_SYMLINK;
+        }
     }
 
     if (alarm_s6)
@@ -448,11 +455,10 @@ main (int argc, char * const argv[])
             aa_strerr_diefu1x (RC_FATAL_ALARM_S6, "alarm s6-svscan: supervisor not listening");
     }
 
-    r = RC_OK;
     if (ga_failed.len > 0)
-        r |= RC_ST_FAILED;
+        rc |= RC_ST_FAILED;
     if (ga_unknown.len > 0)
-        r |= RC_ST_UNKNOWN;
+        rc |= RC_ST_UNKNOWN;
 
     genalloc_free (size_t, &ga_failed);
     genalloc_free (size_t, &ga_unknown);
@@ -460,5 +466,5 @@ main (int argc, char * const argv[])
     stralloc_free (&sa_pl);
     stralloc_free (&names);
 
-    return r;
+    return rc;
 }
