@@ -173,7 +173,7 @@ main (int argc, char * const argv[])
         {
             case 'B':
                 if (!add_option (&sa, &flags, "bind"))
-                    aa_strerr_diefu1sys (2, "build user options");
+                    aa_strerr_diefu1sys (RC_FATAL_MEMORY, "build user options");
                 break;
 
             case 'D':
@@ -185,11 +185,11 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'M':
                 if (!add_option (&sa, &flags, "move"))
-                    aa_strerr_diefu1sys (2, "build user options");
+                    aa_strerr_diefu1sys (RC_FATAL_MEMORY, "build user options");
                 break;
 
             case 'O':
@@ -198,12 +198,12 @@ main (int argc, char * const argv[])
 
             case 'o':
                 if (!add_option (&sa, &flags, optarg))
-                    aa_strerr_diefu1sys (2, "build user options");
+                    aa_strerr_diefu1sys (RC_FATAL_MEMORY, "build user options");
                 break;
 
             case 'r':
                 if (!add_option (&sa, &flags, "ro"))
-                    aa_strerr_diefu1sys (2, "build user options");
+                    aa_strerr_diefu1sys (RC_FATAL_MEMORY, "build user options");
                 break;
 
             case 't':
@@ -215,25 +215,25 @@ main (int argc, char * const argv[])
 
             case 'w':
                 if (!add_option (&sa, &flags, "rw"))
-                    aa_strerr_diefu1sys (2, "build user options");
+                    aa_strerr_diefu1sys (RC_FATAL_MEMORY, "build user options");
                 break;
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc < 2)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     if (!stralloc_0 (&sa))
-        aa_strerr_diefu1sys (2, "build user options");
+        aa_strerr_diefu1sys (RC_FATAL_MEMORY, "build user options");
     if (mk && mkdir (argv[1], 0755) < 0 && errno != EEXIST)
-        aa_strerr_diefu4sys (2, "mkdir ", argv[1], " to mount ", argv[0]);
+        aa_strerr_diefu4sys (RC_FATAL_IO, "mkdir ", argv[1], " to mount ", argv[0]);
     if (mount (argv[0], argv[1], fstype, flags, sa.s) < 0)
-        aa_strerr_diefu4sys (3, "mount ", argv[0], " on ", argv[1]);
+        aa_strerr_diefu4sys (RC_FATAL_IO, "mount ", argv[0], " on ", argv[1]);
 
-    return 0;
+    return RC_OK;
 }

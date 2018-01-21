@@ -74,3 +74,10 @@ skip any that starts with an '@' Also skipped will be process without cmdline
 
 Note that B<aa-kill>(1) will ignore the signals it sends when B<--skip> isn't
 used, though that won't do much against SIGKILL.
+
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+B<aa-kill>(1) does not have even return codes.

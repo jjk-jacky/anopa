@@ -272,6 +272,11 @@ later in shown.
 
 =back
 
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Return codes are unified for
+all commands, and are documented in B<anopa-rc>(1)
+
 =head1 ENVIRONMENT VARIABLES
 
 The following environment variables are used :

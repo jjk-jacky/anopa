@@ -31,6 +31,12 @@
 #define NULL    (void *) 0
 #endif
 
+enum {
+    RC_ST_LSTAT     = 1 << 1,
+    RC_ST_RESOLVE   = 2 << 1,
+    RC_ST_COPY      = 3 << 1
+};
+
 static void
 dieusage (int rc)
 {
@@ -68,7 +74,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'O':
                 aa_set_log_file_or_die (optarg);
@@ -78,14 +84,14 @@ main (int argc, char * const argv[])
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc != 2)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     {
         stralloc sa = STRALLOC_ZERO;
@@ -93,16 +99,16 @@ main (int argc, char * const argv[])
         char *sce = argv[0];
 
         if (lstat (sce, &st) < 0)
-            aa_strerr_diefu2sys (2, "lstat ", sce);
+            aa_strerr_diefu2sys (RC_ST_LSTAT, "lstat ", sce);
         if (S_ISLNK (st.st_mode))
         {
             if (sarealpath (&sa, sce) < 0)
-                aa_strerr_diefu2x (3, "resolve symlink ", sce);
+                aa_strerr_diefu2x (RC_ST_RESOLVE, "resolve symlink ", sce);
             sce = sa.s;
         }
 
         if (!hiercopy(sce, argv[1]))
-            aa_strerr_diefu4sys (4, "copy ", sce, " into ", argv[1]);
+            aa_strerr_diefu4sys (RC_ST_COPY, "copy ", sce, " into ", argv[1]);
         if (sa.a > 0)
             stralloc_free (&sa);
     }

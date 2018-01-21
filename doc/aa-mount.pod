@@ -91,3 +91,10 @@ nodev, diratime, nodiratime, dirsync, exec, noexec, mand, nomand, relatime,
 norelatime, strictatime, nostrictatime, suid, nosuid, remount, sync.
 
 Any other options will be given to the kernel as-is.
+
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+B<aa-mount>(1) does not have even return codes.

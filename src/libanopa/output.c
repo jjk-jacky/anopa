@@ -26,6 +26,7 @@
 #include <skalibs/djbunix.h>
 #include <skalibs/types.h>
 #include <anopa/output.h>
+#include <anopa/rc.h>
 #include <anopa/err.h> /* ERR_IO */
 
 static int istty[2] = { -1, 0 };
@@ -107,9 +108,9 @@ void aa_set_log_file_or_die (const char *file_or_fd)
     if (r < 0)
     {
         if (r == -1)
-            aa_strerr_diefu3sys (1, "set logfile to FD '", file_or_fd, "'");
+            aa_strerr_diefu3sys (RC_FATAL_USAGE, "set logfile to FD '", file_or_fd, "'");
         else
-            aa_strerr_diefu3sys (ERR_IO, "set logfile to '", file_or_fd, "'");
+            aa_strerr_diefu3sys (RC_FATAL_IO, "set logfile to '", file_or_fd, "'");
     }
 }
 

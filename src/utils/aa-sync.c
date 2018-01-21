@@ -43,10 +43,10 @@ main (int argc, char * const argv[])
     if (argc == 1)
     {
         sync ();
-        return 0;
+        return RC_OK;
     }
 
     if (argc == 2 && (str_equal (argv[1], "-V") || str_equal (argv[1], "--version")))
         aa_die_version ();
-    dieusage ((argc == 2 && (str_equal (argv[1], "-h") || str_equal (argv[1], "--help"))) ? 0 : 1);
+    dieusage ((argc == 2 && (str_equal (argv[1], "-h") || str_equal (argv[1], "--help"))) ? RC_OK : RC_FATAL_USAGE);
 }

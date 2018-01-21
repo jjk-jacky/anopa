@@ -30,6 +30,15 @@
 #include <anopa/common.h>
 #include <anopa/output.h>
 
+enum
+{
+    RC_ST_READ      = 1 << 1,
+    RC_ST_NOT_UP    = 2 << 1,
+    RC_ST_CLOCK     = 3 << 1,
+    RC_ST_WRITE     = 4 << 1,
+    RC_ST_EVENT     = 5 << 1
+};
+
 static void
 dieusage (int rc)
 {
@@ -73,7 +82,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'N':
                 ready = 0;
@@ -91,14 +100,14 @@ main (int argc, char * const argv[])
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc != 1)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     {
         size_t l = strlen (argv[0]);
@@ -110,25 +119,25 @@ main (int argc, char * const argv[])
         byte_copy (fifodir + l + 1, sizeof (S6_SUPERVISE_EVENTDIR), S6_SUPERVISE_EVENTDIR);
 
         if (!s6_svstatus_read (argv[0], &st6))
-            aa_strerr_diefu1sys (2, "read s6 status");
+            aa_strerr_diefu1sys (RC_ST_READ, "read s6 status");
         if (!(st6.pid && !st6.flagfinishing))
-            aa_strerr_dief1x (3, "service is not up");
+            aa_strerr_dief1x (RC_ST_NOT_UP, "service is not up");
 
         if (ready)
         {
             st6.flagready = 1;
             if (!tain_now (&st6.readystamp))
-                aa_strerr_diefu1sys (4, "init timestamp");
+                aa_strerr_diefu1sys (RC_ST_CLOCK, "init timestamp");
         }
         else
             st6.flagready = 0;
 
         if (!s6_svstatus_write (argv[0], &st6))
-            aa_strerr_diefu1sys (5, "write s6 status");
+            aa_strerr_diefu1sys (RC_ST_WRITE, "write s6 status");
 
         if (ftrigw_notify (fifodir, (ready) ? 'U' : 'N') < 0)
-            aa_strerr_diefu4sys (6, "send event ", (ready) ? "U": "N" , " via ", fifodir);
+            aa_strerr_diefu4sys (RC_ST_EVENT, "send event ", (ready) ? "U": "N" , " via ", fifodir);
     }
 
-    return 0;
+    return RC_OK;
 }

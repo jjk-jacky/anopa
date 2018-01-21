@@ -37,6 +37,7 @@
 #include <anopa/service_status.h>
 #include <anopa/err.h>
 #include "util.h"
+#include "common.h"
 
 enum
 {
@@ -45,6 +46,8 @@ enum
     MODE_STARTED,
     MODE_STOPPED
 };
+
+static int rc = RC_OK;
 
 static void
 reset_service (const char *name, intptr_t mode)
@@ -59,6 +62,7 @@ reset_service (const char *name, intptr_t mode)
     if (r < 0)
     {
         aa_put_err (name, errmsg[-r], 1);
+        rc |= (r == -ERR_UNKNOWN) ? RC_ST_UNKNOWN : RC_ST_FAILED;
         return;
     }
 
@@ -66,6 +70,7 @@ reset_service (const char *name, intptr_t mode)
     if (r < 0)
     {
         aa_put_err (name, errmsg[-r], 1);
+        rc |= RC_ST_FAILED;
         return;
     }
 
@@ -77,12 +82,15 @@ reset_service (const char *name, intptr_t mode)
         aa_put_err (name, "Failed to read service status file: ", 0);
         aa_bs (AA_ERR, strerror (e));
         aa_end_err ();
+
+        rc |= RC_ST_FAILED;
         return;
     }
 
     if (s->st.type == AA_TYPE_LONGRUN)
     {
         aa_put_err (name, "Can only reset one-shot services", 1);
+        rc |= RC_ST_FAILED;
         return;
     }
 
@@ -117,6 +125,8 @@ reset_service (const char *name, intptr_t mode)
         aa_put_err (name, "Failed to write service status file: ", 0);
         aa_bs (AA_ERR, strerror (e));
         aa_end_err ();
+
+        rc |= RC_ST_FAILED;
     }
     else
     {
@@ -187,7 +197,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'O':
                 aa_set_log_file_or_die (optarg);
@@ -206,27 +216,27 @@ main (int argc, char * const argv[])
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc < 1 || mode == MODE_NONE)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     r = aa_init_repo (path_repo, AA_REPO_READ);
     if (r < 0)
-        aa_strerr_diefu2sys (2, "init repository ", path_repo);
+        aa_strerr_diefu2sys (RC_FATAL_INIT_REPO, "init repository ", path_repo);
 
     for (i = 0; i < argc; ++i)
         if (str_equal (argv[i], "-"))
         {
             if (process_names_from_stdin ((names_cb) reset_service, (void *) mode) < 0)
-                aa_strerr_diefu1sys (ERR_IO, "process names from stdin");
+                aa_strerr_diefu1sys (RC_FATAL_IO, "process names from stdin");
         }
         else
             reset_service (argv[i], mode);
 
-    return 0;
+    return rc;
 }

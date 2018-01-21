@@ -86,12 +86,21 @@ Test whether I<FILE> exists and execute (search) permission is granted
 =head1 DESCRIPTION
 
 B<aa-test>(1) is a simple tool to check file types/permissions as specified, and
-return 0 when true, else:
+exits with a return code indicating whether the test passed or not.
 
-1: Syntax error (e.g. invalid option)
+=head1 RETURN CODES
 
-2: System error (e.g. permission denied)
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
 
-3: I<FILE> doesn't exist
+Possible even return codes for B<aa-test>(1) are:
 
-4: I<File> exists, but the rest of the test failed (e.g. wrong type)
+=over
+
+=item B<2>
+I<FILE> doesn't exist
+
+=item B<4>
+I<FILE> exists, but the rest of the test failed (e.g. wrong type)
+
+=back

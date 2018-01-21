@@ -52,3 +52,10 @@ B<aa-umount>(1) unmounts the specified mount point. It isn't possible to unmount
 a filesystem if it is busy, e.g. there are still open files. This could even be
 caused by B<aa-umount>(1) itself; It is possible to avoid this using the
 B<--lazy> option.
+
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+B<aa-umount>(1) does not have even return codes.

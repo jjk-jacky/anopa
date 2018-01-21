@@ -152,6 +152,11 @@ was already (being) done.
 Obviously, the script used is I<stop> and not I<start>. Other than that, the
 process is much the same, so you can refer to B<aa-start>(1) for more.
 
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Return codes are unified for
+all commands, and are documented in B<anopa-rc>(1)
+
 =head1 ENVIRONMENT VARIABLES
 
 The following environment variables are used :

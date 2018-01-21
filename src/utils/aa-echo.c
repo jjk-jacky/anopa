@@ -111,7 +111,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'n':
                 put = NULL;
@@ -141,14 +141,14 @@ main (int argc, char * const argv[])
                 break;
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc < 1)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     if (blank)
         aa_bs (where, "\n");
@@ -178,5 +178,5 @@ main (int argc, char * const argv[])
     }
     aa_bs_end (where);
 
-    return 0;
+    return RC_OK;
 }

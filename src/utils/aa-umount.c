@@ -75,7 +75,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'l':
                 flags = MNT_DETACH;
@@ -89,17 +89,17 @@ main (int argc, char * const argv[])
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc != 1)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     if (umount2 (argv[0], flags) < 0)
-        aa_strerr_diefu2sys (3, "unmount ", argv[0]);
+        aa_strerr_diefu2sys (RC_FATAL_IO, "unmount ", argv[0]);
 
-    return 0;
+    return RC_OK;
 }

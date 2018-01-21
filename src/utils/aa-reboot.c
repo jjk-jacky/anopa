@@ -83,7 +83,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'O':
                 aa_set_log_file_or_die (optarg);
@@ -101,18 +101,18 @@ main (int argc, char * const argv[])
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc != 0 || i < 0)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     if (reboot (cmd[i].cmd) < 0)
-        aa_strerr_diefu2sys (2, cmd[i].desc, " the machine");
+        aa_strerr_diefu2sys (RC_FATAL_IO, cmd[i].desc, " the machine");
 
     /* unlikely :p */
-    return 0;
+    return RC_OK;
 }

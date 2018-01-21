@@ -113,8 +113,30 @@ reads I</proc/swaps> to list active swaps and I</proc/mounts> for mount points;
 It also reads I</dev> for loop/block devices, and uses I</dev/mapper/control> to
 remove block devices.
 
-=head1 RETURN VALUES
+=head1 RETURN CODES
 
-B<aa-terminate>(1) returns 0 on success (no "left-overs"), 1 on syntax error
-(e.g. invalid option) and 2 if there is at least one left-over (excluding API
-file systems).
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailed in B<anopa-rc>(1)
+
+Possible even return codes for B<aa-terminate>(1) are a bitwise combination of
+the following flags:
+
+=over
+
+=item B<2>
+
+At least 1 swap was left over
+
+=item B<4>
+
+At least 1 mount was left over
+
+=item B<8>
+
+At least 1 loop device was left over
+
+=item B<16>
+
+At least 1 DM block device was left over
+
+=back

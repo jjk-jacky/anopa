@@ -57,3 +57,10 @@ You should never trigger it manually/directly. Instead, use B<aa-shutdown>(1),
 that will send the appropriate commands to B<s6-svscan> (PID 1) in order to
 properly shut down the system, before (probably) ending with a call to
 B<aa-reboot>(1) at the end of stage 4.
+
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+B<aa-reboot>(1) does not have even return codes.

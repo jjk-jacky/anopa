@@ -67,12 +67,12 @@ static genalloc ga_io = GENALLOC_ZERO;
 static aa_mode mode = AA_MODE_START;
 static int no_wants = 0;
 static int verbose = 0;
-static int rc = 0;
+static int rc = RC_OK;
 
 void
 check_essential (int si)
 {
-    if (rc == 0)
+    if (!(rc & RC_ST_ESSENTIAL))
     {
         struct stat st;
         const char *name = aa_service_name (aa_service (si));
@@ -93,7 +93,7 @@ check_essential (int si)
             }
         }
         else
-            rc = 1;
+            rc |= RC_ST_ESSENTIAL;
     }
 }
 
@@ -276,7 +276,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'l':
                 unslash (optarg);
@@ -301,7 +301,7 @@ main (int argc, char * const argv[])
 
             case 't':
                 if (!uint0_scan (optarg, &aa_secs_timeout))
-                    aa_strerr_diefu2sys (ERR_IO, "set default timeout to ", optarg);
+                    aa_strerr_diefu2sys (RC_FATAL_USAGE, "set default timeout to ", optarg);
                 break;
 
             case 'V':
@@ -316,7 +316,7 @@ main (int argc, char * const argv[])
                 break;
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
@@ -326,10 +326,10 @@ main (int argc, char * const argv[])
     is_utf8 = is_locale_utf8 ();
 
     if (!path_list && argc < 1)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     if (aa_init_repo (path_repo, (mode & AA_MODE_IS_DRY) ? AA_REPO_READ : AA_REPO_WRITE) < 0)
-        aa_strerr_diefu2sys (ERR_IO, "init repository ", path_repo);
+        aa_strerr_diefu2sys (RC_FATAL_INIT_REPO, "init repository ", path_repo);
 
     if (path_list)
     {
@@ -342,7 +342,7 @@ main (int argc, char * const argv[])
         r = aa_scan_dir (&sa, 1, it_start, NULL);
         stralloc_free (&sa);
         if (r < 0)
-            aa_strerr_diefu3sys (-r, "read list directory ",
+            aa_strerr_diefu3sys (RC_FATAL_IO, "read list directory ",
                     (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
                     (*path_list != '/' && *path_list != '.') ? path_list : "");
     }
@@ -353,7 +353,7 @@ main (int argc, char * const argv[])
         if (str_equal (argv[i], "-"))
         {
             if (process_names_from_stdin ((names_cb) add_service, NULL) < 0)
-                aa_strerr_diefu1sys (ERR_IO, "process names from stdin");
+                aa_strerr_diefu1sys (RC_FATAL_IO, "process names from stdin");
         }
         else
             add_service (argv[i], NULL);
@@ -373,6 +373,13 @@ main (int argc, char * const argv[])
         aa_show_stat_names (aa_names.s, &ga_unknown, "Unknown", ANSI_HIGHLIGHT_RED_ON);
         aa_show_stat_names (aa_names.s, &ga_skipped, "Skipped", ANSI_HIGHLIGHT_YELLOW_ON);
     }
+
+    if (ga_timedout.len + ga_failed.len + ga_depend.len + ga_io.len > 0)
+        rc |= RC_ST_FAILED;
+    if (ga_unknown.len > 0)
+        rc |= RC_ST_UNKNOWN;
+    if (ga_skipped.len > 0)
+        rc |= RC_ST_SKIPPED;
 
     genalloc_free (int, &ga_timedout);
     genalloc_free (int, &ga_failed);

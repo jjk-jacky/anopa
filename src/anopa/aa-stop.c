@@ -58,7 +58,7 @@ static genalloc ga_depend = GENALLOC_ZERO;
 static genalloc ga_io = GENALLOC_ZERO;
 static aa_mode mode = AA_MODE_STOP;
 static int verbose = 0;
-static int rc = 0;
+static int rc = RC_OK;
 static const char *skip = NULL;
 
 void
@@ -131,7 +131,7 @@ preload_service (const char *name)
             stralloc_catb (&satmp, "/log/run", strlen ("/log/run") + 1);
             r = access (satmp.s + l, F_OK);
             if (r < 0 && (errno != ENOTDIR && errno != ENOENT))
-                aa_strerr_diefu3sys (ERR_IO, "preload services: access(", satmp.s + l, ")");
+                aa_strerr_diefu3sys (RC_FATAL_IO, "preload services: access(", satmp.s + l, ")");
             else if (r == 0)
             {
                 satmp.s[satmp.len - 5] = '\0';
@@ -211,7 +211,7 @@ add_service (const char *name, void *data)
             if (aa_service (si)->st.code != ERR_NOT_UP)
             {
                 errno = EINVAL;
-                aa_strerr_diefu2sys (ERR_IO, "add service ", name);
+                aa_strerr_diefu2sys (RC_FATAL_IO, "add service ", name);
             }
 
             if (!(mode & AA_MODE_IS_DRY))
@@ -377,7 +377,7 @@ main (int argc, char * const argv[])
 
             case 't':
                 if (!uint0_scan (optarg, &aa_secs_timeout))
-                    aa_strerr_diefu2sys (ERR_IO, "set default timeout to ", optarg);
+                    aa_strerr_diefu2sys (RC_FATAL_USAGE, "set default timeout to ", optarg);
                 break;
 
             case 'V':
@@ -407,7 +407,7 @@ main (int argc, char * const argv[])
     }
 
     if (aa_init_repo (path_repo, (mode & AA_MODE_IS_DRY) ? AA_REPO_READ : AA_REPO_WRITE) < 0)
-        aa_strerr_diefu2sys (ERR_IO, "init repository ", path_repo);
+        aa_strerr_diefu2sys (RC_FATAL_INIT_REPO, "init repository ", path_repo);
 
     /* let's "preload" every services from the repo. This will have everything
      * in tmp list, either LOAD_DONE when up, or LOAD_FAIL when not
@@ -424,7 +424,7 @@ main (int argc, char * const argv[])
         r = aa_scan_dir (&sa, 0, it_preload, NULL);
         stralloc_free (&sa);
         if (r < 0)
-            aa_strerr_diefu1sys (-r, "read repository directory");
+            aa_strerr_diefu1sys (RC_FATAL_IO, "read repository directory");
     }
 
     if (all)
@@ -477,7 +477,7 @@ main (int argc, char * const argv[])
         r = aa_scan_dir (&sa, 1, it_stop, NULL);
         stralloc_free (&sa);
         if (r < 0)
-            aa_strerr_diefu3sys (-r, "read list directory ",
+            aa_strerr_diefu3sys (RC_FATAL_IO, "read list directory ",
                     (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
                     (*path_list != '/' && *path_list != '.') ? path_list : "");
     }
@@ -486,7 +486,7 @@ main (int argc, char * const argv[])
             if (str_equal (argv[i], "-"))
             {
                 if (process_names_from_stdin ((names_cb) add_service, NULL) < 0)
-                    aa_strerr_diefu1sys (ERR_IO, "process names from stdin");
+                    aa_strerr_diefu1sys (RC_FATAL_IO, "process names from stdin");
             }
             else
                 add_service (argv[i], NULL);
@@ -507,6 +507,11 @@ main (int argc, char * const argv[])
         aa_show_stat_names (aa_names.s, &ga_io, "I/O error", ANSI_HIGHLIGHT_RED_ON);
         aa_show_stat_names (aa_names.s, &ga_unknown, "Unknown", ANSI_HIGHLIGHT_RED_ON);
     }
+
+    if (ga_timedout.len + ga_failed.len + ga_depend.len + ga_io.len > 0)
+        rc |= RC_ST_FAILED;
+    if (ga_unknown.len > 0)
+        rc |= RC_ST_UNKNOWN;
 
     genalloc_free (int, &ga_timedout);
     genalloc_free (int, &ga_failed);

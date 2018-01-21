@@ -67,7 +67,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'O':
                 aa_set_log_file_or_die (optarg);
@@ -77,16 +77,16 @@ main (int argc, char * const argv[])
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc < 2)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     if (pivot_root (argv[0], argv[1]) < 0)
-        aa_strerr_diefu2sys (2, "pivot into ", argv[0]);
-    return 0;
+        aa_strerr_diefu2sys (RC_FATAL_IO, "pivot into ", argv[0]);
+    return RC_OK;
 }

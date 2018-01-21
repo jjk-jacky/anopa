@@ -45,3 +45,10 @@ which must exists, goes into this directory, chroots into it and chdir into the
 with the given I<ARG> (if any).
 
 Note that B<aa-chroot>(1)'s parent process if unaffected by the change.
+
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+B<aa-chroot>(1) does not have even return codes.

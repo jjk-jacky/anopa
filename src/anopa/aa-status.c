@@ -103,6 +103,8 @@ static unsigned int filter_type = FILTER_NONE;
 static unsigned int filter_status = FILTER_NONE;
 static unsigned int sort_order = SORT_ASC;
 
+static int rc = RC_OK;
+
 static size_t put_s_max (const char *s, size_t max, int pad);
 
 static void
@@ -613,6 +615,7 @@ load_service (const char *name, struct config *cfg)
     if (r < 0)
     {
         aa_put_err (name, errmsg[-r], 1);
+        rc |= (r == -ERR_UNKNOWN) ? RC_ST_UNKNOWN : RC_ST_FAILED;
         return -1;
     }
 
@@ -620,6 +623,7 @@ load_service (const char *name, struct config *cfg)
     if (r < 0)
     {
         aa_put_err (name, errmsg[-r], 1);
+        rc |= RC_ST_FAILED;
         return -1;
     }
 
@@ -631,6 +635,8 @@ load_service (const char *name, struct config *cfg)
         aa_put_err (name, "Failed to read service status file: ", 0);
         aa_bs (AA_ERR, strerror (e));
         aa_end_err ();
+
+        rc |= RC_ST_FAILED;
         return -1;
     }
 
@@ -651,6 +657,8 @@ load_service (const char *name, struct config *cfg)
                 aa_put_err (name, "Unable to read s6 status: ", 0);
                 aa_bs (AA_ERR, strerror (e));
                 aa_end_err ();
+
+                rc |= RC_ST_FAILED;
                 return -1;
             }
         }
@@ -706,7 +714,7 @@ it_all (direntry *d, void *data)
             stralloc_catb (&satmp, "/log/run", strlen ("/log/run") + 1);
             r = access (satmp.s + l, F_OK);
             if (r < 0 && (errno != ENOTDIR && errno != ENOENT))
-                aa_strerr_diefu3sys (ERR_IO, "load service: access(", satmp.s + l, ")");
+                aa_strerr_diefu3sys (RC_FATAL_IO, "load service: access(", satmp.s + l, ")");
             else if (r == 0)
             {
                 satmp.s[satmp.len - 5] = '\0';
@@ -857,11 +865,11 @@ main (int argc, char * const argv[])
 
             case 'f':
                 if (!set_filter (optarg))
-                    aa_strerr_diefu3sys (1, "set filter '", optarg, "'");
+                    aa_strerr_diefu3sys (RC_FATAL_USAGE, "set filter '", optarg, "'");
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'l':
                 unslash (optarg);
@@ -903,7 +911,7 @@ main (int argc, char * const argv[])
                 else
                 {
                     errno = EINVAL;
-                    aa_strerr_diefu3sys (1, "set sort order '", optarg, "'");
+                    aa_strerr_diefu3sys (RC_FATAL_USAGE, "set sort order '", optarg, "'");
                 }
                 break;
 
@@ -911,18 +919,18 @@ main (int argc, char * const argv[])
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (!all && !path_list && argc < 1)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     r = aa_init_repo (path_repo, AA_REPO_READ);
     if (r < 0)
-        aa_strerr_diefu2sys (2, "init repository ", path_repo);
+        aa_strerr_diefu2sys (RC_FATAL_INIT_REPO, "init repository ", path_repo);
 
     if (cfg.mode == MODE_LIST)
     {
@@ -946,7 +954,7 @@ main (int argc, char * const argv[])
         stralloc_catb (&sa, ".", 2);
         r = aa_scan_dir (&sa, 0, it_all, &cfg);
         if (r < 0)
-            aa_strerr_diefu2sys (-r, "scan repo directory ", path_repo);
+            aa_strerr_diefu2sys (RC_FATAL_IO, "scan repo directory ", path_repo);
     }
     else if (path_list)
     {
@@ -959,7 +967,7 @@ main (int argc, char * const argv[])
         r = aa_scan_dir (&sa, 1, it_listdir, &cfg);
         stralloc_free (&sa);
         if (r < 0)
-            aa_strerr_diefu3sys (-r, "read list directory ",
+            aa_strerr_diefu3sys (RC_FATAL_IO, "read list directory ",
                     (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
                     (*path_list != '/' && *path_list != '.') ? path_list : "");
     }
@@ -968,7 +976,7 @@ main (int argc, char * const argv[])
             if (str_equal (argv[i], "-"))
             {
                 if (process_names_from_stdin ((names_cb) load_service, &cfg) < 0)
-                    aa_strerr_diefu1sys (ERR_IO, "process names from stdin");
+                    aa_strerr_diefu1sys (RC_FATAL_IO, "process names from stdin");
             }
             else
                 load_service (argv[i], &cfg);
@@ -981,5 +989,5 @@ main (int argc, char * const argv[])
         status_service (&genalloc_s (struct serv, &ga_serv)[i], &cfg);
 
     aa_bb_flush (AA_OUT, "", 0);
-    return 0;
+    return rc;
 }

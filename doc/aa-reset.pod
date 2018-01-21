@@ -72,6 +72,11 @@ Note that a service either "Starting" or "Stopping" will never be reset.
 You can use B<-> as service name to read actual service names from stdin, where
 there must be one name per line.
 
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Return codes are unified for
+all commands, and are documented in B<anopa-rc>(1)
+
 =head1 ENVIRONMENT VARIABLES
 
 The following environment variables are used :

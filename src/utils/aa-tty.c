@@ -72,7 +72,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'O':
                 aa_set_log_file_or_die (optarg);
@@ -82,21 +82,21 @@ main (int argc, char * const argv[])
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc != 0)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     byte_copy (file, sizeof (PREFIX) - 1, PREFIX);
     byte_copy (file + sizeof (PREFIX) - 1, 7, "console");
     byte_copy (file + sizeof (PREFIX) + 6, sizeof (NAME), NAME);
     r = openreadnclose (file, name, max);
     if (r <= 0)
-        aa_strerr_diefu2sys (2, "read ", file);
+        aa_strerr_diefu2sys (RC_FATAL_IO, "read ", file);
     /* last entry is the active one */
     skip = byte_rchr (name, r, ' ') + 1;
     if (skip > (size_t) r)
@@ -116,10 +116,10 @@ main (int argc, char * const argv[])
             {
                 aa_bs (AA_OUT, "/dev/");
                 aa_bb_flush (AA_OUT, s, l);
-                return 0;
+                return RC_OK;
             }
             else
-                aa_strerr_diefu2sys (2, "read ", file);
+                aa_strerr_diefu2sys (RC_FATAL_IO, "read ", file);
         }
         skip = 0;
     }

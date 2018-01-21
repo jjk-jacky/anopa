@@ -33,6 +33,7 @@ aa-stage4
 
 DOC_TARGETS := \
 anopa.1 \
+anopa-rc.1 \
 aa-chroot.1 \
 aa-ctty.1 \
 aa-echo.1 \

@@ -111,3 +111,10 @@ To print +TEXT
 =back
 
 For example: `aa-echo -w "The file " +r "/foo/bar" +n " doesn't exist"`
+
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+B<aa-echo>(1) does not have even return codes.

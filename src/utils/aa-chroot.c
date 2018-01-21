@@ -65,7 +65,7 @@ main (int argc, char * const argv[], char * const envp[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'O':
                 aa_set_log_file_or_die (optarg);
@@ -75,21 +75,21 @@ main (int argc, char * const argv[], char * const envp[])
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc < 2)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     if (chdir (argv[0]) < 0)
-        aa_strerr_diefu2sys (2, "chdir to ", argv[0]);
+        aa_strerr_diefu2sys (RC_FATAL_IO, "chdir to ", argv[0]);
     if (chroot (".") < 0)
-        aa_strerr_diefu1sys (3, "chroot");
+        aa_strerr_diefu1sys (RC_FATAL_IO, "chroot");
     if (chdir ("/") < 0)
-        aa_strerr_diefu1sys (3, "chdir to new root");
+        aa_strerr_diefu1sys (RC_FATAL_IO, "chdir to new root");
     pathexec_run (argv[1], (char const * const *) argv + 1, (char const * const *) envp);
-    aa_strerr_dieexec (4, argv[1]);
+    aa_strerr_dieexec (RC_FATAL_EXEC, argv[1]);
 }

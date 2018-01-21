@@ -156,7 +156,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'k':
                 send.kill = 1;
@@ -182,14 +182,14 @@ main (int argc, char * const argv[])
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc > 0 || (!send.hup && !send.term && !send.kill))
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     if (send.skip_at)
     {
@@ -200,9 +200,9 @@ main (int argc, char * const argv[])
         ownpid[uint_fmt (ownpid, u)] = '\0';
 
         if (!stralloc_catb (&sa, "/proc", sizeof ("/proc")))
-            aa_strerr_diefu1sys (1, "stralloc_catb");
+            aa_strerr_diefu1sys (RC_FATAL_MEMORY, "stralloc_catb");
         if (aa_scan_dir (&sa, 0, it_kill, &sa) < 0)
-            aa_strerr_diefu1sys (1, "scan /proc");
+            aa_strerr_diefu1sys (RC_FATAL_IO, "scan /proc");
         stralloc_free (&sa);
     }
     else
@@ -224,5 +224,5 @@ main (int argc, char * const argv[])
             _kill (-1, SIGKILL);
     }
 
-    return 0;
+    return RC_OK;
 }

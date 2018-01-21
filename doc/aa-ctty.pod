@@ -54,3 +54,10 @@ B<execline> fashion, it then executes into the rest of its command line.
 
 If the ioctl call fails, a warning is printed and it still executes into the
 rest of its command line. If it fails to do so, it returns 111.
+
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+B<aa-ctty>(1) does not have even return codes.

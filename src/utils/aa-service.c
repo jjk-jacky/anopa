@@ -32,6 +32,8 @@
 #include <anopa/common.h>
 #include <anopa/output.h>
 
+#define RC_ST_FAIL      (1 << 1)
+
 typedef struct exlsn_s exlsn_t;
 struct exlsn_s
 {
@@ -201,7 +203,7 @@ main (int argc, char const **argv, char const *const *envp)
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'l':
                 islog = 1;
@@ -215,7 +217,7 @@ main (int argc, char const **argv, char const *const *envp)
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
@@ -226,29 +228,29 @@ main (int argc, char const **argv, char const *const *envp)
         switch (-r)
         {
             case ERR_NOT_LOG:
-                aa_strerr_dief1x (2, "option --log used while not in a subfolder 'log'");
+                aa_strerr_dief1x (RC_FATAL_USAGE, "option --log used while not in a subfolder 'log'");
 
             case ERR_DIRNAME:
-                aa_strerr_diefu1x (3, "get current dirname");
+                aa_strerr_diefu1x (RC_FATAL_IO, "get current dirname");
 
             case ERR_BAD_KEY:
-                aa_strerr_dief1x (4, "bad substitution key");
+                aa_strerr_dief1x (RC_ST_FAIL, "bad substitution key");
 
             case ERR_ADDVAR:
-                aa_strerr_diefu1sys (5, "complete addvar function");
+                aa_strerr_diefu1sys (RC_ST_FAIL, "complete addvar function");
 
             default:
-                aa_strerr_diefu2x (5, "complete addvar function", ": unknown error");
+                aa_strerr_diefu2x (RC_ST_FAIL, "complete addvar function", ": unknown error");
         }
 
     if (!env_string (&sa, argv, (unsigned int) argc))
-        aa_strerr_diefu1sys (5, "env_string");
+        aa_strerr_diefu1sys (RC_FATAL_MEMORY, "env_string");
 
     r = el_substitute (&dst, sa.s, sa.len, info.vars.s, info.values.s,
             genalloc_s (elsubst_t const, &info.data),
             genalloc_len (elsubst_t const, &info.data));
     if (r < 0)
-        aa_strerr_diefu1sys (5, "el_substitute");
+        aa_strerr_diefu1sys (RC_ST_FAIL, "el_substitute");
     else if (r == 0)
         _exit (0);
 
@@ -258,10 +260,10 @@ main (int argc, char const **argv, char const *const *envp)
         char const *v[r + 1];
 
         if (!env_make (v, r, dst.s, dst.len))
-            aa_strerr_diefu1sys (5, "env_make");
+            aa_strerr_diefu1sys (RC_ST_FAIL, "env_make");
         v[r] = 0;
         pathexec_r (v, envp, env_len (envp), info.modifs.s, info.modifs.len);
     }
 
-    aa_strerr_dieexec (6, dst.s);
+    aa_strerr_dieexec (RC_FATAL_EXEC, dst.s);
 }

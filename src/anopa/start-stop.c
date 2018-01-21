@@ -40,6 +40,7 @@
 #include <anopa/ga_int_list.h>
 #include <anopa/output.h>
 #include <anopa/err.h>
+#include <anopa/rc.h>
 #include "start-stop.h"
 
 genalloc ga_iop = GENALLOC_ZERO;
@@ -882,7 +883,7 @@ handle_signals (aa_mode mode)
         switch (c)
         {
             case -1:
-                aa_strerr_diefu1sys (ERR_IO, "selfpipe_read");
+                aa_strerr_diefu1sys (RC_FATAL_IO, "selfpipe_read");
 
             case 0:
                 return r;
@@ -918,7 +919,7 @@ handle_signals (aa_mode mode)
                 break;
 
             default:
-                aa_strerr_dief1x (ERR_IO, "internal error: invalid selfpipe_read value");
+                aa_strerr_dief1x (RC_FATAL_INTERNAL, "internal error: invalid selfpipe_read value");
         }
     }
 }
@@ -1196,11 +1197,11 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
     size_t i;
 
     if (!genalloc_ready_tuned (iopause_fd, &ga_iop, 2, 0, 0, 1))
-        aa_strerr_diefu1sys (ERR_IO, "allocate iopause_fd");
+        aa_strerr_diefu1sys (RC_FATAL_IO, "allocate iopause_fd");
 
     iop.fd = selfpipe_init ();
     if (iop.fd == -1)
-        aa_strerr_diefu1sys (ERR_IO, "init selfpipe");
+        aa_strerr_diefu1sys (RC_FATAL_IO, "init selfpipe");
     iop.events = IOPAUSE_READ;
     genalloc_append (iopause_fd, &ga_iop, &iop);
 
@@ -1209,7 +1210,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
     sig_ignore (SIGINT);
     iop.fd = aa_prepare_mainlist (prepare_cb, exec_cb);
     if (iop.fd < 0)
-        aa_strerr_diefu1sys (ERR_IO, "prepare mainlist");
+        aa_strerr_diefu1sys (RC_FATAL_IO, "prepare mainlist");
     else if (iop.fd == 0)
         iop.fd = -1;
     genalloc_append (iopause_fd, &ga_iop, &iop);
@@ -1221,7 +1222,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
     sigaddset (&set, SIGINT);
     sigaddset (&set, SIGWINCH);
     if (selfpipe_trapset (&set) < 0)
-        aa_strerr_diefu1sys (ERR_IO, "trap signals");
+        aa_strerr_diefu1sys (RC_FATAL_IO, "trap signals");
 
     /* start what we can */
     for (i = 0; i < genalloc_len (int, &aa_main_list); ++i)
@@ -1267,7 +1268,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
         nb_iop = genalloc_len (iopause_fd, &ga_iop);
         r = iopause_g (genalloc_s (iopause_fd, &ga_iop), nb_iop, &iol_deadline);
         if (r < 0)
-            aa_strerr_diefu1sys (ERR_IO, "iopause");
+            aa_strerr_diefu1sys (RC_FATAL_IO, "iopause");
         else if (r == 0)
         {
             if (ms1 < 0 || ms2 < ms1)
@@ -1301,7 +1302,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
             if (iofd->revents & IOPAUSE_READ)
                 scan += handle_signals (mode);
             else if (iofd->revents & IOPAUSE_EXCEPT)
-                aa_strerr_diefu1sys (ERR_IO, "iopause: selfpipe error");
+                aa_strerr_diefu1sys (RC_FATAL_IO, "iopause: selfpipe error");
 
             iofd = &genalloc_s (iopause_fd, &ga_iop)[1];
             if (iofd->fd <= 0)
@@ -1333,7 +1334,7 @@ mainloop (aa_mode mode, aa_scan_cb scan_cb)
                 }
             }
             else if (iofd->revents & IOPAUSE_EXCEPT)
-                aa_strerr_diefu1sys (ERR_IO, "iopause: longrun pipe error");
+                aa_strerr_diefu1sys (RC_FATAL_IO, "iopause: longrun pipe error");
 
 scan:
             if (scan > 0)

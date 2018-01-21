@@ -72,11 +72,11 @@ main (int argc, char * const argv[], char const * const *envp)
 
             case 'f':
                 if (!uint0_scan (optarg, (unsigned int *) &fd))
-                    aa_strerr_diefu1sys (1, "set fd");
+                    aa_strerr_diefu1sys (RC_FATAL_USAGE, "set fd");
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'O':
                 aa_set_log_file_or_die (optarg);
@@ -90,18 +90,18 @@ main (int argc, char * const argv[], char const * const *envp)
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc == 0)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     if (ioctl (fd, TIOCSCTTY, steal) < 0)
         aa_strerr_warnu1sys ("set controlling terminal");
 
     pathexec_run (argv[0], (char const * const *) argv, envp);
-    aa_strerr_dieexec (111, argv[0]);
+    aa_strerr_dieexec (RC_FATAL_EXEC, argv[0]);
 }

@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * common.h
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -23,6 +23,16 @@
 #ifndef _AA_COMMON_H
 #define _AA_COMMON_H
 
+#include <anopa/rc.h>
+
 #define LISTDIR_PREFIX      "/etc/anopa/listdirs/"
+
+enum
+{
+    RC_ST_UNKNOWN       = 1 << 1,   /* at least 1 service unknown */
+    RC_ST_SKIPPED       = 1 << 2,   /* at least 1 service skipped (start) */
+    RC_ST_FAILED        = 1 << 3,   /* at least 1 service failed */
+    RC_ST_ESSENTIAL     = 1 << 4    /* at least 1 failed service was essential */
+};
 
 #endif /* _AA_COMMON_H */

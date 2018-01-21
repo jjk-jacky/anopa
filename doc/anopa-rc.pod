@@ -1,0 +1,61 @@
+=head1 RETURN CODES
+
+Every command or utility in B<anopa> follows certain rules when it comes to
+return codes. Return codes are classified under two categories, based on whether
+the least significant bit (LSB) is set or not.
+
+If the LSB is set, i.e. the return code is odd, it represents a fatal error. The
+remaining 7bit integer is a fatal error code, common to all software in
+B<anopa>.
+
+If the LSB isn't set, i.e. the return code is even, it is an error code that is
+specific to this command/utility. Although for easiness/consistency, all
+commands do use the same ones, as described below.
+
+=head2 Odd return codes: fatal errors
+
+All commands & utilities in B<anopa> share the same fatal return codes, all
+listed in the following table:
+
+    +--------+-------+------------------------------+-----------------------+
+    | return | 7-bit | Meaning                      | Notes                 |
+    |  code  | value |                              |                       |
+    +--------+-------+------------------------------+-----------------------+
+    |    1   |    0  | Usage error                  |                       |
+    +--------+-------+------------------------------+-----------------------+
+    |    3   |    1  | Failed to init repository    | Only for commands     |
+    +--------+-------+------------------------------+-----------------------+
+    |    5   |    2  | I/O error                    |                       |
+    +--------+-------+------------------------------+-----------------------+
+    |    7   |    3  | Memory error                 |                       |
+    +--------+-------+------------------------------+-----------------------+
+    |    9   |    4  | Failed to alarm s6           | Only for aa-enable    |
+    +--------+-------+------------------------------+-----------------------+
+    |  111   |   55  | Failed to exec               |                       |
+    +--------+-------+------------------------------+-----------------------+
+    |  255   |  127  | Internal error               | Shouldn't happen      |
+    +--------+-------+------------------------------+-----------------------+
+
+=head2 Even return codes
+
+As explained, even return codes aren't common all through B<anopa>, though for
+easiness & consistency all commands use the same ones. For even return codes of
+utilities, please refer to its specific man page.
+
+For commands (B<aa-start>(1), B<aa-stop>(1), B<aa-enable>(1), B<aa-status>(1),
+B<aa-reset>(1)), the remaining 7bit integer is actually a bitwise combination
+of the following flags :
+
+    +------+------+-------------------------------------------+---------------+
+    |  RC  | 7bit | Meaning                                   | Notes         |
+    | flag | flag |                                           |               |
+    +------+------+-------------------------------------------+---------------+
+    |   2  |    1 | At least one service was unknown          |               |
+    +------+------+-------------------------------------------+---------------+
+    |   4  |    2 | At least one service was skipped          | aa-start only |
+    +------+------+-------------------------------------------+---------------+
+    |   8  |    4 | At least one service failed               |               |
+    +------+------+-------------------------------------------+---------------+
+    |  16  |    8 | At least one failed service was essential | aa-start only |
+    +------+------+-------------------------------------------+---------------+
+

@@ -62,7 +62,14 @@ I<NAME> was specified, it exits 1.
 
 If there's no such argument on the command line, or B<--safe> was used and the
 argument's value contains I<C>, or there's no value and B<--required> was used,
-it exits 3; Else it exits 0.
+it exits 4; Else it exits 0.
 
 If the argument had a value specified it will be printed on stdout unless
 B<--quiet> was used.
+
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+Possible even return codes for B<aa-incmdline>(1) are as described above.

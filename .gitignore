@@ -11,5 +11,6 @@
 /config.mak
 /src/include/anopa/config.h
 /anopa.1
+/anopa-rc.1
 /aa-*
 /libanopa.a

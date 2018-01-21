@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * exec_oneshot.c
- * Copyright (C) 2015-2017 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -35,6 +35,7 @@
 #include <anopa/service.h>
 #include <anopa/err.h>
 #include <anopa/output.h>
+#include <anopa/rc.h>
 #include "service_internal.h"
 
 int
@@ -226,7 +227,7 @@ _exec_oneshot (int si, aa_mode mode)
             fd_write (p_int[1], "p", 1);
             uint32_pack (buf_e, e);
             fd_write (p_int[1], buf_e, UINT32_FMT);
-            aa_strerr_diefu1sys (ERR_IO, "set up pipes");
+            aa_strerr_diefu1sys (RC_FATAL_IO, "set up pipes");
         }
 
         if (chdir (PROG) < 0)
@@ -235,7 +236,7 @@ _exec_oneshot (int si, aa_mode mode)
             fd_write (p_int[1], "c", 1);
             uint32_pack (buf_e, e);
             fd_write (p_int[1], buf_e, UINT32_FMT);
-            aa_strerr_diefu1sys (ERR_IO, "get into service directory");
+            aa_strerr_diefu1sys (RC_FATAL_IO, "get into service directory");
         }
 
         buf[l_sn - 1] = '.';
@@ -245,7 +246,7 @@ _exec_oneshot (int si, aa_mode mode)
         fd_write (p_int[1], "e", 1);
         uint32_pack (buf_e, e);
         fd_write (p_int[1], buf_e, UINT32_FMT);
-        aa_strerr_dieexec (ERR_IO, filename);
+        aa_strerr_dieexec (RC_FATAL_EXEC, filename);
     }
 
     fd_close (p_int[1]);

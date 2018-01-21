@@ -50,3 +50,10 @@ into the current directory, e.g. using B<aa-chroot>(1). For example:
     cd NEWROOT
     aa-pivot . OLDROOT
     aa-chroot . COMMAND
+
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+B<aa-pivot>(1) does not have even return codes.

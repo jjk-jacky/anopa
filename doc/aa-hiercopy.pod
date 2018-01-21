@@ -50,20 +50,20 @@ B<s6-hiercopy> would simply copy the symlink itself.
 
 =head1 RETURN CODES
 
-Possible errors are:
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+Possible even return codes for B<aa-hiercopy>(1) are:
 
 =over
-
-=item B<1>
-Usage error
 
 =item B<2>
 Failed to lstat I<SOURCE>
 
-=item B<3>
+=item B<4>
 Failed to resolve symlink I<SOURCE>
 
-=item B<4>
+=item B<6>
 Error during the copy
 
 =back

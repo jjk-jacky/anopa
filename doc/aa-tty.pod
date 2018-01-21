@@ -42,3 +42,10 @@ Show version information and exit.
 B<aa-tty>(1) is a small tool that will print to device name of the active tty.
 It determines it by reading I<active> files in I</sys/class/tty> starting with
 I</sys/class/tty/console/active> and "going up" as much as possible.
+
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+B<aa-tty>(1) does not have even return codes.

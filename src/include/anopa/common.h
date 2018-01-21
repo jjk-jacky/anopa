@@ -2,7 +2,7 @@
  * anopa - Copyright (C) 2015-2017 Olivier Brunel
  *
  * common.h
- * Copyright (C) 2015 Olivier Brunel <jjk@jjacky.com>
+ * Copyright (C) 2015-2018 Olivier Brunel <jjk@jjacky.com>
  *
  * This file is part of anopa.
  *
@@ -22,6 +22,8 @@
 
 #ifndef AA_COMMON_H
 #define AA_COMMON_H
+
+#include <anopa/rc.h>
 
 #define AA_SCANDIR_DIRNAME      ".scandir"
 

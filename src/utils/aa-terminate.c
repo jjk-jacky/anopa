@@ -47,6 +47,14 @@ typedef int (*do_fn) (const char *path);
 static int umnt_flags = 0;
 static int level = 1;
 
+enum
+{
+    RC_ST_SWAP      = 1 << 1,
+    RC_ST_MOUNT     = 1 << 2,
+    RC_ST_LOOP      = 1 << 3,
+    RC_ST_DM        = 1 << 4
+};
+
 static void
 verbose_do (const char *s1, const char *s2)
 {
@@ -200,7 +208,7 @@ it_loops_dms (direntry *d, void *data)
     l = sas[i]->len;
     if (!stralloc_cats (sas[i], "/dev/") || !stralloc_cats (sas[i], d->d_name)
             || !stralloc_0 (sas[i]))
-        aa_strerr_diefu1sys (2, "stralloc_catb");
+        aa_strerr_diefu1sys (RC_FATAL_MEMORY, "stralloc_catb");
 
     /* /dev/loop* always exists, let's find the actual ones */
     if (i == 0)
@@ -310,7 +318,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'l':
                 lazy = 1;
@@ -332,14 +340,14 @@ main (int argc, char * const argv[])
                 break;
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc > 0)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
 again:
     for (;;)
@@ -352,7 +360,7 @@ again:
 
         /* read swaps */
         if (!openslurpclose (&sa, "/proc/swaps"))
-            aa_strerr_diefu1sys (2, "read /proc/swaps");
+            aa_strerr_diefu1sys (RC_FATAL_IO, "read /proc/swaps");
 
         if (sa.len > 0)
         {
@@ -369,7 +377,7 @@ again:
                 {
                     if (!stralloc_catb (&sa_swaps, sa.s + l, e)
                             || !stralloc_0 (&sa_swaps))
-                        aa_strerr_diefu1sys (2, "stralloc_catb");
+                        aa_strerr_diefu1sys (RC_FATAL_MEMORY, "stralloc_catb");
                 }
                 l += byte_chr (sa.s + l, sa.len - l, '\n') + 1;
             }
@@ -384,7 +392,7 @@ again:
 
             mounts = setmntent ("/proc/mounts", "r");
             if (!mounts)
-                aa_strerr_diefu1sys (2, "read /proc/mounts");
+                aa_strerr_diefu1sys (RC_FATAL_IO, "read /proc/mounts");
 
             while ((mnt = getmntent (mounts)))
             {
@@ -396,7 +404,7 @@ again:
                     continue;
 
                 if (!stralloc_catb (&sa_mounts, mnt->mnt_dir, strlen (mnt->mnt_dir) + 1))
-                    aa_strerr_diefu1sys (2, "stralloc_catb");
+                    aa_strerr_diefu1sys (RC_FATAL_MEMORY, "stralloc_catb");
             }
             endmntent (mounts);
         }
@@ -410,7 +418,7 @@ again:
             stralloc_catb (&sa, "/dev", 5);
             r = aa_scan_dir (&sa, 2, it_loops_dms, &sas);
             if (r < 0)
-                aa_strerr_diefu1sys (2, "scan /dev");
+                aa_strerr_diefu1sys (RC_FATAL_IO, "scan /dev");
             sa.len = 0;
         }
 
@@ -452,5 +460,23 @@ again:
         show_left ("Remaining block device", &sa_dms);
     }
 
-    return (sa_swaps.len + sa_mounts.len + sa_loops.len + sa_dms.len == 0) ? 0 : 2;
+    {
+        int rc = RC_OK;
+
+        if (sa_swaps.len > 0)
+            rc |= RC_ST_SWAP;
+        if (sa_mounts.len > 0)
+            rc |= RC_ST_MOUNT;
+        if (sa_loops.len > 0)
+            rc |= RC_ST_LOOP;
+        if (sa_dms.len > 0)
+            rc |= RC_ST_DM;
+
+        stralloc_free (&sa_swaps);
+        stralloc_free (&sa_mounts);
+        stralloc_free (&sa_loops);
+        stralloc_free (&sa_dms);
+
+        return rc;
+    }
 }

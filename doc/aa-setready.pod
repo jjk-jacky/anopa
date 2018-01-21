@@ -59,33 +59,32 @@ state (e.g. connection dropped).
 Obviously you need to have the appropriate permissions to perform all the needed
 tasks.
 
-=head1 RETURN VALUE
+=head1 RETURN CODES
 
-B<aa-setready>(1) will return 0 on success, or one of the following on error:
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+Possible even return codes for B<aa-setready>(1) are:
 
 =over
-
-=item B<1>
-
-Syntax error (e.g. unknown option)
 
 =item B<2>
 
 Failed to read s6 status file
 
-=item B<3>
+=item B<4>
 
 Service is not up
 
-=item B<4>
+=item B<6>
 
 Failed to init timestamp (needed for readiness timestamp, when marking ready)
 
-=item B<5>
+=item B<8>
 
 Failed to write s6 status file
 
-=item B<6>
+=item B<10>
 
 Failed to sent the event on I<event> fifodir
 

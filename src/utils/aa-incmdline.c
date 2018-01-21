@@ -28,6 +28,12 @@
 #include <anopa/common.h>
 #include <anopa/output.h>
 
+enum
+{
+    RC_ST_READ      = 1 << 1,
+    RC_ST_FAIL      = 2 << 1
+};
+
 static void
 dieusage (int rc)
 {
@@ -85,7 +91,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'O':
                 aa_set_log_file_or_die (optarg);
@@ -103,7 +109,7 @@ main (int argc, char * const argv[])
                 if (!optarg)
                     safe = '/';
                 else if (!*optarg || optarg[1])
-                    dieusage (1);
+                    dieusage (RC_FATAL_USAGE);
                 else
                     safe = *optarg;
                 break;
@@ -112,17 +118,17 @@ main (int argc, char * const argv[])
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc < 1)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
     if (!openslurpclose (&sa, file))
-            aa_strerr_diefu2sys (2, "read ", file);
+            aa_strerr_diefu2sys (RC_ST_READ, "read ", file);
 
     len_arg = strlen (argv[0]);
     for (start = i = 0; i < sa.len; ++i)
@@ -136,12 +142,12 @@ main (int argc, char * const argv[])
             if (sa.s[i] != '=')
             {
                 if (found)
-                    return (req) ? 3 : 0;
+                    return (req) ? RC_ST_FAIL : RC_OK;
                 start = ++i;
                 goto next;
             }
             else if (found && quiet && !safe)
-                return (req) ? 3 : 0;
+                return (req) ? RC_ST_FAIL : RC_OK;
 
             start = ++i;
             if (sa.s[start] != '"')
@@ -161,15 +167,15 @@ main (int argc, char * const argv[])
                 if (len == sa.len - start)
                     --len;
                 if (safe && byte_chr (sa.s + start, len, safe) < len)
-                    return 3;
+                    return RC_ST_FAIL;
                 if (req && len == 0)
-                    return 3;
+                    return RC_ST_FAIL;
                 else if (!quiet)
                 {
                     aa_bb (AA_OUT, sa.s + start, len);
                     aa_bs_flush (AA_OUT, "\n");
                 }
-                return 0;
+                return RC_OK;
             }
 
             start += len;
@@ -180,5 +186,5 @@ next:
         }
     }
 
-    return 3;
+    return RC_ST_FAIL;
 }

@@ -28,6 +28,12 @@
 #include <anopa/common.h>
 #include <anopa/output.h>
 
+enum
+{
+    RC_ST_EXIST     = 1 << 1,
+    RC_ST_FAIL      = 2 << 1
+};
+
 static int
 is_group_member (gid_t gid)
 {
@@ -126,7 +132,7 @@ main (int argc, char * const argv[])
                 break;
 
             case 'h':
-                dieusage (0);
+                dieusage (RC_OK);
 
             case 'O':
                 aa_set_log_file_or_die (optarg);
@@ -134,7 +140,7 @@ main (int argc, char * const argv[])
 
             case 'R':
                 if (optarg && !uint0_scan (optarg, &repeat))
-                    aa_strerr_diefu2sys (1, "set repeat counter to ", optarg);
+                    aa_strerr_diefu2sys (RC_FATAL_USAGE, "set repeat counter to ", optarg);
                 else if (!optarg)
                     repeat = 1;
                 else
@@ -145,59 +151,59 @@ main (int argc, char * const argv[])
                 aa_die_version ();
 
             default:
-                dieusage (1);
+                dieusage (RC_FATAL_USAGE);
         }
     }
     argc -= optind;
     argv += optind;
 
     if (argc != 1 || test == 0)
-        dieusage (1);
+        dieusage (RC_FATAL_USAGE);
 
 again:
     if (lstat (argv[0], &st) < 0)
     {
         if (errno != ENOENT)
-            aa_strerr_diefu2sys (2, "stat ", argv[0]);
+            aa_strerr_diefu2sys (RC_FATAL_IO, "stat ", argv[0]);
         else if (repeat >= 1)
         {
             if (repeat > 2)
                 --repeat;
             else if (repeat == 2)
-                return 3;
+                return RC_ST_EXIST;
             sleep (1);
             goto again;
         }
         else
-            return 3;
+            return RC_ST_EXIST;
     }
 
     switch (test)
     {
         case 'b':
-            return (S_ISBLK (st.st_mode)) ? 0 : 4;
+            return (S_ISBLK (st.st_mode)) ? RC_OK : RC_ST_FAIL;
 
         case 'd':
-            return (S_ISDIR (st.st_mode)) ? 0 : 4;
+            return (S_ISDIR (st.st_mode)) ? RC_OK : RC_ST_FAIL;
 
         case 'e':
             return 0;
 
         case 'f':
-            return (S_ISREG (st.st_mode)) ? 0 : 4;
+            return (S_ISREG (st.st_mode)) ? RC_OK : RC_ST_FAIL;
 
         case 'L':
-            return (S_ISLNK (st.st_mode)) ? 0 : 4;
+            return (S_ISLNK (st.st_mode)) ? RC_OK : RC_ST_FAIL;
 
         case 'p':
-            return (S_ISFIFO (st.st_mode)) ? 0 : 4;
+            return (S_ISFIFO (st.st_mode)) ? RC_OK : RC_ST_FAIL;
 
         case 'r':
             mode = R_OK;
             break;
 
         case 'S':
-            return (S_ISSOCK (st.st_mode)) ? 0 : 4;
+            return (S_ISSOCK (st.st_mode)) ? RC_OK : RC_ST_FAIL;
 
         case 'w':
             mode = W_OK;
@@ -213,12 +219,12 @@ again:
     {
         /* root can read/write any file */
         if (mode != X_OK)
-            return 0;
+            return RC_OK;
         /* and execute anything any execute permission set */
         else if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
-            return 0;
+            return RC_OK;
         else
-            return 4;
+            return RC_ST_FAIL;
     }
 
     if (st.st_uid == euid)
@@ -226,5 +232,5 @@ again:
     else if (is_group_member (st.st_gid))
         mode <<= 3;
 
-    return (st.st_mode & mode) ? 0 : 4;
+    return (st.st_mode & mode) ? RC_OK : RC_ST_FAIL;
 }

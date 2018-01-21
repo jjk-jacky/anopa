@@ -69,3 +69,17 @@ string or I<foo>)
 This can be useful to get the service/instance name dynamicly; e.g. a service
 could use I<${INSTANCE}> as argument, and a generic logger could then use
 I</var/log/${SERVICE_NAME}> as logdir.
+
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+Possible even return codes for B<aa-service>(1) are:
+
+=over
+
+=item B<2>
+Failed to perform variable substitution
+
+=back
