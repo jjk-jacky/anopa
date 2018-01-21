@@ -44,7 +44,7 @@ if -n -t
   fdmove -c 2 1
   # And start everything
   foreground { aa-echo -O3 -B "Stage 2: Initializing system..." }
-  backtick -n -D onboot LISTDIR { aa-incmdline -O3 -rs aa }
+  backtick -n -D onboot LISTDIR { aa-incmdline -rs aa }
   importas -u LISTDIR LISTDIR
   # We have a tty in stdin, become session leader and set controlling terminal.
   # This is so Ctrl+C will trigger a SIGINT to aa-start, so one can manually

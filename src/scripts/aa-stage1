@@ -49,7 +49,7 @@ cd /
 umask 022
 
 # Create the repository
-backtick -n -D onboot REPODIR { aa-incmdline -O3 -rs aa }
+backtick -n -D onboot REPODIR { aa-incmdline -rs aa }
 backtick -n -D onboot REPODIR {
     importas -u REPODIR REPODIR
     if { aa-test -e /var/lib/repodir/$REPODIR } echo $REPODIR
