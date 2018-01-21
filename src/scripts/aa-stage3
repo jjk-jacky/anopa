@@ -75,7 +75,7 @@ foreground {
 
     # Something went wrong
     foreground { aa-echo -O3 -Be "Unable to ${1}: Failed to pivot root" }
-    foreground { aa-echo -O3 -t "Trying to open a shell..." }
+    foreground { aa-echo -O3 -t "Trying to open a shell; " +g exit +w " to continue" }
     emptyenv -c sh -i
 }
 # close the logger now

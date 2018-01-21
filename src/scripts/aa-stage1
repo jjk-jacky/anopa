@@ -63,7 +63,7 @@ foreground { aa-echo -O3 -t "Starting s6-svscan..." }
 ifelse -X -n { aa-test -O3 -p /run/services/.scandir/uncaught-logs/fifo }
 {
     foreground { aa-echo -O3 -Be "Cannot start s6-svscan: No uncaught-logs fifo found" }
-    foreground { aa-echo -O3 -t "Trying to open a shell..." }
+    foreground { aa-echo -O3 -t "Trying to open a shell; " +g exit +w " to continue" }
     emptyenv -c sh -i
 }
 
