@@ -1,0 +1,68 @@
+=head1 NAME
+
+aa-bw - Performs simple comparison between two numbers
+
+=head1 SYNOPSIS
+
+B<aa-bw> [B<-a> | B<-A> | B<-e>] [B<-p>] I<NUM1> I<NUM2>
+
+=head1 OPTIONS
+
+=over
+
+=item B<-A, --all>
+
+Success when I<NUM1> & I<NUM2> == I<NUM2>
+
+=item B<-a, --and>
+
+Success when I<NUM1> & I<NUM2> is non null (!= 0)
+
+This is the default is neither B<--all> nor B<--equal> is used.
+
+=item B<-e, --equal>
+
+Success when I<NUM1> == I<NUM2>
+
+=item B<-h, --help>
+
+Show help screen and exit.
+
+=item B<-p, --print>
+
+Print on stdout the result of I<NUM1> & I<NUM2>, or I<NUM1> if B<--equal> is
+used
+
+=item B<-V, --version>
+
+Show version information and exit.
+
+=back
+
+=head1 DESCRIPTION
+
+B<aa-bw>(1) is a minimalistic helper intended to be used in execline scripts,
+mainly to check (flags in) return codes.
+
+It simply performs a bitwise AND on its two first arguments (unless B<--equal>
+is used) and returns 0 on success, 2 on error.
+
+Success is determined depending on which option was specified:
+
+=over
+
+=item B<--and> : Success when result is non zero
+
+=item B<--all> or B<--equal> : Success when result is I<NUM2>
+
+=back
+
+Note that if more then one of B<--and>, B<--all> and B<--equal> is used, the
+last one will be used.
+
+=head1 RETURN CODES
+
+Return codes are somewhat unified inside B<anopa>. Odd return codes represent
+fatal errors, and are detailled in B<anopa-rc>(1)
+
+B<aa-bw>(1) can return 2 if the test failed, as described above.
