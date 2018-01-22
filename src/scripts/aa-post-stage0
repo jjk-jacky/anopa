@@ -1,0 +1,30 @@
+#!/bin/execlineb -s1
+#
+# anopa - Copyright (C) 2015-2017 Olivier Brunel
+#
+# aa-post-stage0
+# Copyright (C) 2018 Olivier Brunel <jjk@jjacky.com>
+#
+# This file is part of anopa.
+#
+# anopa is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# anopa is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# anopa. If not, see http://www.gnu.org/licenses/
+#
+
+# Executes into the rest of the script if the return code ($1) contains either:
+# - bit 1 set, i.e. fatal error
+# - bit 16 set, i.e. at least one essential service failed
+if { aa-bw $1 17 }
+foreground { aa-echo -O3 -Be "Mouting root file system failed" }
+foreground { aa-echo -O3 -t "Trying to open a shell; " +g exit +w " to continue" }
+emptyenv -c sh -i

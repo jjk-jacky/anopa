@@ -1,0 +1,19 @@
+=head1 NAME
+
+aa-post-stage0 - Helper for aa-start's return code post stage 0
+
+=head1 SYNOPSIS
+
+B<aa-post-stage0>
+
+=head1 DESCRIPTION
+
+B<aa-post-stage0>(1) is an B<execline> script meant to be used as handler for
+B<aa-start>(1) return code in stage 0. In other words, it should be set as
+I<REPODIR/.anopa/post-stage0>
+
+It checks B<aa-start>(1) return code (given as argument) for bit 1 or 16, and if
+at least one is set executes into an interactive shell (I<sh -i>).
+
+Bit 1 being set means B<aa-start>(1) failed with a fatal error; Bit 16 means at
+least one service marked essential failed.

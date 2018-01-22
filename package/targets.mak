@@ -26,6 +26,8 @@ BIN_SCRIPTS_TARGET := \
 aa-shutdown
 
 LIBEXEC_SCRIPTS_TARGET := \
+aa-post-stage0 \
+aa-post-stage2 \
 aa-stage0 \
 aa-stage1 \
 aa-stage2 \
@@ -45,6 +47,8 @@ aa-incmdline.1 \
 aa-kill.1 \
 aa-mount.1 \
 aa-pivot.1 \
+aa-post-stage0.1 \
+aa-post-stage2.1 \
 aa-reboot.1 \
 aa-reset.1 \
 aa-service.1 \

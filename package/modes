@@ -8,6 +8,8 @@ aa-incmdline            0755
 aa-kill                 0755
 aa-mount                0755
 aa-pivot                0755
+aa-post-stage0          0755
+aa-post-stage2          0755
 aa-reboot               0755
 aa-reset                0755
 aa-service              0755
