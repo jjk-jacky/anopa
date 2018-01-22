@@ -43,24 +43,22 @@ cd /
 umask 022
 
 # Start services
-foreground { if -n
-{
-  if { emptyenv -c s6-setsid aa-ctty -O3 -s aa-start -O3 -r /services -l onboot }
-  foreground {
-    # if "break" was specified on kernel cmdline, let's open a shell
+foreground {
+    foreground {
+        emptyenv -c s6-setsid aa-ctty -O3 -s aa-start -O3 -r /services -l onboot
+    }
+    if { aa-test -e /services/.anopa/post-stage0 }
+    importas -u RC ? emptyenv -c /services/.anopa/post-stage0 $RC
+}
+
+# if "break" was specified on kernel cmdline, let's open a shell
+foreground {
     if -t { aa-incmdline -O3 -qf /root-fs/proc/cmdline break }
     foreground { aa-echo -O3 -B "Break requested" }
     foreground { aa-echo -O3 -t "Trying to open a shell; " +g exit +w " to continue" }
     emptyenv -c sh -i
-  }
 }
 
-# aa-start failed (i.e. an essential service failed to be started), so we assume
-# the root fs wasn't mounted: try a shell so user has a chance to fix things
-foreground { aa-echo -O3 -Be "Mouting root file system failed" }
-foreground { aa-echo -O3 -t "Trying to open a shell; " +g exit +w " to continue" }
-emptyenv -c sh -i
-}
 
 if { aa-echo -O3 -B "Moving /root-fs to /..." }
 # First we mount bind the rootfs (initramfs) onto /run/initramfs so we can come

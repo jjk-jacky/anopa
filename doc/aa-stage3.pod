@@ -19,6 +19,13 @@ service I<uncaught-logs> to catch all possible logs as long as possible. The
 B<s6-supervise> process of that service will be sent command 'x' so it simply
 exits when the supervised process will.
 
+After B<aa-stop>(1) has run, and if it exists, B<aa-stage3>(1) will execute
+I</run/services/.anopa/post-stage3> with B<aa-stop>(1)'s return code as
+argument. This allows to e.g. open a shell if something went terribly wrong.
+
+Note that file descriptor 3 will remain open for writing and connected to the
+logger, so anything written there will be timestamped & logged.
+
 Signal SIGTERM is then sent to (almost) all processes, using B<aa-kill>(1) with
 option B<--skip>; Then SIGKILL is sent similarly.
 
@@ -27,4 +34,5 @@ exec into I</shutdown> will the same argument it received from B<s6-svscan>, so
 either "halt", "reboot" or "poweroff".
 
 If B<aa-pivot>(1) fails, it will try to open a shell (I<sh -i>) to let you deal
-with things manually.
+with things manually. Again, fd 3 will be still be opened to the logger at this
+point.

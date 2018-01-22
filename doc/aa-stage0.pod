@@ -30,17 +30,20 @@ I</root-fs/sys> and I</root-fs/run>
 
 It is also up to them to load required kernel modules in order to do so.
 
-Once B<aa-start>(1) is done, B<aa-stage0>(1) will mount bind the rootfs (of the
-initramfs) onto I</root-fs/run/initramfs> (so it's possible to pivot back into
-it at the end of stage 3) before doing a mount move of I</root-fs> onto I</> and
-executing (via B<aa-chroot>(1)) into I</sbin/init>, or whatever was specified
-via I<init> on the kernel command line.
+After B<aa-start>(1) has run, and if it exists, B<aa-stage0>(1) will execute
+I</services/.anopa/post-stage0> with B<aa-start>(1)'s return code as
+argument. This allows to e.g. open a shell if something went terribly wrong.
 
-If B<aa-start>(1) exits non-zero, e.g. if an essential service failed to be
-started, B<aa-stage0>(1) assumes the root file system couldn't be mounted, and
-tries to open a shell (I<sh -i>) to give you a possibility to fix things.
-Exiting the shell will resume the process.
+Note that file descriptor 3 will remain open for writing and connected to the
+logger, so anything written there will be timestamped & logged.
 
-You can also specify I<break> on the kernel command line to open a shell after
-B<aa-start>(1) succesfully completed, before moving I</root-fs> to I</> (also
-before mount binding the rootfs).
+For an example, see B<aa-post-stage0>(1)
+
+If "break" was specified on the kernel command line, an interactive shell will
+be open. Once you "exit" the shell, process continues.
+
+Then B<aa-stage0>(1) will mount bind the rootfs (of the initramfs) onto
+I</root-fs/run/initramfs> (so it's possible to pivot back into it at the end of
+stage 3) before doing a mount move of I</root-fs> onto I</> and executing (via
+B<aa-chroot>(1)) into I</sbin/init>, or whatever was specified via I<init> on
+the kernel command line.

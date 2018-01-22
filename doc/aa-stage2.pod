@@ -19,6 +19,11 @@ It starts all services via B<aa-start>(1) using I</etc/anopa/listdirs/onboot> as
 listdir, unless argument B<aa> was specified on kernel command line, in which
 case I</etc/anopa/listdirs/ARGVALUE> is used as listdir intead.
 
-If B<aa-start>(1) exits non-zero, it assumes there might not even be a getty
-running, and will try to open a shell (I<sh -i>). Else, the system is assumed to
-be ready.
+After B<aa-start>(1) has run, and if it exists, B<aa-stage2>(1) will execute
+I</run/services/.anopa/post-stage2> with B<aa-start>(1)'s return code as
+argument. This allows to e.g. open a shell if something went terribly wrong.
+
+Note that file descriptor 3 will remain open for writing and connected to the
+logger, so anything written there will be timestamped & logged.
+
+For an example, see B<aa-post-stage2>(1)
