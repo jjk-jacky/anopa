@@ -289,9 +289,8 @@ _exec_oneshot (int si, aa_mode mode)
                 if (c == 'e')
                 {
                     s->st.code = ERR_EXEC;
-                    byte_copy (msg, 1, " ");
-                    byte_copy (msg + 1, l_fn, filename);
-                    p += 1 + l_fn;
+                    byte_copy (msg, l_fn - 1, filename);
+                    p += l_fn - 1;
                 }
                 else if (c == 'p')
                     s->st.code = ERR_PIPES;
