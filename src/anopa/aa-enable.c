@@ -56,6 +56,9 @@
 #define SCANDIR_CRASH   SVSCANDIR "/crash"
 #define SCANDIR_FINISH  SVSCANDIR "/finish"
 
+#define SYMLINKDIR      ".anopa"
+#define POST_STAGE      SYMLINKDIR "/post-stage"
+
 #define SOURCE_ETC      "/etc/anopa/services"
 #define SOURCE_USR      "/usr/lib/services"
 
@@ -207,6 +210,10 @@ dieusage (int rc)
             " -k, --skip-down SERVICE       Don't create file 'down' for SERVICE\n"
             " -u, --upgrade                 Upgrade service dirs instead of creating them\n"
             " -l, --listdir DIR             Use DIR to list services to enable\n"
+            " -0, --set-post-stage0 TARGET  Create anopa symlink post-stage0 to TARGET\n"
+            " -2, --set-post-stage2 TARGET  Create anopa symlink post-stage2 to TARGET\n"
+            " -3, --set-post-stage3 TARGET  Create anopa symlink post-stage3 to TARGET\n"
+            " -4, --set-post-stage4 TARGET  Create anopa symlink post-stage4 to TARGET\n"
             " -f, --set-finish TARGET       Create s6-svscan symlink finish to TARGET\n"
             " -c, --set-crash TARGET        Create s6-svscan symlink crash to TARGET\n"
             " -a, --alarm-s6                Alarm s6-svscan when done\n"
@@ -227,6 +234,7 @@ main (int argc, char * const argv[])
     const char *path_list = NULL;
     const char *set_crash = NULL;
     const char *set_finish = NULL;
+    const char *set_post_stage[] = { NULL, NULL, NULL, NULL };
     int i;
     int r;
     int rc = RC_OK;
@@ -240,6 +248,10 @@ main (int argc, char * const argv[])
     {
         int extra = 0;
         struct option longopts[] = {
+            { "set-post-stage0",    required_argument,  NULL,   '0' },
+            { "set-post-stage2",    required_argument,  NULL,   '2' },
+            { "set-post-stage3",    required_argument,  NULL,   '3' },
+            { "set-post-stage4",    required_argument,  NULL,   '4' },
             { "alarm-s6",           no_argument,        NULL,   'a' },
             { "set-crash",          required_argument,  NULL,   'c' },
             { "double-output",      no_argument,        NULL,   'D' },
@@ -261,11 +273,21 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "ac:Df:hk:l:NO:qr:S:s:uVW", longopts, NULL);
+        c = getopt_long (argc, argv, "0:2:3:4:ac:Df:hk:l:NO:qr:S:s:uVW", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
         {
+            case '2':
+            case '3':
+            case '4':
+                --c;
+                /* fall through */
+            case '0':
+                c -= '0';
+                set_post_stage[c] = optarg;
+                break;
+
             case 'a':
                 alarm_s6 = 1;
                 break;
@@ -432,6 +454,31 @@ main (int argc, char * const argv[])
 
     if (!(flags & AA_FLAG_UPGRADE_SERVICEDIR))
     {
+        int mk = 0;
+        const char *ps[] = { POST_STAGE "0", POST_STAGE "2", POST_STAGE "3", POST_STAGE "4" };
+
+        for (i = 0; i < 4; ++i)
+        {
+            if (!mk && set_post_stage[i])
+            {
+                if (mkdir (SYMLINKDIR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) < 0)
+                    aa_put_err ("Failed to create " SYMLINKDIR, strerror (errno), 1);
+                else
+                    mk = 1;
+            }
+            if (set_post_stage[i] && symlink (set_post_stage[i], ps[i]) < 0)
+            {
+                int e = errno;
+
+                aa_put_err ("Failed to create symlink ", NULL, 0);
+                aa_bs (AA_ERR, ps[i]);
+                aa_bs (AA_ERR, ": ");
+                aa_bs (AA_ERR, strerror (e));
+                aa_end_err ();
+                rc |= RC_ST_SYMLINK;
+            }
+        }
+
         if ((set_crash || set_finish) && mkdir (SVSCANDIR, S_IRWXU) < 0)
             aa_put_err ("Failed to create " SVSCANDIR, strerror (errno), 1);
         if (set_crash && symlink (set_crash, SCANDIR_CRASH) < 0)
