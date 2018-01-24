@@ -32,5 +32,4 @@ A service I<uncaught-logs> must exist and be a logger that will be used to catch
 all "uncaught logs" (i.e. anything not redirected to a service logger). A FIFO
 must be created as I</run/services/.scandir/uncaught-logs/fifo> and will be
 automatically started by B<s6-svscan>; It will also be used as trigger for
-B<aa-stage2>(1).
-
+the "real" init, I</run/services/.anopa/init> (usually B<aa-stage2>(1)).

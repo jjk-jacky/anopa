@@ -74,14 +74,14 @@ fdmove -c 2 1
 # close logger
 fdclose 3
 
-# Fork the stage2 script and have it ready to start as soon as the catch-all
-# logger is in place
+# Fork the "real" init (stage2) script and have it ready to start as soon as the
+# catch-all logger is in place
 background
 {
     s6-setsid
     redirfd -w 1 /run/services/uncaught-logs/fifo # (blocks until the logger reads)
-    @LIBEXECDIR@/aa-stage2
+    /run/services/.anopa/init
 }
 
-# Start the "real" stage 2 (as far as PID 1 goes)
+# Start the real init (as far as PID 1 goes)
 emptyenv -c s6-svscan -t0 /run/services/.scandir

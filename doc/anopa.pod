@@ -380,15 +380,20 @@ Refer to B<aa-enable>(1) for more on how it works and how the copy operation
 takes place.
 
 
-On boot, B<aa-hiercopy>(1) is used to copy the repository directory as runtime
-repository I</run/services>
+When booting, you would use B<aa-stage1>(1) as your init. It will use
+B<aa-hiercopy>(1) to copy the repository directory as runtime repository
+I</run/services>, then start B<s6-svscan> and I</run/services/.anopa/init>,
+which is the "real" init script aimed to start all services.
 
-Then, B<aa-start>(1) is used to start all services in order, getting the system
-up & ready. Refer to B<aa-start>(1) for more on how it works; Refer to
-B<aa-stage1>(1) and B<aa-stage2>(1) for more on this init process on boot works.
+It would usually be B<aa-stage2>(1), little wrapper around B<aa-start>(1), that
+will start all services in order, handling dependencies, getting the system up &
+ready.
+
+Refer to B<aa-start>(1) for more on how it works; Refer to B<aa-stage1>(1) and
+B<aa-stage2>(1) for more on this init process on boot works.
 
 You can also see B<aa-stage0>(1) and B<aa-stage4>(1) for how to use B<anopa> in
-your initramfs.
+your initramfs, as I</init> and I</shutdown> respectively.
 
 Note that this is of course only a possible solution to set up your system, you
 are of course free to organize things differently, using only the tool(s) you

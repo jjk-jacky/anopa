@@ -4,10 +4,10 @@ aa-enable - Enable services, i.e. copy servicedirs to repodir
 
 =head1 SYNOPSIS
 
-B<aa-enable> [B<-D>] [B<-O> I<FILE|FD>] [B<-r> I<REPODIR>] [B<-p> I<POSTSTART>]
-[B<-P> I<POSTSTOP>] [B<-c> I<CRASH>] [B<-f> I<FINISH>] [B<-k> I<SERVICE>] [B<-S>
-I<SOURCEDIR>] [B<-s> I<SOURCEDIR>] [B<-l> I<LISTDIR>] [B<-N>] [B<-W>] [B<-u>]
-[B<-a>] [B<--no-supervise>] [B<-q>] [I<SERVICE...>]
+B<aa-enable> [B<-D>] [B<-O> I<FILE|FD>] [B<-r> I<REPODIR>] [B<-i> I<INIT>]
+[B<-p> I<POSTSTART>] [B<-P> I<POSTSTOP>] [B<-c> I<CRASH>] [B<-f> I<FINISH>]
+[B<-k> I<SERVICE>] [B<-S> I<SOURCEDIR>] [B<-s> I<SOURCEDIR>] [B<-l> I<LISTDIR>]
+[B<-N>] [B<-W>] [B<-u>] [B<-a>] [B<--no-supervise>] [B<-q>] [I<SERVICE...>]
 
 =head1 OPTIONS
 
@@ -47,6 +47,14 @@ point to B<aa-stage3>(1).
 =item B<-h, --help>
 
 Show help screen and exit.
+
+=item B<-i, --set-init> I<INIT>
+
+Create a symlink I<REPODIR/.anopa/init> that points to I<INIT>. When using
+B<aa-stage1>(1) this is what will be executed to actually start all the services
+and bring the system to readiness.
+
+This would usually point to B<aa-stage2>(1).
 
 =item B<-k, --skip-down> I<SERVICE>
 

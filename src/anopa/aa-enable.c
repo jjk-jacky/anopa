@@ -59,6 +59,7 @@
 #define SYMLINKDIR      ".anopa"
 #define POST_START      SYMLINKDIR "/post-start"
 #define POST_STOP       SYMLINKDIR "/post-stop"
+#define INIT            SYMLINKDIR "/init"
 
 #define SOURCE_ETC      "/etc/anopa/services"
 #define SOURCE_USR      "/usr/lib/services"
@@ -211,6 +212,7 @@ dieusage (int rc)
             " -k, --skip-down SERVICE       Don't create file 'down' for SERVICE\n"
             " -u, --upgrade                 Upgrade service dirs instead of creating them\n"
             " -l, --listdir DIR             Use DIR to list services to enable\n"
+            " -i, --set-init TARGET         Create symlink REPODIR/.anopa/init to TARGET\n"
             " -p, --set-post-start TARGET   Create symlink REPODIR/.anopa/post-start to TARGET\n"
             " -P, --set-post-stop TARGET    Create symlink REPODIR/.anopa/post-stop to TARGET\n"
             " -f, --set-finish TARGET       Create s6-svscan symlink finish to TARGET\n"
@@ -233,6 +235,7 @@ main (int argc, char * const argv[])
     const char *path_list = NULL;
     const char *set_crash = NULL;
     const char *set_finish = NULL;
+    const char *set_init = NULL;
     const char *set_post_start = NULL;
     const char *set_post_stop = NULL;
     int i;
@@ -253,6 +256,7 @@ main (int argc, char * const argv[])
             { "double-output",      no_argument,        NULL,   'D' },
             { "set-finish",         required_argument,  NULL,   'f' },
             { "help",               no_argument,        NULL,   'h' },
+            { "set-init",           required_argument,  NULL,   'i' },
             { "skip-down",          required_argument,  NULL,   'k' },
             { "listdir",            required_argument,  NULL,   'l' },
             { "no-needs",           no_argument,        NULL,   'N' },
@@ -271,7 +275,7 @@ main (int argc, char * const argv[])
         };
         int c;
 
-        c = getopt_long (argc, argv, "ac:Df:hk:l:NO:P:p:qr:S:s:uVW", longopts, NULL);
+        c = getopt_long (argc, argv, "ac:Df:hi:k:l:NO:P:p:qr:S:s:uVW", longopts, NULL);
         if (c == -1)
             break;
         switch (c)
@@ -294,6 +298,10 @@ main (int argc, char * const argv[])
 
             case 'h':
                 dieusage (RC_OK);
+
+            case 'i':
+                set_init = optarg;
+                break;
 
             case 'k':
                 skip = optarg;
@@ -450,9 +458,14 @@ main (int argc, char * const argv[])
 
     if (!(flags & AA_FLAG_UPGRADE_SERVICEDIR))
     {
-        if ((set_post_start || set_post_stop)
+        if ((set_init || set_post_start || set_post_stop)
                 && mkdir (SYMLINKDIR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) < 0)
             aa_put_err ("Failed to create " SYMLINKDIR, strerror (errno), 1);
+        if (set_init && symlink (set_init, INIT) < 0)
+        {
+            aa_put_err ("Failed to create symlink " INIT, strerror (errno), 1);
+            rc |= RC_ST_SYMLINK;
+        }
         if (set_post_start && symlink (set_post_start, POST_START) < 0)
         {
             aa_put_err ("Failed to create symlink " POST_START, strerror (errno), 1);
