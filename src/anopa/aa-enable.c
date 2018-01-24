@@ -46,6 +46,7 @@
 #include <anopa/scan_dir.h>
 #include <anopa/enable_service.h>
 #include <anopa/ga_list.h>
+#include <anopa/copy_file.h>
 #include <anopa/stats.h>
 #include <anopa/err.h>
 #include "util.h"
@@ -56,10 +57,10 @@
 #define SCANDIR_CRASH   SVSCANDIR "/crash"
 #define SCANDIR_FINISH  SVSCANDIR "/finish"
 
-#define SYMLINKDIR      ".anopa"
-#define POST_START      SYMLINKDIR "/post-start"
-#define POST_STOP       SYMLINKDIR "/post-stop"
-#define INIT            SYMLINKDIR "/init"
+#define ANOPADIR        ".anopa"
+#define POST_START      ANOPADIR "/post-start"
+#define POST_STOP       ANOPADIR "/post-stop"
+#define INIT            ANOPADIR "/init"
 
 #define SOURCE_ETC      "/etc/anopa/services"
 #define SOURCE_USR      "/usr/lib/services"
@@ -200,6 +201,27 @@ it_list (direntry *d, void *data)
     return 0;
 }
 
+static int
+copy_file (const char *src, const char *dst)
+{
+    if (aa_copy_file (src, dst, 0744, AA_CP_OVERWRITE) < 0)
+    {
+        int e = errno;
+
+        aa_put_err ("Failed to copy ", NULL, 0);
+        aa_bs (AA_ERR, src);
+        aa_bs (AA_ERR, " as ");
+        aa_bs (AA_ERR, dst);
+        aa_bs (AA_ERR, ": ");
+        aa_bs (AA_ERR, strerror (e));
+        aa_end_err ();
+
+        return 0;
+    }
+
+    return 1;
+}
+
 static void
 dieusage (int rc)
 {
@@ -212,11 +234,11 @@ dieusage (int rc)
             " -k, --skip-down SERVICE       Don't create file 'down' for SERVICE\n"
             " -u, --upgrade                 Upgrade service dirs instead of creating them\n"
             " -l, --listdir DIR             Use DIR to list services to enable\n"
-            " -i, --set-init TARGET         Create symlink REPODIR/.anopa/init to TARGET\n"
-            " -p, --set-post-start TARGET   Create symlink REPODIR/.anopa/post-start to TARGET\n"
-            " -P, --set-post-stop TARGET    Create symlink REPODIR/.anopa/post-stop to TARGET\n"
-            " -f, --set-finish TARGET       Create s6-svscan symlink finish to TARGET\n"
-            " -c, --set-crash TARGET        Create s6-svscan symlink crash to TARGET\n"
+            " -i, --set-init INIT           Copy INIT as REPODIR/" INIT "\n"
+            " -p, --set-post-start POST     Copy POST as REPODIR/" POST_START "\n"
+            " -P, --set-post-stop POST      Copy POST as REPODIR/" POST_STOP "\n"
+            " -f, --set-finish FINISH       Copy FINISH as REPODIR/" SCANDIR_FINISH "\n"
+            " -c, --set-crash CRASH         Copy CRASH as REPODIR/" SCANDIR_CRASH "\n"
             " -a, --alarm-s6                Alarm s6-svscan when done\n"
             " -N, --no-needs                Don't auto-enable services from 'needs'\n"
             " -W, --no-wants                Don't auto-enable services from 'wants'\n"
@@ -459,36 +481,21 @@ main (int argc, char * const argv[])
     if (!(flags & AA_FLAG_UPGRADE_SERVICEDIR))
     {
         if ((set_init || set_post_start || set_post_stop)
-                && mkdir (SYMLINKDIR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) < 0)
-            aa_put_err ("Failed to create " SYMLINKDIR, strerror (errno), 1);
-        if (set_init && symlink (set_init, INIT) < 0)
-        {
-            aa_put_err ("Failed to create symlink " INIT, strerror (errno), 1);
-            rc |= RC_ST_SYMLINK;
-        }
-        if (set_post_start && symlink (set_post_start, POST_START) < 0)
-        {
-            aa_put_err ("Failed to create symlink " POST_START, strerror (errno), 1);
-            rc |= RC_ST_SYMLINK;
-        }
-        if (set_post_stop && symlink (set_post_stop, POST_STOP) < 0)
-        {
-            aa_put_err ("Failed to create symlink " POST_STOP, strerror (errno), 1);
-            rc |= RC_ST_SYMLINK;
-        }
+                && mkdir (ANOPADIR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) < 0)
+            aa_put_err ("Failed to create " ANOPADIR, strerror (errno), 1);
+        if (set_init && !copy_file (set_init, INIT))
+            rc |= RC_ST_COPY_FILE;
+        if (set_post_start && !copy_file (set_post_start, POST_START))
+            rc |= RC_ST_COPY_FILE;
+        if (set_post_stop && !copy_file (set_post_stop, POST_STOP))
+            rc |= RC_ST_COPY_FILE;
 
         if ((set_crash || set_finish) && mkdir (SVSCANDIR, S_IRWXU) < 0)
             aa_put_err ("Failed to create " SVSCANDIR, strerror (errno), 1);
-        if (set_crash && symlink (set_crash, SCANDIR_CRASH) < 0)
-        {
-            aa_put_err ("Failed to create symlink " SCANDIR_CRASH, strerror (errno), 1);
-            rc |= RC_ST_SYMLINK;
-        }
-        if (set_finish && symlink (set_finish, SCANDIR_FINISH) < 0)
-        {
-            aa_put_err ("Failed to create symlink " SCANDIR_FINISH, strerror (errno), 1);
-            rc |= RC_ST_SYMLINK;
-        }
+        if (set_crash && !copy_file (set_crash, SCANDIR_CRASH))
+            rc |= RC_ST_COPY_FILE;
+        if (set_finish && !copy_file (set_finish, SCANDIR_FINISH))
+            rc |= RC_ST_COPY_FILE;
     }
 
     if (alarm_s6)

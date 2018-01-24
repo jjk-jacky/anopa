@@ -56,7 +56,7 @@ of the following flags :
     +------+------+-------------------------------------------+----------------+
     |  16  |    8 | At least one failed service was essential | aa-start only  |
     +------+------+-------------------------------------------+----------------+
-    |  32  |   16 | At least one symlink couldn't be created  | aa-enable only |
+    |  32  |   16 | At least one file copy failed (--set-*)   | aa-enable only |
     +------+------+-------------------------------------------+----------------+
     |  64  |   32 | Failed to alarm s6-svscan                 | aa-enable only |
     +------+------+-------------------------------------------+----------------+
