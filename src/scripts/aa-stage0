@@ -47,8 +47,8 @@ foreground {
     foreground {
         emptyenv -c s6-setsid aa-ctty -O3 -s aa-start -O3 -r /services -l onboot
     }
-    if { aa-test -e /services/.anopa/post-stage0 }
-    importas -u RC ? emptyenv -c /services/.anopa/post-stage0 $RC
+    if { aa-test -e /services/.anopa/post-start }
+    importas -u RC ? emptyenv -c /services/.anopa/post-start $RC
 }
 
 # if "break" was specified on kernel cmdline, let's open a shell

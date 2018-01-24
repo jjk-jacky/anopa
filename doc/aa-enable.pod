@@ -4,43 +4,14 @@ aa-enable - Enable services, i.e. copy servicedirs to repodir
 
 =head1 SYNOPSIS
 
-B<aa-enable> [B<-D>] [B<-O> I<FILE|FD>] [B<-r> I<REPODIR>] [B<-0> I<POSTSTAGE0>]
-[B<-2> I<POSTSTAGE2>] [B<-3> I<POSTSTAGE3>] [B<-4> I<POSTSTAGE4>] [B<-c>
-I<CRASH>] [B<-f> I<FINISH>] [B<-k> I<SERVICE>] [B<-S> I<SOURCEDIR>] [B<-s>
-I<SOURCEDIR>] [B<-l> I<LISTDIR>] [B<-N>] [B<-W>] [B<-u>] [B<-a>]
-[B<--no-supervise>] [B<-q>] [I<SERVICE...>]
+B<aa-enable> [B<-D>] [B<-O> I<FILE|FD>] [B<-r> I<REPODIR>] [B<-p> I<POSTSTART>]
+[B<-P> I<POSTSTOP>] [B<-c> I<CRASH>] [B<-f> I<FINISH>] [B<-k> I<SERVICE>] [B<-S>
+I<SOURCEDIR>] [B<-s> I<SOURCEDIR>] [B<-l> I<LISTDIR>] [B<-N>] [B<-W>] [B<-u>]
+[B<-a>] [B<--no-supervise>] [B<-q>] [I<SERVICE...>]
 
 =head1 OPTIONS
 
 =over
-
-=item B<-0, --set-post-stage0> I<POSTSTAGE0>
-
-Create a symlink I<REPODIR/.anopa/post-stage0> that points to I<POSTSTAGE0>.
-This is executed by B<aa-stage0> after B<aa-start>(1) completed, with its return
-code as first argument.
-
-This could point to B<aa-post-stage0>(1).
-
-=item B<-2, --set-post-stage2> I<POSTSTAGE2>
-
-Create a symlink I<REPODIR/.anopa/post-stage2> that points to I<POSTSTAGE2>.
-This is executed by B<aa-stage2> after B<aa-start>(1) completed, with its return
-code as first argument.
-
-This could point to B<aa-post-stage2>(1).
-
-=item B<-3, --set-post-stage3> I<POSTSTAGE3>
-
-Create a symlink I<REPODIR/.anopa/post-stage3> that points to I<POSTSTAGE3>.
-This is executed by B<aa-stage3> after B<aa-stop>(1) completed, with its return
-code as first argument.
-
-=item B<-4, --set-post-stage4> I<POSTSTAGE4>
-
-Create a symlink I<REPODIR/.anopa/post-stage4> that points to I<POSTSTAGE4>.
-This is executed by B<aa-stage4> after B<aa-stop>(1) completed, with its return
-code as first argument.
 
 =item B<-a, --alarm-s6>
 
@@ -107,6 +78,20 @@ Will duplicate all output (everything written to stdout or stderr) to the given
 file or file descriptor. I<FILE|FD> can either be a (previously opened for
 writing) file descriptor (must be > 2), or a file which will then be opened in
 append mode.
+
+=item B<-P, --set-post-stop> I<POSTSTOP>
+
+Create a symlink I<REPODIR/.anopa/post-stop> that points to I<POSTSTOP>.
+When using B<aa-stage3>(1) and/or B<aa-stage4>(1) this is executed after
+B<aa-stop>(1) completed, with its return code as first argument.
+
+=item B<-p, --set-post-start> I<POSTSTART>
+
+Create a symlink I<REPODIR/.anopa/post-start> that points to I<POSTSTART>.
+When using B<aa-stage0>(1) and/or B<aa-stage2>(1) this is executed after
+B<aa-start>(1) completed, with its return code as first argument.
+
+This could point to B<aa-post-stage0>(1) or B<aa-post-stage2>(1).
 
 =item B<-q, --quiet>
 

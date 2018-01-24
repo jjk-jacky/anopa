@@ -50,5 +50,5 @@ importas -u LISTDIR LISTDIR
 foreground {
     emptyenv -c s6-setsid aa-ctty -O3 aa-start -O3 -l /etc/anopa/listdirs/${LISTDIR}
 }
-if { aa-test -e /run/services/.anopa/post-stage2 }
-importas -u RC ? emptyenv -c /run/services/.anopa/post-stage2 $RC
+if { aa-test -e /run/services/.anopa/post-start }
+importas -u RC ? emptyenv -c /run/services/.anopa/post-start $RC

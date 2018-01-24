@@ -31,7 +31,7 @@ I</root-fs/sys> and I</root-fs/run>
 It is also up to them to load required kernel modules in order to do so.
 
 After B<aa-start>(1) has run, and if it exists, B<aa-stage0>(1) will execute
-I</services/.anopa/post-stage0> with B<aa-start>(1)'s return code as
+I</services/.anopa/post-start> with B<aa-start>(1)'s return code as
 argument. This allows to e.g. open a shell if something went terribly wrong.
 
 Note that file descriptor 3 will remain open for writing and connected to the

@@ -26,8 +26,8 @@
 foreground { aa-echo -B "Stage 4: Unmounting root file system..." }
 foreground {
     foreground { emptyenv -c aa-stop -r /services -a }
-    if { aa-test -e /services/.anopa/post-stage4 }
-    importas -u RC ? emptyenv -c /services/.anopa/post-stage4 $RC
+    if { aa-test -e /services/.anopa/post-stop }
+    importas -u RC ? emptyenv -c /services/.anopa/post-stop $RC
 }
 
 # At this point everything should be unmounted, so we need to remount what's
