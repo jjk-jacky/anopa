@@ -48,7 +48,7 @@ importas -u LISTDIR LISTDIR
 # This is so Ctrl+C will trigger a SIGINT to aa-start, so one can manually
 # timeout a service.
 foreground {
-    emptyenv -c s6-setsid aa-ctty -O3 aa-start -O3 -l /etc/anopa/listdirs/${LISTDIR}
+    emptyenv -c s6-setsid aa-ctty -O3 -s aa-start -O3 -l /etc/anopa/listdirs/${LISTDIR}
 }
 if { aa-test -e /run/services/.anopa/post-start }
 importas -u RC ? emptyenv -c /run/services/.anopa/post-start $RC

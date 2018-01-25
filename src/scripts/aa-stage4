@@ -25,7 +25,7 @@
 
 foreground { aa-echo -B "Stage 4: Unmounting root file system..." }
 foreground {
-    foreground { emptyenv -c aa-stop -r /services -a }
+    foreground { emptyenv -c s6-setsid aa-ctty -O3 -s aa-stop -r /services -a }
     if { aa-test -e /services/.anopa/post-stop }
     importas -u RC ? emptyenv -c /services/.anopa/post-stop $RC
 }
