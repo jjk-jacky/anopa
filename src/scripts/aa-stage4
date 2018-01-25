@@ -23,6 +23,12 @@
 
 /bin/emptyenv /bin/s6-envdir /etc/anopa/env /bin/exec
 
+# Make sure we're sane
+cd /
+redirfd -r 0 /dev/console
+redirfd -w 1 /dev/console
+fdmove -c 2 1
+
 foreground { aa-echo -B "Stage 4: Unmounting root file system..." }
 foreground {
     foreground { emptyenv -c s6-setsid aa-ctty -O3 -s aa-stop -r /services -a }
