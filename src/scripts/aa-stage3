@@ -74,7 +74,8 @@ foreground {
     if -n
     {
         # grab the chroot binary for after the pivot
-        if { cp /bin/aa-chroot . }
+        if { cp @BINDIR@/aa-chroot . }
+        if { cp @BINDIR@/fdclose . }
         # PIVOT!
         if { aa-pivot -O3 . root-fs }
     }
@@ -85,6 +86,6 @@ foreground {
     emptyenv -c sh -i
 }
 # close the logger now
-fdclose 3
+./fdclose 3
 # And let initramfs end things ($1 is halt/reboot/poweroff)
 ./aa-chroot . /shutdown ${1}
