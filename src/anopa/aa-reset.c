@@ -96,7 +96,14 @@ reset_service (const char *name, intptr_t mode)
 
     /* Starting/Stopping cannot be reset */
     if (s->st.event == AA_EVT_STARTING || s->st.event == AA_EVT_STOPPING)
+    {
+        aa_put_warn (name, "Service is ", 0);
+        aa_bs (AA_ERR, (s->st.event == AA_EVT_STARTING) ? "starting" : "stopping");
+        aa_bs (AA_ERR, "; Skipping...");
+        aa_end_warn ();
+        rc |= RC_ST_SKIPPED;
         return;
+    }
 
     if (mode == MODE_AUTO)
     {

@@ -45,19 +45,19 @@ B<aa-reset>(1)), the remaining 7bit integer is actually a bitwise combination
 of the following flags :
 
     +------+------+-------------------------------------------+----------------+
-    |  RC  | 7bit | Meaning                                   | Notes          |
+    |  RC  | 7bit | Meaning                                   | Applies to:    |
     | flag | flag |                                           |                |
     +------+------+-------------------------------------------+----------------+
-    |   2  |    1 | At least one service was unknown          |                |
+    |   2  |    1 | At least one service was unknown          | All            |
     +------+------+-------------------------------------------+----------------+
-    |   4  |    2 | At least one service was skipped          | aa-start only  |
+    |   4  |    2 | At least one service was skipped          | start/reset    |
     +------+------+-------------------------------------------+----------------+
-    |   8  |    4 | At least one service failed               |                |
+    |   8  |    4 | At least one service failed               | All            |
     +------+------+-------------------------------------------+----------------+
-    |  16  |    8 | At least one failed service was essential | aa-start only  |
+    |  16  |    8 | At least one failed service was essential | start          |
     +------+------+-------------------------------------------+----------------+
-    |  32  |   16 | At least one file copy failed (--set-*)   | aa-enable only |
+    |  32  |   16 | At least one file copy failed (--set-*)   | enable         |
     +------+------+-------------------------------------------+----------------+
-    |  64  |   32 | Failed to alarm s6-svscan                 | aa-enable only |
+    |  64  |   32 | Failed to alarm s6-svscan                 | enable         |
     +------+------+-------------------------------------------+----------------+
 

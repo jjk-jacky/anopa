@@ -30,7 +30,7 @@
 enum
 {
     RC_ST_UNKNOWN       = 1 << 1,   /* at least 1 service unknown */
-    RC_ST_SKIPPED       = 1 << 2,   /* at least 1 service skipped (start) */
+    RC_ST_SKIPPED       = 1 << 2,   /* at least 1 service skipped (start/reset) */
     RC_ST_FAILED        = 1 << 3,   /* at least 1 service failed */
     RC_ST_ESSENTIAL     = 1 << 4,   /* at least 1 failed service was essential (start) */
     /* enable only: */
