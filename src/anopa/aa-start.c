@@ -244,6 +244,7 @@ int
 main (int argc, char * const argv[])
 {
     PROG = "aa-start";
+    stralloc sacwd = STRALLOC_ZERO;
     const char *path_repo = aa_get_repodir ();
     const char *path_list = NULL;
     int i;
@@ -280,6 +281,10 @@ main (int argc, char * const argv[])
 
             case 'l':
                 unslash (optarg);
+                /* if relative path (starts with '.') and we don't have cwd yet,
+                 * get it now -- i.e. before init_repo() */
+                if (*optarg == '.' && sacwd.len == 0 && sagetcwd (&sacwd) < 0)
+                    aa_strerr_diefu1sys (RC_FATAL_IO, "get current working directory");
                 path_list = optarg;
                 break;
 
@@ -333,20 +338,21 @@ main (int argc, char * const argv[])
 
     if (path_list)
     {
-        stralloc sa = STRALLOC_ZERO;
         int r;
 
-        if (*path_list != '/' && *path_list != '.')
-            stralloc_cats (&sa, LISTDIR_PREFIX);
-        stralloc_catb (&sa, path_list, strlen (path_list) + 1);
-        r = aa_scan_dir (&sa, 1, it_start, NULL);
-        stralloc_free (&sa);
+        /* relative: cwd already there, just add a slash */
+        if (*path_list == '.')
+            stralloc_cats (&sacwd, "/");
+        /* neither relative nor absolute: prefix w/ default listdir path */
+        else if (*path_list != '/')
+            stralloc_cats (&sacwd, LISTDIR_PREFIX);
+        stralloc_catb (&sacwd, path_list, strlen (path_list) + 1);
+        r = aa_scan_dir (&sacwd, 1, it_start, NULL);
         if (r < 0)
-            aa_strerr_diefu3sys (RC_FATAL_IO, "read list directory ",
-                    (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
-                    (*path_list != '/' && *path_list != '.') ? path_list : "");
+            aa_strerr_diefu2sys (RC_FATAL_IO, "read list directory ", sacwd.s);
     }
 
+    stralloc_free (&sacwd);
     tain_now_g ();
 
     for (i = 0; i < argc; ++i)

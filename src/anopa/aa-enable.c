@@ -33,6 +33,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <skalibs/bytestr.h>
+#include <skalibs/djbunix.h>
 #include <skalibs/stralloc.h>
 #include <skalibs/genalloc.h>
 #include <skalibs/direntry.h>
@@ -204,6 +205,18 @@ it_list (direntry *d, void *data)
 static int
 copy_file (const char *src, const char *dst)
 {
+    size_t len = sa_pl.len;
+    int ok = 1;
+
+    if (*src != '/')
+    {
+        if (!stralloc_cats (&sa_pl, "/"))
+            aa_strerr_diefu1sys (RC_FATAL_MEMORY, "stralloc_cats");
+        if (!stralloc_cats (&sa_pl, src))
+            aa_strerr_diefu1sys (RC_FATAL_MEMORY, "stralloc_cats");
+        src = sa_pl.s;
+    }
+
     if (aa_copy_file (src, dst, 0744, AA_CP_OVERWRITE) < 0)
     {
         int e = errno;
@@ -216,10 +229,13 @@ copy_file (const char *src, const char *dst)
         aa_bs (AA_ERR, strerror (e));
         aa_end_err ();
 
-        return 0;
+        ok = 0;
     }
 
-    return 1;
+    if (src == sa_pl.s)
+        sa_pl.len = len;
+
+    return ok;
 }
 
 static void
@@ -307,6 +323,8 @@ main (int argc, char * const argv[])
                 break;
 
             case 'c':
+                if (*optarg != '/' && sa_pl.len == 0 && sagetcwd (&sa_pl) < 0)
+                    aa_strerr_diefu1sys (RC_FATAL_IO, "get current working directory");
                 set_crash = optarg;
                 break;
 
@@ -315,6 +333,8 @@ main (int argc, char * const argv[])
                 break;
 
             case 'f':
+                if (*optarg != '/' && sa_pl.len == 0 && sagetcwd (&sa_pl) < 0)
+                    aa_strerr_diefu1sys (RC_FATAL_IO, "get current working directory");
                 set_finish = optarg;
                 break;
 
@@ -322,6 +342,8 @@ main (int argc, char * const argv[])
                 dieusage (RC_OK);
 
             case 'i':
+                if (*optarg != '/' && sa_pl.len == 0 && sagetcwd (&sa_pl) < 0)
+                    aa_strerr_diefu1sys (RC_FATAL_IO, "get current working directory");
                 set_init = optarg;
                 break;
 
@@ -331,6 +353,10 @@ main (int argc, char * const argv[])
 
             case 'l':
                 unslash (optarg);
+                /* if relative path (starts with '.') and we don't have cwd yet,
+                 * get it now -- i.e. before init_repo() */
+                if (*optarg == '.' && sa_pl.len == 0 && sagetcwd (&sa_pl) < 0)
+                    aa_strerr_diefu1sys (RC_FATAL_IO, "get current working directory");
                 path_list = optarg;
                 break;
 
@@ -343,10 +369,14 @@ main (int argc, char * const argv[])
                 break;
 
             case 'P':
+                if (*optarg != '/' && sa_pl.len == 0 && sagetcwd (&sa_pl) < 0)
+                    aa_strerr_diefu1sys (RC_FATAL_IO, "get current working directory");
                 set_post_stop = optarg;
                 break;
 
             case 'p':
+                if (*optarg != '/' && sa_pl.len == 0 && sagetcwd (&sa_pl) < 0)
+                    aa_strerr_diefu1sys (RC_FATAL_IO, "get current working directory");
                 set_post_start = optarg;
                 break;
 
@@ -365,6 +395,14 @@ main (int argc, char * const argv[])
 
             case 's':
                 unslash (optarg);
+                if (*optarg != '/')
+                {
+                    if (sa_pl.len == 0 && sagetcwd (&sa_pl) < 0)
+                        aa_strerr_diefu1sys (RC_FATAL_IO, "get current working directory");
+                    if (!stralloc_cats (&aa_sa_sources, sa_pl.s)
+                            || !stralloc_cats (&aa_sa_sources, "/"))
+                        aa_strerr_diefu1sys (RC_FATAL_MEMORY, "stralloc_catb");
+                }
                 if (!stralloc_catb (&aa_sa_sources, optarg, strlen (optarg) + 1))
                     aa_strerr_diefu1sys (RC_FATAL_MEMORY, "stralloc_catb");
                 break;
@@ -415,15 +453,21 @@ main (int argc, char * const argv[])
      * the one with (potentially) a config dir */
     if (path_list)
     {
-        if (*path_list != '/' && *path_list != '.')
+        size_t len = sa_pl.len;
+
+        /* relative: cwd already there, just add a slash */
+        if (*path_list == '.')
+            stralloc_cats (&sa_pl, "/");
+        /* neither relative nor absolute: prefix w/ default listdir path */
+        else if (*path_list != '/')
             stralloc_cats (&sa_pl, LISTDIR_PREFIX);
         stralloc_catb (&sa_pl, path_list, strlen (path_list) + 1);
         r = aa_scan_dir (&sa_pl, 0, it_list, NULL);
         if (r < 0)
             /* -r == ERR_IO, since it_list always returns 0 */
-            aa_strerr_diefu3sys (RC_FATAL_IO, "read list directory ",
-                    (*path_list != '/' && *path_list != '.') ? LISTDIR_PREFIX : path_list,
-                    (*path_list != '/' && *path_list != '.') ? path_list : "");
+            aa_strerr_diefu2sys (RC_FATAL_IO, "read list directory ", sa_pl.s);
+
+        sa_pl.len = len;
     }
 
     for (i = 0; i < argc; ++i)
