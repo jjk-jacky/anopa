@@ -232,7 +232,7 @@ main (int argc, char * const argv[])
     if (argc < 1 || mode == MODE_NONE)
         dieusage (RC_FATAL_USAGE);
 
-    r = aa_init_repo (path_repo, AA_REPO_READ);
+    r = aa_init_repo (path_repo, AA_REPO_WRITE);
     if (r < 0)
         aa_strerr_diefu2sys (RC_FATAL_INIT_REPO, "init repository ", path_repo);
 
