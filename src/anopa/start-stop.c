@@ -769,6 +769,14 @@ handle_oneshot (int is_start)
             if (aa_service_status_write (svst, aa_service_name (aa_service (si))) < 0)
                 aa_strerr_warnu2sys ("write service status file for ", aa_service_name (aa_service (si)));
 
+            if (aa_service (si)->retries > 0)
+            {
+                --aa_service (si)->retries;
+                aa_bs (AA_OUT, aa_service_name (aa_service (si)));
+                aa_bs_flush (AA_OUT, ": Failed; Retrying...\n");
+                return 1;
+            }
+
             if (WIFEXITED (wstat))
             {
                 byte_copy (buf, 9, "exitcode ");
@@ -820,6 +828,39 @@ handle_longrun (aa_mode mode, uint16_t id, char event)
     si = list_get (&aa_main_list, i);
     if ((mode & AA_MODE_START) && aa_service (si)->gets_ready)
     {
+        if (event == 'd')
+        {
+            if (aa_service (si)->retries == 0)
+            {
+                aa_service *s = aa_service (si);
+
+                aa_unsubscribe_for (id);
+                s->ft_id = 0;
+
+                /* This is to be consistent, but in all likelihood in very
+                 * little time s6 will update the service status, thus taking
+                 * over ours, with up, then down again, and up, and so on... */
+                s->st.event = AA_EVT_STARTING_FAILED;
+                s->st.code = ERR_FAILED;
+                tain_copynow (&s->st.stamp);
+                aa_service_status_set_msg (&s->st, "Got down before being ready");
+                if (aa_service_status_write (&s->st, aa_service_name (s)) < 0)
+                    aa_strerr_warnu2sys ("write service status file for ", aa_service_name (s));
+
+                put_err_service (aa_service_name (s), ERR_FAILED, 0);
+                add_err (": ");
+                add_err ("Got down before being ready");
+                end_err ();
+                genalloc_append (int, &ga_failed, &si);
+
+                --nb_wait_longrun;
+                remove_from_list (&aa_main_list, si);
+                return 1;
+            }
+            else
+                --aa_service (si)->retries;
+        }
+
         if (event == 'u' || event == 'd')
         {
             clear_draw ();

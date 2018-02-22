@@ -86,6 +86,7 @@ typedef struct
     aa_ls ls;
     aa_service_status st;
     tain_t ts_exec;
+    uint16_t retries;
     /* longrun */
     uint16_t ft_id;
     int gets_ready;

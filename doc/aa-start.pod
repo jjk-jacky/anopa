@@ -88,6 +88,24 @@ there must be one name per line.
 
 Refer to B<anopa>(1) for descriptions of servicedirs and service dependencies.
 
+=head1 RETRIES
+
+It is possible to define a number of retries via file I<retries>, which must
+contains the number of retries for the service.
+
+- For oneshot, the service will be re-started up to I<retries> times and
+then be processed as failed;
+
+- For longrun, if it supports readiness, up to I<retries> event 'd' will be
+allowed while waiting for event 'U', before the service is processed failed.
+This means if the service goes down before becoming ready, B<aa-start>(1) will
+keep waiting as it is restarted.
+
+Note that when the service is processed failed, nothing is changed regarding
+its supervised state, i.e. its B<s6-supervise> will continue to restart it
+unless/until told otherwise; The failed state is only meaningful when comes to
+the current B<aa-start>(1) transaction and related dependencies/ordering.
+
 =head1 TIMEOUTS
 
 When starting a service, a timestamp is collected. If the service fails to be
@@ -160,9 +178,8 @@ If there was no I<gets-ready>/valid I<notification-fd> file, it waits for event
 'u' to be triggered, then (disconnects from the fifodir and) announce the
 service as started. If there was one, it will then wait for event 'U' to be
 triggered instead, announcing the service as ready instead. (A message will be
-shown on event 'u' as information only. Note that should event 'd' occur, a
-message will also be shown, but B<aa-start>(1) will still keep waiting for event
-'U'.)
+shown on event 'u' as information only. Note that should event 'd' occur, the
+behavior depends on file I<retries> as described in L<RETRIES> above.)
 
 =head1 STARTING A ONE-SHOT SERVICE
 

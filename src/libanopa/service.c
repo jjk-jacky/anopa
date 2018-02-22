@@ -416,6 +416,34 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_autoload_cb al_
             aa_service (si)->secs_timeout = aa_secs_timeout;
     }
 
+    {
+        char buf[UINT_FMT + 1];
+        ssize_t rr;
+
+        sa.len -= strlen ("timeout") + 1;
+        stralloc_catb (&sa, "retries", strlen ("retries") + 1);
+
+        rr = openreadnclose_nb (sa.s, buf, UINT_FMT);
+        if (rr < 0 && errno != ENOENT)
+            aa_strerr_warnu3sys ("read retries for ", aa_service_name (aa_service (si)), "; using default");
+
+        if (rr >= 0)
+        {
+            unsigned int i = rr;
+
+            buf[byte_chr (buf, i, '\n')] = '\0';
+            if (!uint0_scan (buf, &i))
+            {
+                aa_strerr_warn3x ("invalid retries for ", aa_service_name (aa_service (si)), "; using default");
+                aa_service (si)->retries = 0;
+            }
+            else
+                aa_service (si)->retries = (uint16_t) i;
+        }
+        else
+            aa_service (si)->retries = 0;
+    }
+
     stralloc_free (&sa);
     aa_service (si)->ls = AA_LOAD_DONE;
     tain_now_g ();

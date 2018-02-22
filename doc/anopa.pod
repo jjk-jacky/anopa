@@ -133,6 +133,19 @@ This can be used for services that support readiness outside of the
 I<notification-fd> file interface (e.g. via B<aa-setready>(1) triggered on a log
 event).
 
+=item An optional regular file named I<retries>
+
+This is B<anopa>-specific, and only used for services that supports readiness
+(else it's simply ignored).
+The file must only contain an unsigned integer, which is the number of times the
+service can go down (and, therefore, restarted) whilst B<aa-start> is waiting
+for it to become ready.
+
+This is used by B<aa-start>(1) to allow up to I<retries> event 'd' while waiting
+for 'U'. After that, the service is considered failed (though nothing is changed
+regarding its supervised state, i.e. its B<s6-supervise> will continue to
+restart it unless/until told otherwise.)
+
 =item An optional regular file named I<timeout>
 
 If such a file exists, it should contain the number of seconds before the
@@ -186,6 +199,12 @@ It can be any executable file (binary or script), that will be executed by
 B<aa-stop> when stopping the service. It if exits with 0 the service will be
 considered stopped, else stopped-failed.
 If no such file exists, the service will be considered stopped instantly.
+
+=item An optional regular file named I<retries>
+
+The file must only contain an unsigned integer, which is the number of times the
+service can go fail, and then be restarted, until it is actually considered
+failed.
 
 =item An optional, empty, regular file named I<essential>
 
