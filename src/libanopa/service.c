@@ -407,9 +407,10 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_autoload_cb al_
             }
             /* in STOP_ALL the default is also a maximum */
             else if ((mode & AA_MODE_STOP_ALL)
-                    && (aa_service (si)->secs_timeout > aa_secs_timeout
-                        || aa_service (si)->secs_timeout == 0))
+                    && (i > aa_secs_timeout || i == 0))
                 aa_service (si)->secs_timeout = aa_secs_timeout;
+            else
+                aa_service (si)->secs_timeout = i;
         }
         else
             aa_service (si)->secs_timeout = aa_secs_timeout;
