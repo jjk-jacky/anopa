@@ -393,7 +393,7 @@ aa_ensure_service_loaded (int si, aa_mode mode, int no_wants, aa_autoload_cb al_
 
         rr = openreadnclose_nb (sa.s, buf, UINT_FMT);
         if (rr < 0 && errno != ENOENT)
-            aa_strerr_warnu3x ("read timeout for ", aa_service_name (aa_service (si)), "; using default");
+            aa_strerr_warnu3sys ("read timeout for ", aa_service_name (aa_service (si)), "; using default");
 
         if (rr >= 0)
         {
