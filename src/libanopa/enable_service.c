@@ -130,13 +130,10 @@ clear_dir (const char *path, int excludes, aa_warn_fn warn_fn)
                 && (d->d_name[1] == '\0' || (d->d_name[1] == '.' && d->d_name[2] == '\0')))
             continue;
 
-        if (stralloc_cats (&satmp, path) < 0)
-            goto err;
-        if (stralloc_catb (&satmp, "/", 1) < 0)
-            goto err;
-        if (stralloc_cats (&satmp, d->d_name) < 0)
-            goto err;
-        if (!stralloc_0 (&satmp))
+        if (!stralloc_cats (&satmp, path)
+                || !stralloc_cats (&satmp, "/")
+                || !stralloc_cats (&satmp, d->d_name)
+                || !stralloc_0 (&satmp))
             goto err;
 
         if (d->d_type == DT_UNKNOWN)
