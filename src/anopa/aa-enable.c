@@ -210,9 +210,9 @@ copy_file (const char *src, const char *dst)
 
     if (*src != '/')
     {
-        if (!stralloc_cats (&sa_pl, "/"))
-            aa_strerr_diefu1sys (RC_FATAL_MEMORY, "stralloc_cats");
-        if (!stralloc_cats (&sa_pl, src))
+        if (!stralloc_cats (&sa_pl, "/")
+                || !stralloc_cats (&sa_pl, src)
+                || !stralloc_0 (&sa_pl))
             aa_strerr_diefu1sys (RC_FATAL_MEMORY, "stralloc_cats");
         src = sa_pl.s;
     }

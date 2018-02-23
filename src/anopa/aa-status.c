@@ -955,7 +955,7 @@ main (int argc, char * const argv[])
     if (all)
     {
         sacwd.len = 0;
-        stralloc_cats (&sacwd, ".");
+        stralloc_catb (&sacwd, ".", 2);
         r = aa_scan_dir (&sacwd, 0, it_all, &cfg);
         if (r < 0)
             aa_strerr_diefu2sys (RC_FATAL_IO, "scan repo directory ", path_repo);
