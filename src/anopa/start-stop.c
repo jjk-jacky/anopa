@@ -408,7 +408,9 @@ close_fd_for (int fd, int si)
                 if (pg->is_drawn)
                     clear_draw ();
                 pg->si = -1;
+                pg->is_drawn = 0;
                 pg->aa_pg.sa.len = 0;
+                aa_service (si)->pi = -1;
             }
             aa_service (si)->fd_progress = -1;
         }
